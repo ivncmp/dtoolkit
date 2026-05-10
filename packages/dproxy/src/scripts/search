@@ -1,0 +1,4 @@
+#!/bin/bash
+# Quick wrapper for search_facts.py
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+python3 "$SCRIPT_DIR/search_facts.py" "$@"

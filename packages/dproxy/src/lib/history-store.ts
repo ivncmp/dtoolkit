@@ -38,7 +38,7 @@ export async function addHistoryEntry(
   } catch (err) {
     // pruning is best-effort — log if debug enabled
     const cfg = await loadConfig();
-    if (cfg.debug) console.error('[cw debug] history pruning failed:', err);
+    if (cfg.debug) console.error('[dproxy debug] history pruning failed:', err);
   }
 
   return full;

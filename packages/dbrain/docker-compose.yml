@@ -1,6 +1,8 @@
 services:
   dbrain:
-    build: .
+    build:
+      context: ../..
+      dockerfile: packages/dbrain/Dockerfile
     container_name: dbrain
     restart: unless-stopped
     ports:

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import type { AppConfig } from './types.js';
 
-const DATA_DIR = process.env.CW_DATA_DIR || join(homedir(), '.claude-wrapper');
+const DATA_DIR = process.env.DPROXY_DATA_DIR || join(homedir(), '.dproxy');
 
 const DEFAULT_CONFIG: AppConfig = {
   initialized: false,
@@ -49,7 +49,7 @@ const DEFAULT_CONFIG: AppConfig = {
   debug: false,
 };
 
-/** Returns the data directory path (`~/.claude-wrapper` or `CW_DATA_DIR`). */
+/** Returns the data directory path (`~/.dproxy` or `DPROXY_DATA_DIR`). */
 export function getDataDir(): string {
   return DATA_DIR;
 }

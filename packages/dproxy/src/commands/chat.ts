@@ -32,7 +32,7 @@ async function saveSession(session: SessionInfo): Promise<void> {
   );
 }
 
-/** Create the `cw chat` Commander command for interactive conversations. */
+/** Create the `dproxy chat` Commander command for interactive conversations. */
 export function createChatCommand(): Command {
   return new Command('chat')
     .description('Start an interactive conversation with Claude')

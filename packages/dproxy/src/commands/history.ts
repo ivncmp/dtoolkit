@@ -17,7 +17,7 @@ function printEntryList(entries: HistoryEntry[], showCost = true): void {
   }
 }
 
-/** Create the `cw history` Commander command with list/show/search/clear subcommands. */
+/** Create the `dproxy history` Commander command with list/show/search/clear subcommands. */
 export function createHistoryCommand(): Command {
   const cmd = new Command('history').description('Manage query history');
 

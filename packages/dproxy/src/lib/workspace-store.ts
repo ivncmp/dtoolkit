@@ -40,7 +40,7 @@ export async function buildWorkspaceContext(maxChars?: number): Promise<string> 
       totalChars += section.length;
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== 'ENOENT' && config.debug) {
-        console.error(`[cw debug] workspace file ${file} error:`, err);
+        console.error(`[dproxy debug] workspace file ${file} error:`, err);
       }
     }
   }

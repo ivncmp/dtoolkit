@@ -1,4 +1,10 @@
-/** Options passed to {@link execClaude} for a single Claude CLI invocation. */
+export type {
+  HistoryEntry,
+  SessionInfo,
+  TemplateDefinition,
+  TemplateVariable,
+} from "@dtoolkit/core";
+
 export interface ClaudeOptions {
   prompt: string;
   stdinContent?: string;
@@ -13,7 +19,6 @@ export interface ClaudeOptions {
   additionalArgs?: string[];
 }
 
-/** Token usage breakdown from a Claude CLI response. */
 export interface ClaudeUsage {
   input: number;
   output: number;
@@ -22,7 +27,6 @@ export interface ClaudeUsage {
   total: number;
 }
 
-/** Parsed result from a Claude CLI invocation. */
 export interface ClaudeResult {
   result: string;
   sessionId: string;
@@ -33,46 +37,7 @@ export interface ClaudeResult {
   raw?: unknown;
 }
 
-/** A single entry in the JSONL history file. */
-export interface HistoryEntry {
-  id: string;
-  timestamp: string;
-  prompt: string;
-  result: string;
-  sessionId: string;
-  costUsd: number;
-  durationMs: number;
-  model?: string;
-  templateUsed?: string;
-}
-
-/** Metadata for the current/last chat session (persisted for `--continue`). */
-export interface SessionInfo {
-  sessionId: string;
-  startedAt: string;
-  name?: string;
-}
-
-/** A reusable YAML prompt template with variable placeholders. */
-export interface TemplateDefinition {
-  name: string;
-  description?: string;
-  prompt: string;
-  variables?: TemplateVariable[];
-  claudeOptions?: Partial<Pick<ClaudeOptions, 'model' | 'maxTurns' | 'maxBudgetUsd'>>;
-}
-
-/** A variable declaration within a prompt template. */
-export interface TemplateVariable {
-  name: string;
-  source?: 'stdin' | 'arg' | 'flag';
-  required?: boolean;
-  default?: string;
-}
-
-/** Full application configuration stored in ~/.claude-wrapper/config.json. */
 export interface AppConfig {
-  /** Whether `cw init` has been run. Commands require this to be true. */
   initialized: boolean;
   memory: {
     autoInject: boolean;
@@ -109,7 +74,7 @@ export interface AppConfig {
   defaults: {
     model?: string;
     maxTurns?: number;
-    outputFormat?: 'text' | 'json' | 'stream-json';
+    outputFormat?: "text" | "json" | "stream-json";
   };
   debug: boolean;
 }

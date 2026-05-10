@@ -36,7 +36,7 @@ function askBool(
   });
 }
 
-/** Creates the `cw init` Commander command. */
+/** Creates the `dproxy init` Commander command. */
 export function createInitCommand(): Command {
   return new Command('init')
     .description('Interactive setup wizard — required before first use')
@@ -55,7 +55,7 @@ async function runInit(): Promise<void> {
   const config = await loadConfig();
 
   console.log();
-  console.log(chalk.bold.blue('cw — Claude Wrapper Setup'));
+  console.log(chalk.bold.blue('dproxy — Setup'));
   console.log(chalk.dim('Configure your environment. Press Enter to accept defaults.\n'));
 
   const rl = createInterface({
@@ -122,7 +122,7 @@ async function runInit(): Promise<void> {
 
     console.log();
     console.log(chalk.green('Configuration saved to ') + chalk.dim(getDataDir() + '/config.json'));
-    console.log(chalk.green("You're ready to go! Try: ") + chalk.bold('cw "hello"'));
+    console.log(chalk.green("You're ready to go! Try: ") + chalk.bold('dproxy "hello"'));
     console.log();
   } finally {
     rl.close();
@@ -130,7 +130,7 @@ async function runInit(): Promise<void> {
 }
 
 /**
- * Checks whether `cw init` has been run.
+ * Checks whether `dproxy init` has been run.
  * Call this before executing any command that requires configuration.
  * Prints a helpful message and exits if not initialized.
  */
@@ -139,8 +139,8 @@ export async function requireInit(): Promise<void> {
   if (config.initialized) return;
 
   console.error(
-    chalk.yellow('cw is not configured yet. Run ') +
-      chalk.bold('cw init') +
+    chalk.yellow('dproxy is not configured yet. Run ') +
+      chalk.bold('dproxy init') +
       chalk.yellow(' to set up your environment.'),
   );
   process.exit(1);

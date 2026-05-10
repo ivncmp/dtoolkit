@@ -19,7 +19,7 @@ function printKeyList(keys: string[]): void {
   }
 }
 
-/** Create the `cw memory` Commander command with set/get/list/search/delete subcommands. */
+/** Create the `dproxy memory` Commander command with set/get/list/search/delete subcommands. */
 export function createMemoryCommand(): Command {
   const cmd = new Command('memory').description('Manage persistent memory');
 

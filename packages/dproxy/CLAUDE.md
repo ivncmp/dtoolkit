@@ -4,22 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-`claude-nice-wrapper` (`cw`) is a CLI wrapper around the `claude --print` command. It adds persistent memory, context injection, interactive chat, conversation history, and YAML-based prompt templates on top of the Claude Code CLI. It requires the `claude` CLI to be installed and on PATH.
+`dproxy` is a universal CLI adapter for invoking models via local CLIs. It adds persistent memory, context injection, interactive chat, conversation history, and YAML-based prompt templates on top of the Claude Code CLI. It requires the `claude` CLI to be installed and on PATH.
 
 ## Build & Dev Commands
 
 ```bash
-npm run build          # Build with tsup (output: dist/)
-npm run dev            # Build in watch mode
-npm run lint           # Run ESLint
-npm run format         # Run Prettier
-npm run check          # Lint + format check + build
-npm link               # Install `cw` globally for local testing
+pnpm build          # Build with tsup (output: dist/)
+pnpm dev            # Build in watch mode
 ```
 
 ## Architecture
 
-**Entry point:** `src/index.ts` — Commander CLI setup. The bare `cw <prompt>` invocation is a shorthand that delegates to `runAsk()`. All commands (except `init`) are guarded by `requireInit()` which ensures `cw init` has been run.
+**Entry point:** `src/index.ts` — Commander CLI setup. The bare `dproxy <prompt>` invocation is a shorthand that delegates to `runAsk()`. All commands (except `init`) are guarded by `requireInit()` which ensures `dproxy init` has been run.
 
 **Core execution:** `src/claude.ts` — `execClaude()` spawns the Claude CLI as a child process, parses JSON output into `ClaudeResult`. `--dangerously-skip-permissions` is opt-in via `config.claude.skipPermissions`. Also exports `readStdin()` for piped input (5s timeout).
 
@@ -32,7 +28,7 @@ npm link               # Install `cw` globally for local testing
 - `template.ts` — CRUD and execution of YAML prompt templates with `{{variable}}` interpolation
 
 **Data layer** (`src/lib/`):
-- `config.ts` — reads/writes config with deep merge; provides `getDataDir()`, `atomicWriteFile()` for safe concurrent writes; supports `CW_DATA_DIR` env var override
+- `config.ts` — reads/writes config with deep merge; provides `getDataDir()`, `atomicWriteFile()` for safe concurrent writes; supports `DPROXY_DATA_DIR` env var override
 - `context-builder.ts` — shared `buildSystemPromptContext()` used by both `ask.ts` and `chat.ts` to assemble all context sources consistently
 - `history-store.ts` — append-only JSONL with per-line error resilience; enforces `maxEntries` pruning; uses atomic writes
 - `memory-store.ts` — one `.md` file per key (slugified filenames); `buildMemoryContext()` assembles for injection
@@ -41,7 +37,7 @@ npm link               # Install `cw` globally for local testing
 - `workspace-store.ts` — reads bootstrap files from `config.workspace.dir`; disabled by default
 - `chat-log-store.ts` — daily conversation log at `config.chatLog.dir`; disabled by default
 - `session-state.ts` — per-session token tracking with 7-day auto-pruning; uses atomic writes
-- `types.ts` — shared TypeScript interfaces (all with JSDoc)
+- `types.ts` — shared TypeScript interfaces (re-exports from `@dtoolkit/core` + local types)
 
 ## Context Injection Pipeline
 
@@ -59,6 +55,19 @@ All parts joined with `"\n\n---\n\n"` and passed via `--append-system-prompt`. B
 tsup bundles `src/index.ts` into a single ESM file in `dist/` with a `#!/usr/bin/env node` shebang. A post-build step copies `src/scripts/` → `dist/scripts/` to bundle the Python search script.
 
 The package uses `"type": "module"` and NodeNext module resolution — all local imports must use `.js` extensions.
+
+## Data Storage
+
+```
+~/.dproxy/
+├── config.json          # App configuration
+├── history.jsonl         # Prompt history
+├── current-session.json  # Active session state
+├── memory/               # Named memory snippets (.md)
+└── templates/            # Prompt templates (.yaml)
+```
+
+Override the data directory with `DPROXY_DATA_DIR` env var.
 
 ## Key CLI Flags
 

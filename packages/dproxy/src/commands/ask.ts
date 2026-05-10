@@ -9,7 +9,7 @@ import { addHistoryEntry } from '../lib/history-store.js';
 import { getSessionTokens, updateSessionTokens } from '../lib/session-state.js';
 import type { ClaudeOptions } from '../lib/types.js';
 
-/** Create the `cw ask` Commander command with all CLI options. */
+/** Create the `dproxy ask` Commander command with all CLI options. */
 export function createAskCommand(): Command {
   return new Command('ask')
     .description('Send a prompt to Claude')
@@ -52,7 +52,7 @@ export async function runAsk(promptParts: string[], opts: Record<string, unknown
   const promptText = promptParts.join(' ');
 
   if (!promptText && !stdinContent) {
-    console.error(chalk.red('No prompt provided. Usage: cw ask "your question"'));
+    console.error(chalk.red('No prompt provided. Usage: dproxy ask "your question"'));
     process.exit(1);
   }
 

@@ -16,7 +16,7 @@ import type { TemplateDefinition } from '../lib/types.js';
 
 import { runAsk } from './ask.js';
 
-/** Create the `cw template` Commander command with list/show/add/run/delete subcommands. */
+/** Create the `dproxy template` Commander command with list/show/add/run/delete subcommands. */
 export function createTemplateCommand(): Command {
   const cmd = new Command('template').description('Manage prompt templates');
 
@@ -26,7 +26,7 @@ export function createTemplateCommand(): Command {
     .action(async () => {
       const templates = await listTemplates();
       if (templates.length === 0) {
-        console.log(chalk.dim("No templates. Use 'cw template add <name>' to create one."));
+        console.log(chalk.dim("No templates. Use 'dproxy template add <name>' to create one."));
         return;
       }
       for (const t of templates) {

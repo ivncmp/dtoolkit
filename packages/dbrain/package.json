@@ -1,0 +1,82 @@
+{
+  "name": "dbrain",
+  "version": "0.2.1",
+  "description": "Your distributed mind. Persistent knowledge across all your AIs.",
+  "type": "module",
+  "bin": {
+    "dbrain": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/cli/index.ts start",
+    "cli": "tsx src/cli/index.ts",
+    "build": "tsc && cp src/dashboard/index.html src/dashboard/logo*.png dist/dashboard/ && rm -rf dist/dashboard/icons && cp -r src/dashboard/icons dist/dashboard/icons && chmod +x dist/cli/index.js",
+    "prepare": "husky",
+    "start": "node dist/cli/index.js start",
+    "test": "vitest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "check": "npm run lint:fix && npm run format && npm run build"
+  },
+  "lint-staged": {
+    "*.{ts,js}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.json": [
+      "prettier --write"
+    ]
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivncmp/dbrain.git"
+  },
+  "homepage": "https://github.com/ivncmp/dbrain",
+  "bugs": "https://github.com/ivncmp/dbrain/issues",
+  "author": "Iván Campillo <ivncmp@gmail.com>",
+  "license": "MIT",
+  "keywords": [
+    "ai",
+    "memory",
+    "mcp",
+    "brain",
+    "knowledge",
+    "claude",
+    "llm",
+    "sqlite"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.3.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "better-sqlite3": "^12.9.0",
+    "dotenv": "^17.4.2",
+    "fastify": "^5.8.5",
+    "picocolors": "^1.1.1",
+    "zod": "^4.4.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.6.0",
+    "eslint": "^9.25.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import-x": "^4.16.1",
+    "globals": "^16.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.5",
+    "prettier": "^3.8.1",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.30.1",
+    "vitest": "^4.1.5"
+  }
+}

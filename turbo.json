@@ -7,8 +7,6 @@
     },
     "test": {
       "dependsOn": ["build"]
-    },
-    "lint": {},
-    "lint:fix": {}
+    }
   }
 }

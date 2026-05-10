@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo.png" alt="dtoolkit" />
+</p>
+
 # dtoolkit
 
 Open-source harness engineering toolkit for AI coding agents.

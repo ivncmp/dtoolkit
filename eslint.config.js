@@ -5,11 +5,11 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'node_modules'] },
+  { ignores: ['**/dist', '**/coverage', '**/node_modules'] },
 
   {
     extends: [js.configs.recommended, ...tseslint.configs.strict, prettier],
-    files: ['src/**/*.ts'],
+    files: ['packages/*/src/**/*.ts'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.node,
@@ -18,7 +18,6 @@ export default tseslint.config(
       'import-x': importX,
     },
     rules: {
-      // TypeScript
       '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports' }],
       '@typescript-eslint/no-unused-vars': [
         'warn',
@@ -31,7 +30,6 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-non-null-assertion': 'warn',
 
-      // Imports (ordering only — TypeScript already handles resolution)
       'import-x/order': [
         'warn',
         {
@@ -42,7 +40,17 @@ export default tseslint.config(
       ],
       'import-x/no-duplicates': 'warn',
 
-      // General — CLI app, console.log is expected
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
+  },
+
+  {
+    files: [
+      'packages/*/src/cli/**/*.ts',
+      'packages/dbrain/src/dashboard/server.ts',
+      'packages/dproxy/src/**/*.ts',
+    ],
+    rules: {
       'no-console': 'off',
     },
   },

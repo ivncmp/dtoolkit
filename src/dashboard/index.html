@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>dbrain - Your distributed brain</title>
+<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:oklch(0.965 0.008 248);
+  --sidebar-bg:oklch(0.99 0.003 250);
+  --surface:oklch(1 0 0);
+  --surface-2:oklch(0.95 0.01 248);
+  --border:oklch(0.87 0.018 248);
+  --border-subtle:oklch(0.92 0.01 248);
+  --text:oklch(0.20 0.06 252);
+  --text-2:oklch(0.42 0.05 250);
+  --text-3:oklch(0.60 0.04 248);
+  --accent:oklch(0.50 0.22 252);
+  --accent-light:oklch(0.94 0.06 252);
+  --online:oklch(0.50 0.18 148);
+  --font:'DM Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --sb:220px;
+  --r:8px;
+}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ── LAYOUT ─────────────────────────────── */
+.shell{display:flex;min-height:100vh}
+.sidebar{
+  width:var(--sb);flex-shrink:0;position:fixed;top:0;left:0;bottom:0;
+  background:var(--sidebar-bg);border-right:1px solid var(--border-subtle);
+  display:flex;flex-direction:column;overflow:hidden;z-index:50;
+}
+.sb-logo{padding:24px 20px 8px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.sb-logo img{width:100px;height:auto;display:block}
+.sb-logo-info{display:flex;flex-direction:column;align-items:center;gap:4px}
+.sb-logo-text{font-size:18px;font-weight:700;letter-spacing:-.03em;color:var(--text)}
+.sb-version{
+  font-size:10px;font-family:var(--mono);font-weight:500;
+  color:var(--text-3);background:var(--surface-2);
+  border:1px solid var(--border-subtle);
+  border-radius:4px;padding:2px 7px;display:inline-block;margin-left:2px;
+}
+.sb-nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:2px}
+.sb-link{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border-radius:var(--r);cursor:pointer;border:none;background:none;
+  font-family:var(--font);font-size:13.5px;font-weight:500;
+  color:var(--text-2);width:100%;text-align:left;
+  transition:background .12s,color .12s;
+}
+.sb-link:hover{background:var(--surface-2);color:var(--text)}
+.sb-link.active{background:var(--accent-light);color:var(--accent);font-weight:600}
+.sb-link svg{flex-shrink:0;opacity:.7}
+.sb-link.active svg{opacity:1}
+.sb-divider{height:1px;background:var(--border-subtle);margin:10px 12px}
+.sb-footer{padding:16px;display:flex;flex-direction:column;gap:10px}
+.palette-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface-2);border:1px solid var(--border-subtle);
+  border-radius:var(--r);padding:8px 12px;
+}
+.palette-toggle-label{font-size:12px;font-weight:500;color:var(--text-2)}
+.palette-toggle-switch{
+  display:flex;gap:2px;background:var(--bg);
+  border:1px solid var(--border-subtle);border-radius:6px;padding:2px;
+}
+.palette-toggle-opt{
+  padding:3px 9px;border-radius:4px;font-size:11px;font-weight:600;
+  border:none;background:none;font-family:var(--font);cursor:pointer;
+  color:var(--text-3);transition:all .12s;
+}
+.palette-toggle-opt.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px oklch(0 0 0/.1)}
+.brain-card{
+  background:var(--surface-2);border:1px solid var(--border-subtle);
+  border-radius:var(--r);padding:12px 14px;
+}
+.brain-card-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.online-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--online);
+  box-shadow:0 0 6px var(--online);flex-shrink:0;
+  animation:blink 2.5s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.brain-name{font-size:13px;font-weight:600;color:var(--text)}
+.brain-meta{font-size:11px;color:var(--text-3);line-height:1.7;font-family:var(--mono)}
+.main{margin-left:var(--sb);flex:1;min-width:0}
+.topbar{
+  position:sticky;top:0;z-index:40;
+  background:oklch(from var(--bg) l c h / .92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border-subtle);
+  display:flex;align-items:center;gap:12px;padding:0 32px;height:52px;
+}
+.topbar-title{font-size:14px;font-weight:600;color:var(--text);flex:none}
+.topbar-sep{color:var(--border);font-size:16px}
+.search-bar{
+  flex:1;max-width:400px;display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:1px solid var(--border-subtle);
+  border-radius:20px;padding:6px 14px;transition:border-color .15s;
+}
+.search-bar:focus-within{border-color:var(--accent)}
+.search-bar input{flex:1;background:none;border:none;outline:none;font-family:var(--font);font-size:13px;color:var(--text)}
+.search-bar input::placeholder{color:var(--text-3)}
+.page{padding:28px 32px 80px;}
+
+/* ── STATS ──────────────────────────────── */
+.stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:28px}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border-subtle);
+  border-radius:var(--r);padding:18px 16px 14px;
+  transition:border-color .15s,box-shadow .15s;
+}
+.stat-card:hover{border-color:var(--border);box-shadow:0 2px 12px oklch(0 0 0/.06)}
+.stat-num{font-size:28px;font-weight:700;letter-spacing:-.04em;line-height:1;margin-bottom:5px}
+.stat-lbl{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3)}
+
+/* ── SECTION HEADERS ────────────────────── */
+.sec-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.sec-title{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3)}
+.sec-badge{
+  font-size:11px;font-family:var(--mono);color:var(--text-3);
+  background:var(--surface-2);border:1px solid var(--border-subtle);
+  padding:1px 8px;border-radius:20px;
+}
+
+/* ── ENTITY GRID ────────────────────────── */
+.entity-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.entity-card{
+  background:var(--surface);border:1px solid var(--border-subtle);
+  border-radius:var(--r);padding:16px;cursor:pointer;
+  transition:transform .12s,box-shadow .15s,border-color .15s;
+  position:relative;overflow:hidden;
+}
+.entity-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--card-accent,var(--accent));
+}
+.entity-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px oklch(0 0 0/.08);border-color:var(--border)}
+.entity-name{font-size:14px;font-weight:600;letter-spacing:-.02em;color:var(--text);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entity-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.entity-footer{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tier-pill{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;font-family:var(--mono);font-weight:500;
+  padding:2px 8px;border-radius:20px;
+}
+
+/* ── BADGE ──────────────────────────────── */
+.badge{
+  display:inline-flex;align-items:center;
+  padding:2px 7px;border-radius:4px;font-size:10.5px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;font-family:var(--mono);
+  border:1px solid;
+}
+
+/* ── CONVERSATIONS ──────────────────────── */
+.conv-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.conv-filter-btn{
+  padding:5px 13px;border-radius:20px;border:1px solid var(--border);
+  background:none;font-family:var(--font);font-size:12px;font-weight:500;
+  color:var(--text-3);cursor:pointer;transition:all .12s;
+}
+.conv-filter-btn:hover{border-color:var(--accent);color:var(--accent)}
+.conv-filter-btn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent);font-weight:600}
+.conv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px}
+.conv-card{
+  background:var(--surface);border:1px solid var(--border-subtle);
+  border-radius:var(--r);padding:12px 14px;cursor:pointer;
+  transition:border-color .12s,transform .12s,box-shadow .12s;
+}
+.conv-card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 14px oklch(0 0 0/.07)}
+.conv-card-date{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;letter-spacing:-.01em}
+.conv-card-source{margin-bottom:8px}
+.conv-card-meta{font-family:var(--mono);font-size:11px;color:var(--text-3)}
+
+/* ── DETAIL ─────────────────────────────── */
+.back-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:none;border:none;color:var(--text-2);
+  font-family:var(--font);font-size:13px;font-weight:500;padding:4px 0;
+  cursor:pointer;transition:color .12s;
+}
+.back-btn:hover{color:var(--text)}
+.detail-title{font-size:28px;font-weight:700;letter-spacing:-.04em;line-height:1.1;margin-bottom:8px}
+.detail-stat-row{
+  display:flex;gap:0;background:var(--surface);border:1px solid var(--border-subtle);
+  border-radius:var(--r);overflow:hidden;margin-bottom:28px;
+}
+.detail-stat{padding:16px 24px;flex:1;border-right:1px solid var(--border-subtle)}
+.detail-stat:last-child{border-right:none}
+.detail-stat-val{font-size:22px;font-weight:700;letter-spacing:-.04em;margin-bottom:2px}
+.detail-stat-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3)}
+.fact-card{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r);padding:14px 16px;margin-bottom:8px}
+.fact-text{font-size:14px;color:var(--text);line-height:1.6;margin-bottom:8px}
+.fact-meta{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text-3);font-family:var(--mono)}
+
+/* ── MESSAGES ───────────────────────────── */
+.msg{border-radius:var(--r);padding:14px 16px;margin-bottom:10px}
+.msg-user{background:oklch(from var(--accent) l c h /.08);border:1px solid oklch(from var(--accent) l c h /.2)}
+.msg-assistant{background:var(--surface);border:1px solid var(--border-subtle)}
+.msg-role{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;font-family:var(--mono);color:var(--text-3)}
+.msg-user .msg-role{color:var(--accent)}
+.msg-text{font-size:13px;line-height:1.65;color:var(--text);white-space:pre-wrap;font-family:var(--mono)}
+
+/* ── DOCS ───────────────────────────────── */
+.docs-header{margin-bottom:32px}
+.docs-title{font-size:30px;font-weight:700;letter-spacing:-.04em;margin-bottom:8px}
+.docs-sub{font-size:14px;color:var(--text-2);line-height:1.6}
+.docs-sub code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 6px;border-radius:4px;color:var(--accent)}
+.meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:32px}
+.meta-card{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r);padding:14px 16px}
+.meta-lbl{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3);margin-bottom:5px}
+.meta-val{font-family:var(--mono);font-size:12.5px;color:var(--accent)}
+.doc-group{margin-bottom:36px}
+.doc-group-title{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3);padding-bottom:10px;border-bottom:1px solid var(--border-subtle);margin-bottom:12px}
+.endpoint{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r);padding:14px 16px;margin-bottom:8px;transition:border-color .12s}
+.endpoint:hover{border-color:var(--border)}
+.endpoint-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.endpoint-path{font-family:var(--mono);font-size:13px;color:var(--text)}
+.endpoint-desc{font-size:13px;color:var(--text-2);line-height:1.5}
+.code-block{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r);padding:18px 20px;overflow-x:auto}
+.code-block code{font-family:var(--mono);font-size:12.5px;color:var(--text-2);line-height:1.75;white-space:pre}
+.mcp-card{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r);padding:16px 18px;margin-bottom:10px}
+.mcp-name{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--accent);margin-right:8px}
+.mcp-desc{font-size:13px;color:var(--text-2);line-height:1.5;margin:8px 0 12px}
+.param-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface-2);border-radius:5px;margin-bottom:4px}
+.param-name{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text);min-width:100px}
+.param-type{font-family:var(--mono);font-size:11px;color:#f59e0b;min-width:55px}
+.param-desc{font-size:12px;color:var(--text-3);flex:1}
+.tier-table{display:flex;flex-direction:column;gap:4px}
+.tier-row{display:flex;align-items:center;gap:16px;padding:12px 16px;background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r)}
+
+/* ── LOGIN ──────────────────────────────── */
+.login-bg{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 90% 70% at 50% -10%,oklch(.42 .15 252/.18) 0%,var(--bg) 60%);
+  position:relative;
+}
+.login-bg::before{
+  content:'';position:absolute;inset:0;
+  background-image:linear-gradient(var(--border-subtle) 1px,transparent 1px),linear-gradient(90deg,var(--border-subtle) 1px,transparent 1px);
+  background-size:36px 36px;opacity:.5;
+}
+.login-card{
+  position:relative;z-index:1;background:var(--surface);
+  border:1px solid var(--border);border-radius:16px;
+  padding:40px 44px;width:400px;text-align:center;
+  box-shadow:0 20px 60px oklch(0 0 0/.12),0 0 0 1px oklch(from var(--accent) l c h /.08);
+}
+.login-logo{width:200px;height:auto;margin:0 auto 24px;display:block}
+.login-token-label{font-size:13px;color:var(--text-2);margin-bottom:10px;text-align:left}
+.login-input{
+  width:100%;padding:11px 14px;background:var(--surface-2);
+  border:1.5px solid var(--border);border-radius:var(--r);
+  font-family:var(--mono);font-size:13.5px;color:var(--text);outline:none;
+  transition:border-color .15s;margin-bottom:10px;
+}
+.login-input:focus{border-color:var(--accent)}
+.login-input.err{border-color:#e53e3e}
+.login-hint{font-size:12px;color:var(--text-3);margin-bottom:14px}
+.login-err{font-size:12px;color:#e53e3e;margin-bottom:14px}
+
+/* ── LOADING ────────────────────────────── */
+.loading{display:flex;align-items:center;justify-content:center;height:60vh;color:var(--text-3);font-size:13px}
+.empty{color:var(--text-3);font-size:13px;padding:32px;text-align:center;background:var(--surface);border-radius:var(--r);border:1px solid var(--border-subtle)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useMemo, useCallback } = React;
+
+const TOKEN_KEY = 'dbrain_token';
+const THEME_KEY = 'dbrain_theme';
+const API_BASE = `http://${window.location.hostname}:7878`;
+
+/* ── PALETTES ─────────────────────────────────────────── */
+const PALETTES = {
+  cloud: {'--bg':'oklch(0.965 0.008 248)','--sidebar-bg':'oklch(0.99 0.003 250)','--surface':'oklch(1 0 0)','--surface-2':'oklch(0.95 0.010 248)','--border':'oklch(0.87 0.018 248)','--border-subtle':'oklch(0.92 0.010 248)','--text':'oklch(0.20 0.06 252)','--text-2':'oklch(0.42 0.05 250)','--text-3':'oklch(0.60 0.04 248)','--accent':'oklch(0.50 0.22 252)','--accent-light':'oklch(0.94 0.06 252)','--online':'oklch(0.50 0.18 148)'},
+  ocean: {'--bg':'oklch(0.11 0.04 254)','--sidebar-bg':'oklch(0.13 0.046 254)','--surface':'oklch(0.16 0.04 252)','--surface-2':'oklch(0.20 0.04 250)','--border':'oklch(0.26 0.05 250)','--border-subtle':'oklch(0.19 0.04 252)','--text':'oklch(0.93 0.015 245)','--text-2':'oklch(0.65 0.06 245)','--text-3':'oklch(0.47 0.05 248)','--accent':'oklch(0.68 0.20 245)','--accent-light':'oklch(0.68 0.20 245 /.15)','--online':'oklch(0.70 0.18 148)'},
+};
+
+function applyPalette(name) {
+  const p = PALETTES[name] || PALETTES.cloud;
+  Object.entries(p).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
+}
+
+/* ── API HELPER ───────────────────────────────────────── */
+function api(path, opts = {}) {
+  const token = localStorage.getItem(TOKEN_KEY) || '';
+  return fetch(`${API_BASE}${path}`, {
+    ...opts,
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...opts.headers },
+  }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+}
+
+/* ── ROUTER ───────────────────────────────────────────── */
+function useRouter() {
+  const [hash, setHash] = useState(window.location.hash || '#/');
+  useEffect(() => {
+    const h = () => setHash(window.location.hash || '#/');
+    window.addEventListener('hashchange', h);
+    return () => window.removeEventListener('hashchange', h);
+  }, []);
+  const nav = (p) => { window.location.hash = p; };
+  const route = hash.replace('#', '') || '/';
+  const segs = route.split('/').filter(Boolean);
+  return { route, segs, nav };
+}
+
+/* ── SHARED COMPONENTS ────────────────────────────────── */
+const TYPE_COLOR = { project: '#3b82f6', system: '#8b5cf6', person: '#10b981', event: '#f59e0b' };
+const SRC_COLOR = { 'openclaw': '#10b981', 'claude-code': '#f59e0b', 'claude-code-mac': '#f59e0b', 'gemini': '#3b82f6', 'cursor': '#8b5cf6' };
+
+function Badge({ children, variant = 'default' }) {
+  const map = {
+    default: { bg: 'oklch(from var(--accent) l c h /.12)', c: 'var(--accent)', b: 'oklch(from var(--accent) l c h /.3)' },
+    project: { bg: '#3b82f615', c: '#3b82f6', b: '#3b82f630' },
+    system:  { bg: '#8b5cf615', c: '#8b5cf6', b: '#8b5cf630' },
+    person:  { bg: '#10b98115', c: '#10b981', b: '#10b98130' },
+    event:   { bg: '#f59e0b18', c: '#f59e0b', b: '#f59e0b35' },
+    area:    { bg: '#06b6d415', c: '#06b6d4', b: '#06b6d430' },
+    GET:     { bg: '#10b98112', c: '#10b981', b: '#10b98128' },
+    POST:    { bg: '#3b82f612', c: '#3b82f6', b: '#3b82f628' },
+    PUT:     { bg: '#f59e0b12', c: '#f59e0b', b: '#f59e0b28' },
+    DELETE:  { bg: '#ef444412', c: '#ef4444', b: '#ef444428' },
+    PATCH:   { bg: '#6b728012', c: '#6b7280', b: '#6b728028' },
+    primary: { bg: '#3b82f615', c: '#3b82f6', b: '#3b82f630' },
+  };
+  const s = map[variant] || map.default;
+  return <span className="badge" style={{ background: s.bg, color: s.c, borderColor: s.b }}>{children}</span>;
+}
+
+function TierPill({ tier, count }) {
+  const cs = { hot: { bg: '#f59e0b18', c: '#f59e0b', dot: '#f59e0b' }, warm: { bg: '#eab30818', c: '#ca8a04', dot: '#eab308' }, cold: { bg: '#3b82f615', c: '#3b82f6', dot: '#3b82f6' } };
+  const s = cs[tier] || cs.cold;
+  return (
+    <span className="tier-pill" style={{ background: s.bg, color: s.c }}>
+      <span style={{ width: 5, height: 5, borderRadius: '50%', background: s.dot, display: 'inline-block' }}></span>
+      {count != null && count}{count != null && ' '}{tier}
+    </span>
+  );
+}
+
+function SearchIcon() {
+  return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" style={{ color: 'var(--text-3)', flexShrink: 0 }}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>;
+}
+
+function BackIcon() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>;
+}
+
+/* ── SIDEBAR ──────────────────────────────────────────── */
+function Sidebar({ route, nav, palette, onTogglePalette, brain }) {
+  const links = [
+    { href: '#/dashboard', label: 'Brain', icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2z" />
+        <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2z" />
+      </svg>) },
+    { href: '#/api', label: 'REST API', icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+        <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+      </svg>) },
+    { href: '#/mcp', label: 'MCP Server', icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+        <circle cx="12" cy="12" r="3" /><circle cx="4" cy="6" r="2" /><circle cx="20" cy="6" r="2" />
+        <circle cx="4" cy="18" r="2" /><circle cx="20" cy="18" r="2" />
+        <line x1="6" y1="7" x2="9.5" y2="10.5" /><line x1="18" y1="7" x2="14.5" y2="10.5" />
+        <line x1="6" y1="17" x2="9.5" y2="13.5" /><line x1="18" y1="17" x2="14.5" y2="13.5" />
+      </svg>) },
+  ];
+  const active = (href) => {
+    const p = href.replace('#', '');
+    if (p === '/dashboard') return route === '/' || route === '/dashboard' || route.startsWith('/entity') || route.startsWith('/conversation');
+    return route.startsWith(p);
+  };
+  return (
+    <aside className="sidebar">
+      <div className="sb-logo">
+        <img src="/logo-image.png" alt="dbrain" />
+        <div className="sb-logo-info">
+          <span className="sb-logo-text">dbrain</span>
+          <span className="sb-version">v{brain.version}</span>
+        </div>
+      </div>
+      <nav className="sb-nav">
+        {links.map(l => (
+          <button key={l.href} className={`sb-link ${active(l.href) ? 'active' : ''}`} onClick={() => nav(l.href)}>
+            {l.icon}{l.label}
+          </button>
+        ))}
+      </nav>
+      <div className="sb-divider"></div>
+      <div className="sb-footer">
+        <div className="palette-toggle">
+          <span className="palette-toggle-label">Theme</span>
+          <div className="palette-toggle-switch">
+            <button className={`palette-toggle-opt ${palette === 'cloud' ? 'active' : ''}`} onClick={() => onTogglePalette('cloud')}>&#9788; Light</button>
+            <button className={`palette-toggle-opt ${palette === 'ocean' ? 'active' : ''}`} onClick={() => onTogglePalette('ocean')}>&#9679; Dark</button>
+          </div>
+        </div>
+        <div className="brain-card">
+          <div className="brain-card-head">
+            <span className="online-dot"></span>
+            <span className="brain-name">{brain.name || 'dBrain'}</span>
+          </div>
+          <div className="brain-meta">
+            {brain.entities || 0} entities<br />
+            {(brain.facts || 0).toLocaleString()} facts<br />
+            {brain.conversations || 0} conversations
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+/* ── LOGIN PAGE ───────────────────────────────────────── */
+function LoginPage({ onLogin }) {
+  const [token, setToken] = useState('');
+  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(false);
+  const submit = () => {
+    if (!token.trim()) return;
+    setLoading(true); setErr('');
+    fetch(`${API_BASE}/health`, { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(r => { if (!r.ok) throw new Error('Invalid token'); return r.json(); })
+      .then(() => onLogin(token))
+      .catch(() => { setErr('Invalid token or brain unreachable.'); setLoading(false); });
+  };
+  return (
+    <div className="login-bg">
+      <div className="login-card">
+        <img src="logo-complete.png" alt="dbrain" className="login-logo" />
+        <p className="login-token-label">Access token</p>
+        <input className={`login-input${err ? ' err' : ''}`} type="password"
+          placeholder="sk-dbr_..." value={token}
+          onChange={e => { setToken(e.target.value); setErr(''); }}
+          onKeyDown={e => e.key === 'Enter' && submit()} autoFocus spellCheck="false" />
+        {err
+          ? <p className="login-err">{err}</p>
+          : <p className="login-hint">{loading ? 'Connecting...' : 'Press Enter to connect'}</p>
+        }
+      </div>
+    </div>
+  );
+}
+
+/* ── DASHBOARD PAGE ───────────────────────────────────── */
+function DashboardPage({ nav, overview, conversations }) {
+  const [q, setQ] = useState('');
+  const [srcFilter, setSrcFilter] = useState('all');
+
+  const entities = overview || [];
+  const totalFacts = entities.reduce((s, e) => s + e.total, 0);
+  const hotFacts = entities.reduce((s, e) => s + e.hot, 0);
+  const warmFacts = entities.reduce((s, e) => s + e.warm, 0);
+  const coldFacts = entities.reduce((s, e) => s + e.cold, 0);
+
+  const filtered = useMemo(() => entities.filter(e =>
+    e.name.toLowerCase().includes(q.toLowerCase()) || e.type.toLowerCase().includes(q.toLowerCase())
+  ), [q, entities]);
+
+  const sources = useMemo(() => {
+    const s = new Set();
+    (conversations || []).forEach(c => c.source && s.add(c.source));
+    return [...s].sort();
+  }, [conversations]);
+
+  const filteredConvs = useMemo(() =>
+    srcFilter === 'all' ? (conversations || []) : (conversations || []).filter(c => c.source === srcFilter)
+  , [srcFilter, conversations]);
+
+  return (
+    <>
+      <div className="topbar">
+        <span className="topbar-title">Overview</span>
+        <span className="topbar-sep">&middot;</span>
+        <div className="search-bar">
+          <SearchIcon />
+          <input placeholder="Search entities..." value={q} onChange={e => setQ(e.target.value)} />
+        </div>
+      </div>
+      <div className="page">
+        <div className="stats-row">
+          {[
+            { l: 'Entities', v: entities.length, c: 'var(--accent)' },
+            { l: 'Total Facts', v: totalFacts.toLocaleString(), c: 'var(--text)' },
+            { l: 'Hot', v: hotFacts, c: '#f59e0b' },
+            { l: 'Warm', v: warmFacts, c: '#eab308' },
+            { l: 'Cold', v: coldFacts.toLocaleString(), c: '#3b82f6' },
+            { l: 'Conversations', v: (conversations || []).length, c: '#10b981' },
+          ].map(s => (
+            <div key={s.l} className="stat-card">
+              <div className="stat-num" style={{ color: s.c }}>{s.v}</div>
+              <div className="stat-lbl">{s.l}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="sec-head"><span className="sec-title">Entities</span><span className="sec-badge">{filtered.length}</span></div>
+        <div className="entity-grid" style={{ marginBottom: 36 }}>
+          {filtered.map(e => (
+            <div key={e.id} className="entity-card" style={{ '--card-accent': TYPE_COLOR[e.type] || 'var(--accent)' }} onClick={() => nav(`#/entity/${e.id}`)}>
+              <div className="entity-name">{e.name}</div>
+              <div className="entity-tags">
+                <Badge variant={e.type}>{e.type}</Badge>
+                <Badge variant="area">{e.category}</Badge>
+              </div>
+              <div className="entity-footer">
+                {e.hot > 0 && <TierPill tier="hot" count={e.hot} />}
+                {e.warm > 0 && <TierPill tier="warm" count={e.warm} />}
+                {e.cold > 0 && <TierPill tier="cold" count={e.cold} />}
+                {e.total === 0 && <TierPill tier="cold" count={0} />}
+              </div>
+            </div>
+          ))}
+          {filtered.length === 0 && <div className="empty">No entities found</div>}
+        </div>
+
+        <div className="sec-head" style={{ marginBottom: 10 }}>
+          <span className="sec-title">Conversations</span>
+          <span className="sec-badge">{filteredConvs.length}</span>
+        </div>
+        <div className="conv-filters">
+          {['all', ...sources].map(src => (
+            <button key={src} className={`conv-filter-btn ${srcFilter === src ? 'active' : ''}`}
+              onClick={() => setSrcFilter(src)}
+              style={srcFilter === src && src !== 'all' ? { background: `${SRC_COLOR[src] || 'var(--accent)'}18`, borderColor: SRC_COLOR[src] || 'var(--accent)', color: SRC_COLOR[src] || 'var(--accent)' } : {}}>
+              {src === 'all' ? 'All sources' : src}
+            </button>
+          ))}
+        </div>
+        <div className="conv-grid">
+          {filteredConvs.map(c => {
+            const sc = SRC_COLOR[c.source] || 'var(--online)';
+            const date = c.started_at ? c.started_at.split('T')[0] : c.id;
+            return (
+              <div key={c.id} className="conv-card" onClick={() => nav(`#/conversation/${c.id}`)}>
+                <div className="conv-card-date">{date}</div>
+                <div className="conv-card-source">
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, fontFamily: 'var(--mono)', color: sc }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: sc, display: 'inline-block' }}></span>
+                    {c.source || 'unknown'}
+                  </span>
+                </div>
+                <div className="conv-card-meta">{c.message_count || 0} msgs</div>
+              </div>
+            );
+          })}
+          {filteredConvs.length === 0 && <div className="empty">No conversations</div>}
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ── ENTITY DETAIL ────────────────────────────────────── */
+function EntityDetailPage({ id, nav }) {
+  const [entity, setEntity] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    api(`/entities/${id}`).then(setEntity).catch(() => setEntity(null)).finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) return <><div className="topbar"><span className="topbar-title">Loading...</span></div><div className="loading">Loading entity...</div></>;
+  if (!entity) return <><div className="topbar"><button className="back-btn" onClick={() => nav('#/dashboard')}><BackIcon /> Overview</button></div><div className="page"><div className="empty">Entity not found</div></div></>;
+
+  const facts = entity.facts || [];
+  const hot = facts.filter(f => f.tier === 'hot');
+  const warm = facts.filter(f => f.tier === 'warm');
+  const cold = facts.filter(f => f.tier === 'cold');
+  const tiers = [{ t: 'hot', items: hot }, { t: 'warm', items: warm }, { t: 'cold', items: cold }].filter(g => g.items.length);
+
+  return (
+    <>
+      <div className="topbar">
+        <button className="back-btn" onClick={() => nav('#/dashboard')}><BackIcon /> Overview</button>
+        <span className="topbar-sep">&middot;</span>
+        <span className="topbar-title">{entity.name}</span>
+      </div>
+      <div className="page">
+        <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <h1 className="detail-title">{entity.name}</h1>
+          <Badge variant={entity.type}>{entity.type}</Badge>
+          <Badge variant="area">{entity.category}</Badge>
+        </div>
+        <div className="detail-stat-row">
+          {[{ l: 'Total', v: facts.length, c: 'var(--text)' }, { l: 'Hot', v: hot.length, c: '#f59e0b' }, { l: 'Warm', v: warm.length, c: '#eab308' }, { l: 'Cold', v: cold.length, c: '#3b82f6' }].map(s => (
+            <div key={s.l} className="detail-stat">
+              <div className="detail-stat-val" style={{ color: s.c }}>{s.v}</div>
+              <div className="detail-stat-lbl">{s.l}</div>
+            </div>
+          ))}
+        </div>
+        {tiers.map(({ t, items }) => (
+          <div key={t} style={{ marginBottom: 24 }}>
+            <div className="sec-head"><TierPill tier={t} count={items.length} /></div>
+            {items.map(f => (
+              <div key={f.id} className="fact-card">
+                <p className="fact-text">{f.fact}</p>
+                <div className="fact-meta">
+                  <TierPill tier={f.tier} count={null} />
+                  <span>accessed {f.access_count || 0}x &middot; last {f.last_accessed ? f.last_accessed.split('T')[0] : 'n/a'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+        {facts.length === 0 && <div className="empty">No facts recorded for this entity</div>}
+      </div>
+    </>
+  );
+}
+
+/* ── CONVERSATION DETAIL ──────────────────────────────── */
+function ConversationDetailPage({ id, nav }) {
+  const [convo, setConvo] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    api(`/conversations/${id}`).then(setConvo).catch(() => setConvo(null)).finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) return <><div className="topbar"><span className="topbar-title">Loading...</span></div><div className="loading">Loading conversation...</div></>;
+  if (!convo) return <><div className="topbar"><button className="back-btn" onClick={() => nav('#/dashboard')}><BackIcon /> Overview</button></div><div className="page"><div className="empty">Conversation not found</div></div></>;
+
+  const date = convo.started_at ? convo.started_at.split('T')[0] : convo.id;
+  const msgs = convo.messages || [];
+
+  return (
+    <>
+      <div className="topbar">
+        <button className="back-btn" onClick={() => nav('#/dashboard')}><BackIcon /> Overview</button>
+        <span className="topbar-sep">&middot;</span>
+        <span className="topbar-title">{date}</span>
+        <Badge>{convo.source || 'unknown'}</Badge>
+      </div>
+      <div className="page">
+        <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <h1 className="detail-title">{date}</h1>
+          <Badge>{convo.source || 'unknown'}</Badge>
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 24, fontFamily: 'var(--mono)' }}>{msgs.length} messages</p>
+        {msgs.map((m, i) => (
+          <div key={m.id || i} className={`msg msg-${m.role}`}>
+            <div className="msg-role">{m.role}</div>
+            <div className="msg-text">{m.content}</div>
+          </div>
+        ))}
+        {msgs.length === 0 && <div className="empty">No messages</div>}
+      </div>
+    </>
+  );
+}
+
+/* ── API DOCS PAGE ────────────────────────────────────── */
+const API_GROUPS = [
+  { g: 'Health & Config', eps: [
+    { m: 'GET', p: '/health', d: 'Brain pulse check. No auth required. Returns status and entity count.' },
+    { m: 'GET', p: '/connect', d: 'Client config: MCP URL, permissions, and CLAUDE.md instructions.' },
+  ]},
+  { g: 'Workspace (Identity)', eps: [
+    { m: 'GET', p: '/workspace', d: 'List all identity documents.' },
+    { m: 'GET', p: '/workspace/:key', d: 'Read an identity document (MEMORY.md, PARA structure, etc).' },
+    { m: 'PUT', p: '/workspace/:key', d: 'Create or update an identity document.' },
+    { m: 'DELETE', p: '/workspace/:key', d: 'Remove an identity document.' },
+  ]},
+  { g: 'Entities & Facts', eps: [
+    { m: 'GET', p: '/entities', d: 'List all entities.' },
+    { m: 'GET', p: '/entities/:id', d: 'Entity with all facts, tiers, and metadata.' },
+    { m: 'POST', p: '/entities', d: 'Create a new entity.' },
+    { m: 'DELETE', p: '/entities/:id', d: 'Archive entity.' },
+    { m: 'GET', p: '/entities/:id/facts', d: 'Facts for an entity.' },
+    { m: 'POST', p: '/entities/:id/facts', d: 'Add facts to an entity. Auto-tiered by access pattern.' },
+    { m: 'PATCH', p: '/facts/:id/access', d: 'Bump a memory — resets decay, increments access count.' },
+  ]},
+  { g: 'Conversations', eps: [
+    { m: 'GET', p: '/conversations', d: 'List all stored conversations.' },
+    { m: 'GET', p: '/conversations/:id', d: 'Full conversation with messages.' },
+    { m: 'POST', p: '/conversations', d: 'Start a new conversation.' },
+    { m: 'POST', p: '/conversations/:id/messages', d: 'Send messages (single or batch).' },
+    { m: 'GET', p: '/conversations/:id/messages', d: 'List messages (filter by ?processed=).' },
+    { m: 'GET', p: '/conversations/pending', d: 'Unprocessed messages overview.' },
+  ]},
+  { g: 'Search & Memory', eps: [
+    { m: 'POST', p: '/search', d: 'Full-text search (FTS5) over all facts. Bumps matched facts to hot.' },
+    { m: 'GET', p: '/memory/summary', d: 'Overview: entity and fact counts per tier.' },
+  ]},
+];
+
+function APIDocsPage() {
+  return (
+    <>
+      <div className="topbar"><span className="topbar-title">REST API</span></div>
+      <div className="page" style={{ maxWidth: 'none' }}>
+        <div className="docs-header">
+          <h1 className="docs-title">REST API</h1>
+          <p className="docs-sub">All endpoints require <code>Authorization: Bearer &lt;token&gt;</code> except <code>/health</code>.</p>
+        </div>
+        <div className="meta-grid">
+          {[{ l: 'Base URL', v: API_BASE }, { l: 'Auth', v: 'Authorization: Bearer sk-dbr_...' }, { l: 'Format', v: 'application/json' }].map(m => (
+            <div key={m.l} className="meta-card"><div className="meta-lbl">{m.l}</div><code className="meta-val">{m.v}</code></div>
+          ))}
+        </div>
+        {API_GROUPS.map(({ g, eps }) => (
+          <div key={g} className="doc-group">
+            <div className="doc-group-title">{g}</div>
+            {eps.map((ep, i) => (
+              <div key={i} className="endpoint">
+                <div className="endpoint-head"><Badge variant={ep.m}>{ep.m}</Badge><code className="endpoint-path">{ep.p}</code></div>
+                <p className="endpoint-desc">{ep.d}</p>
+              </div>
+            ))}
+          </div>
+        ))}
+        <div className="doc-group">
+          <div className="doc-group-title">Example &mdash; search</div>
+          <div className="code-block"><code>{`curl -X POST ${API_BASE}/search \\
+  -H "Authorization: Bearer sk-dbr_..." \\
+  -H "Content-Type: application/json" \\
+  -d '{"query": "typescript react stack"}'
+
+# Response
+{
+  "results": [{
+    "entity": "ivan-campillo",
+    "fact": "Stack habitual: React, Next.js, Fastify, SQLite",
+    "tier": "warm",
+    "score": 0.92,
+    "accessCount": 5
+  }]
+}`}</code></div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ── MCP DOCS PAGE ────────────────────────────────────── */
+const MCP_TOOLS = [
+  { name: 'recall', primary: true, desc: 'Primary tool. Searches memory and loads identity context. Called at session start.', params: [{ n: 'query', t: 'string', req: true, d: 'What to look for' }, { n: 'limit', t: 'number', req: false, d: 'Max results (default 10)' }] },
+  { name: 'remember', primary: false, desc: 'Save a fact to an entity. Auto-tiered, FTS-indexed.', params: [{ n: 'entityId', t: 'string', req: true, d: 'Entity ID' }, { n: 'fact', t: 'string', req: true, d: 'Fact to store' }, { n: 'category', t: 'string', req: false, d: 'context / milestone / status / preference / relationship' }] },
+  { name: 'get_entity', primary: false, desc: 'Read full entity with facts, tiers, and access history.', params: [{ n: 'id', t: 'string', req: true, d: 'Entity ID' }] },
+  { name: 'list_entities', primary: false, desc: 'List entities by type or PARA category.', params: [{ n: 'type', t: 'string', req: false, d: 'project / person / system / event' }, { n: 'category', t: 'string', req: false, d: 'PARA category' }] },
+  { name: 'create_entity', primary: false, desc: 'Create a new entity in the knowledge graph.', params: [{ n: 'id', t: 'string', req: true, d: 'Unique identifier' }, { n: 'name', t: 'string', req: true, d: 'Display name' }, { n: 'type', t: 'string', req: true, d: 'Entity type' }, { n: 'category', t: 'string', req: true, d: 'PARA category' }] },
+  { name: 'bump', primary: false, desc: 'Touch a fact to keep it hot and reset its decay timer.', params: [{ n: 'factId', t: 'string', req: true, d: 'Fact ID to bump' }] },
+  { name: 'log', primary: false, desc: 'Persist conversation messages.', params: [{ n: 'source', t: 'string', req: true, d: 'Client name' }, { n: 'messages', t: 'array', req: true, d: '[{role,content}] array' }, { n: 'conversationId', t: 'string', req: false, d: 'Existing conversation ID' }] },
+  { name: 'wake_up', primary: false, desc: 'Full identity load — all workspace docs in one call.', params: [] },
+  { name: 'overview', primary: false, desc: 'Brain stats: entities, facts, tier counts.', params: [] },
+];
+
+function MCPDocsPage() {
+  return (
+    <>
+      <div className="topbar"><span className="topbar-title">MCP Server</span></div>
+      <div className="page" style={{ maxWidth: 'none' }}>
+        <div className="docs-header">
+          <h1 className="docs-title">MCP Server</h1>
+          <p className="docs-sub">Connect any MCP-compatible client (Claude Code, Gemini, custom) to your brain.</p>
+        </div>
+        <div className="meta-grid">
+          {[{ l: 'Transport', v: 'Streamable HTTP' }, { l: 'Endpoint', v: `${API_BASE}/mcp` }, { l: 'SDK', v: '@modelcontextprotocol/sdk' }].map(m => (
+            <div key={m.l} className="meta-card"><div className="meta-lbl">{m.l}</div><code className="meta-val">{m.v}</code></div>
+          ))}
+        </div>
+        <div className="doc-group">
+          <div className="doc-group-title">Quick Connect</div>
+          <div className="code-block"><code>{`# Interactive wizard
+dbrain connect claude
+
+# Or with explicit params
+dbrain connect claude http://server:7878 --token=sk-dbr_...
+
+# Supported clients: claude, opencode (coming soon)
+
+# Automatically updates:
+#   ~/.claude.json              MCP registered
+#   ~/.claude/settings.json     Permissions
+#   ~/.claude/CLAUDE.md         Behavioral instructions`}</code></div>
+        </div>
+        <div className="doc-group">
+          <div className="doc-group-title">Available Tools</div>
+          {MCP_TOOLS.map(tool => (
+            <div key={tool.name} className="mcp-card">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <span className="mcp-name">{tool.name}</span>
+                {tool.primary && <Badge variant="primary">primary</Badge>}
+              </div>
+              <p className="mcp-desc">{tool.desc}</p>
+              {tool.params.length > 0 && tool.params.map(p => (
+                <div key={p.n} className="param-row">
+                  <span className="param-name">{p.n}</span>
+                  <Badge variant={p.req ? 'POST' : 'PATCH'}>{p.req ? 'required' : 'optional'}</Badge>
+                  <span className="param-type">{p.t}</span>
+                  <span className="param-desc">{p.d}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="doc-group">
+          <div className="doc-group-title">Memory Tiers</div>
+          <div className="tier-table">
+            {[{ t: 'hot', r: 'Accessed in last 7 days, or accessCount ≥ 10', c: '#f59e0b' }, { t: 'warm', r: '8–30 days since last access', c: '#eab308' }, { t: 'cold', r: '> 30 days — fading, candidate for archival', c: '#3b82f6' }].map(({ t, r, c }) => (
+              <div key={t} className="tier-row">
+                <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, color: c, minWidth: 46 }}>{t}</span>
+                <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{r}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ── APP ──────────────────────────────────────────────── */
+function App() {
+  const { route, segs, nav } = useRouter();
+  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || '');
+  const [palette, setPalette] = useState(() => localStorage.getItem(THEME_KEY) || 'cloud');
+  const [health, setHealth] = useState(null);
+  const [overview, setOverview] = useState(null);
+  const [conversations, setConversations] = useState(null);
+  const authed = Boolean(token);
+
+  const togglePalette = (p) => {
+    setPalette(p);
+    localStorage.setItem(THEME_KEY, p);
+    applyPalette(p);
+  };
+
+  useEffect(() => { applyPalette(palette); }, []);
+
+  useEffect(() => {
+    if (!authed) return;
+    api('/health').then(setHealth).catch(() => { localStorage.removeItem(TOKEN_KEY); setToken(''); });
+    api('/memory/summary').then(setOverview).catch(() => {});
+    api('/conversations?limit=200').then(setConversations).catch(() => {});
+  }, [authed]);
+
+  useEffect(() => {
+    if (!authed && route !== '/login') nav('#/login');
+    if (authed && (route === '/' || route === '/login')) nav('#/dashboard');
+  }, [authed]);
+
+  if (!authed) return <LoginPage onLogin={tk => { localStorage.setItem(TOKEN_KEY, tk); setToken(tk); nav('#/dashboard'); }} />;
+
+  if (!health) return <div className="loading">Connecting to brain...</div>;
+
+  const brain = {
+    name: health.name || 'dBrain',
+    version: health.version || '0.1.0',
+    entities: health.entities || 0,
+    facts: overview ? overview.reduce((s, e) => s + e.total, 0) : (health.facts || 0),
+    conversations: health.conversations || 0,
+  };
+
+  const renderPage = () => {
+    const [sec, ...rest] = segs;
+    if (sec === 'entity') return <EntityDetailPage id={rest[0]} nav={nav} />;
+    if (sec === 'conversation') return <ConversationDetailPage id={rest[0]} nav={nav} />;
+    if (sec === 'api') return <APIDocsPage />;
+    if (sec === 'mcp') return <MCPDocsPage />;
+    return <DashboardPage nav={nav} overview={overview} conversations={conversations} />;
+  };
+
+  return (
+    <div className="shell">
+      <Sidebar route={route} nav={nav} palette={palette} onTogglePalette={togglePalette} brain={brain} />
+      <div className="main">{renderPage()}</div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

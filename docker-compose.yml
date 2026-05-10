@@ -1,0 +1,12 @@
+services:
+  dbrain:
+    build: .
+    container_name: dbrain
+    restart: unless-stopped
+    ports:
+      - "${DBRAIN_PORT:-7878}:7878"
+      - "${DBRAIN_DASHBOARD_PORT:-7879}:7879"
+    volumes:
+      - ${DBRAIN_DATA_HOST:-./.data}:/data
+    env_file:
+      - .env

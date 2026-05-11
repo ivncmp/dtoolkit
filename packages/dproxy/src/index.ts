@@ -1,5 +1,5 @@
-import pc from 'picocolors';
 import { Command } from 'commander';
+import pc from 'picocolors';
 
 import { createAskCommand, runAsk } from './commands/ask.js';
 import { createChatCommand } from './commands/chat.js';

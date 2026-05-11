@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
-import pc from 'picocolors';
 import { Command } from 'commander';
+import pc from 'picocolors';
 import { parse } from 'yaml';
 
 import { readStdin } from '../claude.js';

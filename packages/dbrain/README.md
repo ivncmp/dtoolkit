@@ -1,9 +1,14 @@
-# @dtoolkit/dbrain
+<p align="center">
+  <img src="logo.png" alt="dbrain" />
+</p>
 
-[![npm](https://img.shields.io/npm/v/@dtoolkit/dbrain.svg)](https://www.npmjs.com/package/@dtoolkit/dbrain)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](../../LICENSE)
+<h1 align="center">@dtoolkit/dbrain</h1>
+<p align="center">Your distributed mind. Persistent knowledge across all your AIs.</p>
 
-Your distributed mind. Persistent knowledge across all your AIs.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@dtoolkit/dbrain"><img src="https://img.shields.io/npm/v/@dtoolkit/dbrain.svg" alt="npm"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
+</p>
 
 Install it once, connect every AI you use — Claude Code at home, Claude Code at work, Gemini on your phone. All share the same identity, the same memories, the same knowledge.
 

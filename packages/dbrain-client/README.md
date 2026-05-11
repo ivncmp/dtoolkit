@@ -1,9 +1,14 @@
-# @dtoolkit/dbrain-client
+<p align="center">
+  <img src="../../logo.png" alt="dtoolkit" />
+</p>
 
-[![npm](https://img.shields.io/npm/v/@dtoolkit/dbrain-client.svg)](https://www.npmjs.com/package/@dtoolkit/dbrain-client)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](../../LICENSE)
+<h1 align="center">@dtoolkit/dbrain-client</h1>
+<p align="center">Typed HTTP client for dbrain — your persistent AI memory server</p>
 
-Typed HTTP client for [dbrain](https://www.npmjs.com/package/@dtoolkit/dbrain) — your persistent AI memory server.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@dtoolkit/dbrain-client"><img src="https://img.shields.io/npm/v/@dtoolkit/dbrain-client.svg" alt="npm"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
+</p>
 
 ## Install
 

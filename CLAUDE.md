@@ -1,56 +1,123 @@
-# dtoolkit
+# CLAUDE.md
 
-Open-source harness engineering toolkit for AI coding agents.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Monorepo structure
+## What is this
+
+dtoolkit is an open-source harness engineering toolkit for AI coding agents. It's a pnpm monorepo with publishable packages under `@dtoolkit/*`.
+
+## Commands
+
+```bash
+pnpm install              # install all deps
+pnpm build                # turbo run build (all packages, dependency-ordered)
+pnpm test                 # turbo run test
+pnpm lint                 # eslint across the monorepo
+pnpm lint:fix             # eslint --fix
+pnpm format               # prettier --write
+pnpm format:check         # prettier --check
+```
+
+Per-package (run from package dir or use `--filter`):
+
+```bash
+pnpm --filter @dtoolkit/dbrain build
+pnpm --filter @dtoolkit/dbrain test
+pnpm --filter @dtoolkit/dproxy dev       # tsup --watch
+pnpm --filter @dtoolkit/dbrain dev       # tsx watch
+```
+
+## Architecture
 
 ```
-packages/       # publishable packages (@dtoolkit/*)
-tools/          # internal tooling (tsconfig, etc.)
-apps/           # applications (future)
+packages/
+├── core/            Shared types + Zod schemas (Entity, Fact, Tier, ContextBlock)
+│                    Build: tsc. No runtime deps beyond zod. Other packages depend on this.
+├── dbrain/          Persistent memory server — the brain
+│                    Fastify REST API + MCP HTTP on :7878, React dashboard on :7879
+│                    SQLite + FTS5 via better-sqlite3. CLI: dbrain init/start/connect/status
+│                    Build: tsc + copy dashboard assets + chmod bin
+├── dbrain-client/   Typed HTTP client for dbrain's REST API
+│                    Build: tsc. Single class DBrainClient with all endpoints.
+└── dproxy/          Universal CLI adapter for invoking models via local CLIs
+                     Commander-based CLI with context injection pipeline
+                     Build: tsup (single ESM bundle)
+tools/
+└── tsconfig/        Shared base tsconfig (ES2022, NodeNext, strict)
 ```
+
+**Dependency graph**: `core` ← `dbrain-client` ← (consumers). `core` ← `dbrain`. `core` ← `dproxy`. Turbo handles build ordering via `^build`.
+
+### dbrain internals
+
+- `src/cli/` — CLI commands (init wizard, connect client setup, start server, status)
+- `src/server/` — Fastify app with routes: entities, facts, conversations, search, workspace, health
+- `src/mcp/` — MCP server on same port as REST
+- `src/core/` — db.ts (SQLite schema + FTS5), models.ts (Zod), config.ts, memory.ts (tier logic)
+- `src/dashboard/` — Single-file React app served via Fastify static (CDN deps, no build step)
+- init = server-side (creates brain), connect = client-side (configures Claude Code files)
+
+### dproxy internals
+
+- `src/commands/` — ask (single-shot), chat (REPL), history, memory, template, init
+- `src/lib/` — context-builder.ts assembles prompt context from multiple sources in priority order: day chat log → workspace bootstrap → memory snippets → life/PARA context
+- Data stored in `~/.dproxy/` (config.json, history.jsonl, memory/, templates/)
 
 ## CLI conventions
 
-All CLI packages in this monorepo must use the same libraries and style:
+All CLI packages must use these libraries — no exceptions:
 
-| Concern | Library | Notes |
-| --- | --- | --- |
-| Colors | `picocolors` | Never chalk, kleur, or others |
-| Interactive prompts | `@clack/prompts` | Never raw readline or enquirer |
-| CLI framework | `commander` | For argument parsing and command routing |
-| YAML | `yaml` | When needed |
+| Concern | Library |
+| --- | --- |
+| Colors | `picocolors` |
+| Interactive prompts | `@clack/prompts` |
+| CLI framework | `commander` |
+| YAML parsing | `yaml` |
 
-Style rules:
-- Errors in red (`pc.red()`), success in green (`pc.green()`), secondary info in dim (`pc.dim()`), highlights in blue (`pc.blue()`)
-- Interactive wizards use @clack/prompts (intro, text, select, confirm, outro)
-- All commands must check initialization with a preAction guard where applicable
+Color conventions: errors in `pc.red()`, success in `pc.green()`, secondary info in `pc.dim()`, highlights in `pc.blue()`, headings in `pc.bold()`.
 
-## Build & dev
+## README conventions
 
-```bash
-pnpm install
-pnpm build        # turbo run build (all packages)
-pnpm test         # turbo run test
-pnpm lint         # eslint
-pnpm format       # prettier
+All package READMEs follow this header format:
+
+```html
+<p align="center">
+  <img src="../../logo.png" alt="dtoolkit" />
+</p>
+
+<h1 align="center">@dtoolkit/package-name</h1>
+<p align="center">One-line description of the package</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/@dtoolkit/package-name"><img src="https://img.shields.io/npm/v/@dtoolkit/package-name.svg" alt="npm"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
+</p>
 ```
 
-## Release flow
-
-Uses changesets for versioning and publishing:
-
-```bash
-pnpm changeset          # create a changeset
-git push                # triggers release workflow
-                        # → creates "chore: version packages" PR
-                        # → merge PR → publishes to npm + creates GitHub Releases
-```
+Use `../../logo.png` (monorepo logo) unless the package has its own `logo.png`.
 
 ## Code conventions
 
-- Strict TypeScript
-- Commits in English
+- ESM only (`"type": "module"`), all local imports use `.js` extensions
+- Strict TypeScript — all packages extend `@dtoolkit/tsconfig/base.json`
 - Tests with vitest
-- ESM only (`"type": "module"`)
-- All local imports use `.js` extensions
+- Commits in English, no Co-Authored-By lines
+- Node >= 22
+
+## Linting rules of note
+
+- `consistent-type-imports` enforced (use `import type` where possible)
+- `import-x/order` with alphabetized groups
+- `no-console` is warn globally, but disabled for CLI entry files (dbrain cli, dproxy, dashboard server)
+
+## Release flow
+
+Changesets + GitHub Actions. Packages publish to npm as public `@dtoolkit/*` scoped packages.
+
+```bash
+pnpm changeset              # create a changeset describing the change
+git push                    # CI runs lint+test+build; release workflow creates a "chore: version packages" PR
+                            # merging that PR → publishes to npm + creates GitHub Releases
+```
+
+Internal deps use `workspace:*` — changesets resolves these to real versions at publish time.

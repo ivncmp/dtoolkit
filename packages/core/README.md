@@ -1,9 +1,14 @@
-# @dtoolkit/core
+<p align="center">
+  <img src="../../logo.png" alt="dtoolkit" />
+</p>
 
-[![npm](https://img.shields.io/npm/v/@dtoolkit/core.svg)](https://www.npmjs.com/package/@dtoolkit/core)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](../../LICENSE)
+<h1 align="center">@dtoolkit/core</h1>
+<p align="center">Shared types and schemas for the dtoolkit ecosystem</p>
 
-Shared types and schemas for the [dtoolkit](https://github.com/ivncmp/dtoolkit) ecosystem.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@dtoolkit/core"><img src="https://img.shields.io/npm/v/@dtoolkit/core.svg" alt="npm"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
+</p>
 
 ## Install
 

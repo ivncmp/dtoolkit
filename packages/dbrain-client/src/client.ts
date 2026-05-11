@@ -28,7 +28,7 @@ export class DBrainClient {
   constructor(baseUrlOrOptions: string | DBrainClientOptions, token?: string) {
     if (typeof baseUrlOrOptions === "string") {
       this.baseUrl = baseUrlOrOptions.replace(/\/$/, "");
-      this.token = token!;
+      this.token = token ?? "";
     } else {
       this.baseUrl = baseUrlOrOptions.baseUrl.replace(/\/$/, "");
       this.token = baseUrlOrOptions.token;

@@ -2,8 +2,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 
-import pc from 'picocolors';
 import { Command } from 'commander';
+import pc from 'picocolors';
 
 import { execClaude } from '../claude.js';
 import { addChatLog } from '../lib/chat-log-store.js';

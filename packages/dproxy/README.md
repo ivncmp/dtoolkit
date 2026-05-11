@@ -1,9 +1,14 @@
-# @dtoolkit/dproxy
+<p align="center">
+  <img src="../../logo.png" alt="dtoolkit" />
+</p>
 
-[![npm](https://img.shields.io/npm/v/@dtoolkit/dproxy.svg)](https://www.npmjs.com/package/@dtoolkit/dproxy)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](../../LICENSE)
+<h1 align="center">@dtoolkit/dproxy</h1>
+<p align="center">Universal CLI adapter for invoking models via local CLIs</p>
 
-Universal CLI adapter for invoking models via local CLIs. Adds persistent memory, context injection, interactive chat, conversation history, and YAML-based prompt templates on top of Claude Code.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@dtoolkit/dproxy"><img src="https://img.shields.io/npm/v/@dtoolkit/dproxy.svg" alt="npm"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
+</p>
 
 ## Install
 

@@ -1,5 +1,5 @@
-import pc from 'picocolors';
 import { Command } from 'commander';
+import pc from 'picocolors';
 
 import { listHistory, getHistoryEntry, searchHistory, clearHistory } from '../lib/history-store.js';
 import type { HistoryEntry } from '../lib/types.js';

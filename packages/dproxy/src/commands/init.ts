@@ -1,7 +1,7 @@
 import { createInterface } from 'node:readline';
 
-import pc from 'picocolors';
 import { Command } from 'commander';
+import pc from 'picocolors';
 
 import { loadConfig, saveConfig, getDataDir } from '../lib/config.js';
 

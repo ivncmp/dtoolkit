@@ -38,11 +38,11 @@ Each product has **one job**, works standalone, and composes with the rest via a
 | Package | Version | Description |
 | --- | --- | --- |
 | [`@dtoolkit/dproxy`](packages/dproxy/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dproxy.svg)](https://www.npmjs.com/package/@dtoolkit/dproxy) | Universal CLI adapter for invoking models |
-| [`@dtoolkit/adapter-claude`](packages/adapter-claude/) | — | Adapter for Claude Code CLI |
-| [`@dtoolkit/adapter-codex`](packages/adapter-codex/) | — | Adapter for Codex CLI |
-| [`@dtoolkit/adapter-gemini`](packages/adapter-gemini/) | — | Adapter for Gemini CLI |
-| [`@dtoolkit/adapter-ollama`](packages/adapter-ollama/) | — | Adapter for Ollama CLI |
-| [`@dtoolkit/adapter-opencode`](packages/adapter-opencode/) | — | Adapter for OpenCode CLI |
+| [`@dtoolkit/adapter-claude`](packages/adapter-claude/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-claude.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-claude) | Adapter for Claude Code CLI |
+| [`@dtoolkit/adapter-codex`](packages/adapter-codex/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-codex.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-codex) | Adapter for Codex CLI |
+| [`@dtoolkit/adapter-gemini`](packages/adapter-gemini/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-gemini.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-gemini) | Adapter for Gemini CLI |
+| [`@dtoolkit/adapter-ollama`](packages/adapter-ollama/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-ollama.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-ollama) | Adapter for Ollama CLI |
+| [`@dtoolkit/adapter-opencode`](packages/adapter-opencode/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-opencode.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-opencode) | Adapter for OpenCode CLI |
 
 ### Team Coordination
 

@@ -1,0 +1,49 @@
+{
+  "name": "@dtoolkit/dcontext",
+  "version": "0.0.0",
+  "description": "Tool cache + background compactor for AI coding agents",
+  "type": "module",
+  "license": "MIT",
+  "author": "Iván Campillo <ivncmp@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "directory": "packages/dcontext"
+  },
+  "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dcontext",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "dcontext": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "ai",
+    "context",
+    "cache",
+    "compactor",
+    "dtoolkit"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "dependencies": {
+    "@dtoolkit/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

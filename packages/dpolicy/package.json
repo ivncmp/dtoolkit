@@ -1,0 +1,46 @@
+{
+  "name": "@dtoolkit/dpolicy",
+  "version": "0.0.0",
+  "description": "Policy-as-code for the team harness — centralized rules, versioned, repo-synced",
+  "type": "module",
+  "license": "MIT",
+  "author": "Iván Campillo <ivncmp@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "directory": "packages/dpolicy"
+  },
+  "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dpolicy",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "ai",
+    "policy",
+    "rules",
+    "security",
+    "dtoolkit"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "dependencies": {
+    "@dtoolkit/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

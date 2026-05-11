@@ -1,0 +1,51 @@
+{
+  "name": "@dtoolkit/dguard",
+  "version": "0.0.0",
+  "description": "Pre-commit for agents — validate LLM output before applying",
+  "type": "module",
+  "license": "MIT",
+  "author": "Iván Campillo <ivncmp@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "directory": "packages/dguard"
+  },
+  "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dguard",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "dguard": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "ai",
+    "guard",
+    "validation",
+    "security",
+    "pre-commit",
+    "dtoolkit"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "dependencies": {
+    "@dtoolkit/core": "workspace:*",
+    "@dtoolkit/dpolicy": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

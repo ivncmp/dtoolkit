@@ -1,0 +1,50 @@
+{
+  "name": "@dtoolkit/dforge",
+  "version": "0.0.0",
+  "description": "Internal marketplace for skills, hooks, and slash commands",
+  "type": "module",
+  "license": "MIT",
+  "author": "Iván Campillo <ivncmp@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "directory": "packages/dforge"
+  },
+  "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dforge",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "dforge": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "ai",
+    "marketplace",
+    "skills",
+    "hooks",
+    "commands",
+    "dtoolkit"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "dependencies": {
+    "@dtoolkit/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

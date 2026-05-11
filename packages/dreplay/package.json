@@ -1,0 +1,50 @@
+{
+  "name": "@dtoolkit/dreplay",
+  "version": "0.0.0",
+  "description": "Session browser for the team — tools, decisions, files touched (privacy-aware)",
+  "type": "module",
+  "license": "MIT",
+  "author": "Iván Campillo <ivncmp@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "directory": "packages/dreplay"
+  },
+  "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dreplay",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "dreplay": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "ai",
+    "replay",
+    "session",
+    "onboarding",
+    "dtoolkit"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "dependencies": {
+    "@dtoolkit/core": "workspace:*",
+    "@dtoolkit/dbrain-client": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

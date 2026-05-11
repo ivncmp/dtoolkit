@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../../logo.png" alt="dtoolkit" />
+  <img src="https://raw.githubusercontent.com/ivncmp/dtoolkit/main/logo.png" alt="dtoolkit" />
 </p>
 
 <h1 align="center">@dtoolkit/dbrain-client</h1>

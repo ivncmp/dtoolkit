@@ -1,0 +1,47 @@
+{
+  "name": "@dtoolkit/adapter-gemini",
+  "version": "0.0.0",
+  "description": "dproxy adapter for Gemini API and gemini-cli",
+  "type": "module",
+  "license": "MIT",
+  "author": "Iván Campillo <ivncmp@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "directory": "packages/adapter-gemini"
+  },
+  "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/adapter-gemini",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "ai",
+    "gemini",
+    "google",
+    "adapter",
+    "dtoolkit",
+    "dproxy"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "dependencies": {
+    "@dtoolkit/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

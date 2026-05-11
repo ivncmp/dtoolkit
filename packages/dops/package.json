@@ -1,0 +1,50 @@
+{
+  "name": "@dtoolkit/dops",
+  "version": "0.0.0",
+  "description": "Agent observability — tokens, cost, tools, success rate, errors per hook",
+  "type": "module",
+  "license": "MIT",
+  "author": "Iván Campillo <ivncmp@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "directory": "packages/dops"
+  },
+  "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dops",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "dops": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "ai",
+    "observability",
+    "metrics",
+    "tokens",
+    "cost",
+    "dtoolkit"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "dependencies": {
+    "@dtoolkit/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

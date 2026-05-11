@@ -1,0 +1,50 @@
+{
+  "name": "@dtoolkit/droute",
+  "version": "0.0.0",
+  "description": "Model router (Haiku/Sonnet/Opus) with cost tracking and per-project policies",
+  "type": "module",
+  "license": "MIT",
+  "author": "Iván Campillo <ivncmp@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "directory": "packages/droute"
+  },
+  "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/droute",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "droute": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "ai",
+    "router",
+    "model",
+    "cost",
+    "optimization",
+    "dtoolkit"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "dependencies": {
+    "@dtoolkit/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

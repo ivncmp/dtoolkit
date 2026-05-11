@@ -46,6 +46,58 @@ importers:
         specifier: ^8.30.1
         version: 8.59.2(eslint@9.39.4)(typescript@5.9.3)
 
+  packages/adapter-claude:
+    dependencies:
+      '@dtoolkit/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.18
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/adapter-gemini:
+    dependencies:
+      '@dtoolkit/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.18
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/adapter-ollama:
+    dependencies:
+      '@dtoolkit/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.18
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/adapter-openai:
+    dependencies:
+      '@dtoolkit/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.18
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
   packages/core:
     dependencies:
       zod:
@@ -109,6 +161,116 @@ importers:
         specifier: ^5.7.0
         version: 5.9.3
 
+  packages/dcontext:
+    dependencies:
+      '@dtoolkit/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.18
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/dcouncil:
+    dependencies:
+      '@dtoolkit/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.18
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/dforge:
+    dependencies:
+      '@dtoolkit/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.18
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/dguard:
+    dependencies:
+      '@dtoolkit/core':
+        specifier: workspace:*
+        version: link:../core
+      '@dtoolkit/dpolicy':
+        specifier: workspace:*
+        version: link:../dpolicy
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.18
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/dops:
+    dependencies:
+      '@dtoolkit/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.18
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/dpair:
+    dependencies:
+      '@dtoolkit/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.18
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/dpolicy:
+    dependencies:
+      '@dtoolkit/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.18
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/dprime:
+    dependencies:
+      '@dtoolkit/core':
+        specifier: workspace:*
+        version: link:../core
+      '@dtoolkit/dbrain-client':
+        specifier: workspace:*
+        version: link:../dbrain-client
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.18
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
   packages/dproxy:
     dependencies:
       '@dtoolkit/core':
@@ -130,6 +292,51 @@ importers:
       tsup:
         specifier: ^8.0.0
         version: 8.5.1(postcss@8.5.14)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.4)
+
+  packages/dreplay:
+    dependencies:
+      '@dtoolkit/core':
+        specifier: workspace:*
+        version: link:../core
+      '@dtoolkit/dbrain-client':
+        specifier: workspace:*
+        version: link:../dbrain-client
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.18
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/droute:
+    dependencies:
+      '@dtoolkit/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.18
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/dstream:
+    dependencies:
+      '@dtoolkit/core':
+        specifier: workspace:*
+        version: link:../core
+      '@dtoolkit/dbrain-client':
+        specifier: workspace:*
+        version: link:../dbrain-client
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.18
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
 
   tools/tsconfig: {}
 
@@ -3160,7 +3367,7 @@ snapshots:
 
   '@types/better-sqlite3@7.6.13':
     dependencies:
-      '@types/node': 25.6.2
+      '@types/node': 22.19.18
 
   '@types/chai@5.2.3':
     dependencies:

@@ -38,8 +38,8 @@
     "typescript-eslint": "^8.30.1"
   },
   "dependencies": {
-    "@dtoolkit/dbrain": "link:packages/dbrain",
-    "@dtoolkit/dproxy": "link:packages/dproxy"
+    "@dtoolkit/dbrain": "workspace:*",
+    "@dtoolkit/dproxy": "workspace:*"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

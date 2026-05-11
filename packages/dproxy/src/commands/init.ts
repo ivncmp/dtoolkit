@@ -1,6 +1,6 @@
 import { createInterface } from 'node:readline';
 
-import chalk from 'chalk';
+import pc from 'picocolors';
 import { Command } from 'commander';
 
 import { loadConfig, saveConfig, getDataDir } from '../lib/config.js';
@@ -10,7 +10,7 @@ import { loadConfig, saveConfig, getDataDir } from '../lib/config.js';
  * Returns the trimmed answer, or the default if the user presses Enter.
  */
 function ask(rl: ReturnType<typeof createInterface>, question: string, def = ''): Promise<string> {
-  const suffix = def ? chalk.dim(` (${def})`) : '';
+  const suffix = def ? pc.dim(` (${def})`) : '';
   return new Promise((resolve) => {
     rl.question(`${question}${suffix}: `, (answer) => {
       resolve(answer.trim() || def);
@@ -28,7 +28,7 @@ function askBool(
 ): Promise<boolean> {
   const hint = def ? 'Y/n' : 'y/N';
   return new Promise((resolve) => {
-    rl.question(`${question} ${chalk.dim(`[${hint}]`)}: `, (answer) => {
+    rl.question(`${question} ${pc.dim(`[${hint}]`)}: `, (answer) => {
       const a = answer.trim().toLowerCase();
       if (!a) return resolve(def);
       resolve(a === 'y' || a === 'yes');
@@ -44,7 +44,7 @@ export function createInitCommand(): Command {
       try {
         await runInit();
       } catch (err) {
-        console.error(chalk.red((err as Error).message));
+        console.error(pc.red((err as Error).message));
         process.exit(1);
       }
     });
@@ -55,8 +55,8 @@ async function runInit(): Promise<void> {
   const config = await loadConfig();
 
   console.log();
-  console.log(chalk.bold.blue('dproxy — Setup'));
-  console.log(chalk.dim('Configure your environment. Press Enter to accept defaults.\n'));
+  console.log(pc.bold(pc.blue('dproxy — Setup')));
+  console.log(pc.dim('Configure your environment. Press Enter to accept defaults.\n'));
 
   const rl = createInterface({
     input: process.stdin,
@@ -83,8 +83,8 @@ async function runInit(): Promise<void> {
     );
 
     console.log();
-    console.log(chalk.bold('Optional integrations'));
-    console.log(chalk.dim('These inject extra context into every prompt.\n'));
+    console.log(pc.bold('Optional integrations'));
+    console.log(pc.dim('These inject extra context into every prompt.\n'));
 
     // Workspace
     const enableWorkspace = await askBool(
@@ -121,8 +121,8 @@ async function runInit(): Promise<void> {
     await saveConfig(config);
 
     console.log();
-    console.log(chalk.green('Configuration saved to ') + chalk.dim(getDataDir() + '/config.json'));
-    console.log(chalk.green("You're ready to go! Try: ") + chalk.bold('dproxy "hello"'));
+    console.log(pc.green('Configuration saved to ') + pc.dim(getDataDir() + '/config.json'));
+    console.log(pc.green("You're ready to go! Try: ") + pc.bold('dproxy "hello"'));
     console.log();
   } finally {
     rl.close();
@@ -139,9 +139,9 @@ export async function requireInit(): Promise<void> {
   if (config.initialized) return;
 
   console.error(
-    chalk.yellow('dproxy is not configured yet. Run ') +
-      chalk.bold('dproxy init') +
-      chalk.yellow(' to set up your environment.'),
+    pc.yellow('dproxy is not configured yet. Run ') +
+      pc.bold('dproxy init') +
+      pc.yellow(' to set up your environment.'),
   );
   process.exit(1);
 }

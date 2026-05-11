@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 
-import chalk from 'chalk';
+import pc from 'picocolors';
 import { Command } from 'commander';
 
 import { execClaude } from '../claude.js';
@@ -46,7 +46,7 @@ export function createChatCommand(): Command {
       try {
         await runChat(opts);
       } catch (err) {
-        console.error(chalk.red((err as Error).message));
+        console.error(pc.red((err as Error).message));
         process.exit(1);
       }
     });
@@ -61,14 +61,14 @@ async function runChat(opts: Record<string, unknown>): Promise<void> {
   // Resume or continue
   if (opts.resume) {
     sessionId = opts.resume as string;
-    console.log(chalk.dim(`Resuming session: ${sessionId}`));
+    console.log(pc.dim(`Resuming session: ${sessionId}`));
   } else if (opts.continue) {
     const prev = await loadSession();
     if (prev) {
       sessionId = prev.sessionId;
-      console.log(chalk.dim(`Continuing session: ${sessionId}`));
+      console.log(pc.dim(`Continuing session: ${sessionId}`));
     } else {
-      console.log(chalk.dim('No previous session found. Starting new chat.'));
+      console.log(pc.dim('No previous session found. Starting new chat.'));
     }
   }
 
@@ -84,13 +84,13 @@ async function runChat(opts: Record<string, unknown>): Promise<void> {
       config,
     )) || undefined;
 
-  console.log(chalk.bold.blue('Claude Chat'));
-  console.log(chalk.dim('Type "exit" or Ctrl+C to quit.\n'));
+  console.log(pc.bold(pc.blue('Claude Chat')));
+  console.log(pc.dim('Type "exit" or Ctrl+C to quit.\n'));
 
   const rl = createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: chalk.green('you > '),
+    prompt: pc.green('you > '),
   });
 
   rl.prompt();
@@ -103,7 +103,7 @@ async function runChat(opts: Record<string, unknown>): Promise<void> {
     }
 
     if (input === 'exit' || input === 'quit') {
-      console.log(chalk.dim('Bye!'));
+      console.log(pc.dim('Bye!'));
       rl.close();
       return;
     }
@@ -112,7 +112,7 @@ async function runChat(opts: Record<string, unknown>): Promise<void> {
     rl.pause();
 
     try {
-      process.stdout.write(chalk.dim('thinking...\r'));
+      process.stdout.write(pc.dim('thinking...\r'));
 
       const result = await execClaude({
         prompt: input,
@@ -124,7 +124,7 @@ async function runChat(opts: Record<string, unknown>): Promise<void> {
 
       // Clear "thinking..." and print response
       process.stdout.write('\r' + ' '.repeat(20) + '\r');
-      console.log(chalk.cyan('claude > ') + result.result);
+      console.log(pc.cyan('claude > ') + result.result);
       console.log();
 
       // Capture session ID from first response
@@ -149,7 +149,7 @@ async function runChat(opts: Record<string, unknown>): Promise<void> {
       // Save to daily chat log
       void addChatLog(input, result.result);
     } catch (err) {
-      console.error(chalk.red((err as Error).message));
+      console.error(pc.red((err as Error).message));
     }
 
     // Unlock input

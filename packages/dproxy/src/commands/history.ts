@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import pc from 'picocolors';
 import { Command } from 'commander';
 
 import { listHistory, getHistoryEntry, searchHistory, clearHistory } from '../lib/history-store.js';
@@ -6,14 +6,14 @@ import type { HistoryEntry } from '../lib/types.js';
 
 function printEntryList(entries: HistoryEntry[], showCost = true): void {
   if (entries.length === 0) {
-    console.log(chalk.dim('No history entries.'));
+    console.log(pc.dim('No history entries.'));
     return;
   }
   for (const e of entries) {
     const date = new Date(e.timestamp).toLocaleString();
     const prompt = e.prompt.length > 60 ? e.prompt.slice(0, 60) + '\u2026' : e.prompt;
-    const cost = showCost && e.costUsd ? chalk.dim(`$${e.costUsd.toFixed(4)}`) : '';
-    console.log(`${chalk.dim(e.id.slice(0, 8))}  ${chalk.blue(date)}  ${prompt}  ${cost}`);
+    const cost = showCost && e.costUsd ? pc.dim(`$${e.costUsd.toFixed(4)}`) : '';
+    console.log(`${pc.dim(e.id.slice(0, 8))}  ${pc.blue(date)}  ${prompt}  ${cost}`);
   }
 }
 
@@ -36,17 +36,17 @@ export function createHistoryCommand(): Command {
     .action(async (id: string) => {
       const entry = await getHistoryEntry(id);
       if (!entry) {
-        console.error(chalk.red(`Entry not found: ${id}`));
+        console.error(pc.red(`Entry not found: ${id}`));
         process.exit(1);
       }
-      console.log(chalk.bold('Prompt:'));
+      console.log(pc.bold('Prompt:'));
       console.log(entry.prompt);
       console.log();
-      console.log(chalk.bold('Response:'));
+      console.log(pc.bold('Response:'));
       console.log(entry.result);
       console.log();
       console.log(
-        chalk.dim(
+        pc.dim(
           `Session: ${entry.sessionId || 'n/a'} | Cost: $${entry.costUsd.toFixed(4)} | Duration: ${entry.durationMs}ms | ${entry.timestamp}`,
         ),
       );
@@ -66,7 +66,7 @@ export function createHistoryCommand(): Command {
     .option('--before <date>', 'Clear entries before this date')
     .action(async (opts) => {
       const removed = await clearHistory(opts.before);
-      console.log(chalk.green(`Cleared ${removed} entries.`));
+      console.log(pc.green(`Cleared ${removed} entries.`));
     });
 
   // Default: list

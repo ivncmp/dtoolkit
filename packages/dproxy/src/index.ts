@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import pc from 'picocolors';
 import { Command } from 'commander';
 
 import { createAskCommand, runAsk } from './commands/ask.js';
@@ -41,7 +41,7 @@ configCmd
   .description('Set a config value (e.g., memory.autoInject true)')
   .action(async (key: string, value: string) => {
     await setConfigValue(key, value);
-    console.log(chalk.green(`${key} = ${value}`));
+    console.log(pc.green(`${key} = ${value}`));
   });
 
 configCmd
@@ -50,7 +50,7 @@ configCmd
   .action(async (key: string) => {
     const value = await getConfigValue(key);
     if (value === undefined) {
-      console.error(chalk.red(`Config key "${key}" not found.`));
+      console.error(pc.red(`Config key "${key}" not found.`));
       process.exit(1);
     }
     console.log(JSON.stringify(value, null, 2));
@@ -88,7 +88,7 @@ program
     try {
       await runAsk(promptParts, opts);
     } catch (err) {
-      console.error(chalk.red((err as Error).message));
+      console.error(pc.red((err as Error).message));
       process.exit(1);
     }
   });

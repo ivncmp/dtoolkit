@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 
-import chalk from 'chalk';
+import pc from 'picocolors';
 import { Command } from 'commander';
 import { parse } from 'yaml';
 
@@ -26,12 +26,12 @@ export function createTemplateCommand(): Command {
     .action(async () => {
       const templates = await listTemplates();
       if (templates.length === 0) {
-        console.log(chalk.dim("No templates. Use 'dproxy template add <name>' to create one."));
+        console.log(pc.dim("No templates. Use 'dproxy template add <name>' to create one."));
         return;
       }
       for (const t of templates) {
-        const desc = t.description ? chalk.dim(` — ${t.description}`) : '';
-        console.log(`${chalk.blue(t.name)}${desc}`);
+        const desc = t.description ? pc.dim(` — ${t.description}`) : '';
+        console.log(`${pc.blue(t.name)}${desc}`);
       }
     });
 
@@ -41,21 +41,21 @@ export function createTemplateCommand(): Command {
     .action(async (name: string) => {
       const t = await getTemplate(name);
       if (!t) {
-        console.error(chalk.red(`Template "${name}" not found.`));
+        console.error(pc.red(`Template "${name}" not found.`));
         process.exit(1);
       }
-      console.log(chalk.bold(t.name));
-      if (t.description) console.log(chalk.dim(t.description));
+      console.log(pc.bold(t.name));
+      if (t.description) console.log(pc.dim(t.description));
       console.log();
-      console.log(chalk.bold('Prompt:'));
+      console.log(pc.bold('Prompt:'));
       console.log(t.prompt);
       if (t.variables?.length) {
         console.log();
-        console.log(chalk.bold('Variables:'));
+        console.log(pc.bold('Variables:'));
         for (const v of t.variables) {
-          const req = v.required ? chalk.red('*') : '';
-          const def = v.default ? chalk.dim(` (default: ${v.default})`) : '';
-          const src = v.source ? chalk.dim(` [${v.source}]`) : '';
+          const req = v.required ? pc.red('*') : '';
+          const def = v.default ? pc.dim(` (default: ${v.default})`) : '';
+          const src = v.source ? pc.dim(` [${v.source}]`) : '';
           console.log(`  {{${v.name}}}${req}${def}${src}`);
         }
       }
@@ -81,12 +81,12 @@ export function createTemplateCommand(): Command {
           prompt: opts.prompt,
         };
       } else {
-        console.error(chalk.red('Provide --file or --prompt'));
+        console.error(pc.red('Provide --file or --prompt'));
         process.exit(1);
       }
 
       await saveTemplate(template);
-      console.log(chalk.green(`Template "${name}" saved.`));
+      console.log(pc.green(`Template "${name}" saved.`));
     });
 
   cmd
@@ -98,7 +98,7 @@ export function createTemplateCommand(): Command {
     .action(async (name: string, opts) => {
       const t = await getTemplate(name);
       if (!t) {
-        console.error(chalk.red(`Template "${name}" not found.`));
+        console.error(pc.red(`Template "${name}" not found.`));
         process.exit(1);
       }
 
@@ -128,7 +128,7 @@ export function createTemplateCommand(): Command {
             vars[v.name] = v.default;
           }
           if (v.required && !(v.name in vars)) {
-            console.error(chalk.red(`Missing required variable: {{${v.name}}}`));
+            console.error(pc.red(`Missing required variable: {{${v.name}}}`));
             process.exit(1);
           }
         }
@@ -153,9 +153,9 @@ export function createTemplateCommand(): Command {
     .action(async (name: string) => {
       const deleted = await deleteTemplate(name);
       if (deleted) {
-        console.log(chalk.green(`Template "${name}" deleted.`));
+        console.log(pc.green(`Template "${name}" deleted.`));
       } else {
-        console.error(chalk.red(`Template "${name}" not found.`));
+        console.error(pc.red(`Template "${name}" not found.`));
       }
     });
 

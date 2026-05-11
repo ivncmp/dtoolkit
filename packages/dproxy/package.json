@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@dtoolkit/core": "workspace:*",
-    "chalk": "^5.4.0",
+    "picocolors": "^1.1.1",
     "commander": "^13.0.0",
     "yaml": "^2.7.0"
   },

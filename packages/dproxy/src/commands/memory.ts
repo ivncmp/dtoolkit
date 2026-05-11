@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import pc from 'picocolors';
 import { Command } from 'commander';
 
 import {
@@ -11,11 +11,11 @@ import {
 
 function printKeyList(keys: string[]): void {
   if (keys.length === 0) {
-    console.log(chalk.dim('No memory entries.'));
+    console.log(pc.dim('No memory entries.'));
     return;
   }
   for (const key of keys) {
-    console.log(chalk.blue(key));
+    console.log(pc.blue(key));
   }
 }
 
@@ -29,7 +29,7 @@ export function createMemoryCommand(): Command {
     .action(async (key: string, valueParts: string[]) => {
       const value = valueParts.join(' ');
       await setMemory(key, value);
-      console.log(chalk.green(`Memory "${key}" saved.`));
+      console.log(pc.green(`Memory "${key}" saved.`));
     });
 
   cmd
@@ -38,7 +38,7 @@ export function createMemoryCommand(): Command {
     .action(async (key: string) => {
       const value = await getMemory(key);
       if (value === null) {
-        console.error(chalk.red(`Memory "${key}" not found.`));
+        console.error(pc.red(`Memory "${key}" not found.`));
         process.exit(1);
       }
       console.log(value);
@@ -58,12 +58,12 @@ export function createMemoryCommand(): Command {
     .action(async (query: string) => {
       const results = await searchMemory(query);
       if (results.length === 0) {
-        console.log(chalk.dim('No matches.'));
+        console.log(pc.dim('No matches.'));
         return;
       }
       for (const { key, content } of results) {
         const preview = content.length > 80 ? content.slice(0, 80) + '\u2026' : content;
-        console.log(`${chalk.blue(key)}: ${preview}`);
+        console.log(`${pc.blue(key)}: ${preview}`);
       }
     });
 
@@ -73,9 +73,9 @@ export function createMemoryCommand(): Command {
     .action(async (key: string) => {
       const deleted = await deleteMemory(key);
       if (deleted) {
-        console.log(chalk.green(`Memory "${key}" deleted.`));
+        console.log(pc.green(`Memory "${key}" deleted.`));
       } else {
-        console.error(chalk.red(`Memory "${key}" not found.`));
+        console.error(pc.red(`Memory "${key}" not found.`));
       }
     });
 

@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import pc from 'picocolors';
 import { Command } from 'commander';
 
 import { execClaude, readStdin } from '../claude.js';
@@ -36,7 +36,7 @@ export function createAskCommand(): Command {
       try {
         await runAsk(promptParts, opts);
       } catch (err) {
-        console.error(chalk.red((err as Error).message));
+        console.error(pc.red((err as Error).message));
         process.exit(1);
       }
     });
@@ -52,7 +52,7 @@ export async function runAsk(promptParts: string[], opts: Record<string, unknown
   const promptText = promptParts.join(' ');
 
   if (!promptText && !stdinContent) {
-    console.error(chalk.red('No prompt provided. Usage: dproxy ask "your question"'));
+    console.error(pc.red('No prompt provided. Usage: dproxy ask "your question"'));
     process.exit(1);
   }
 

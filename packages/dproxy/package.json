@@ -11,6 +11,9 @@
     "directory": "packages/dproxy"
   },
   "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dproxy",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "dproxy": "dist/index.js"
   },

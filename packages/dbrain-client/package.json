@@ -11,6 +11,9 @@
     "directory": "packages/dbrain-client"
   },
   "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dbrain-client",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",

@@ -11,6 +11,9 @@
     "directory": "packages/dbrain"
   },
   "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dbrain",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "dbrain": "./dist/cli/index.js"
   },

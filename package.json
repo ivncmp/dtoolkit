@@ -40,5 +40,12 @@
   "dependencies": {
     "@dtoolkit/dbrain": "link:packages/dbrain",
     "@dtoolkit/dproxy": "link:packages/dproxy"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "unrs-resolver"
+    ]
   }
 }

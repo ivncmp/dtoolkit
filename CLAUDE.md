@@ -31,22 +31,28 @@ pnpm --filter @dtoolkit/dbrain dev       # tsx watch
 
 ```
 packages/
-├── core/            Shared types + Zod schemas (Entity, Fact, Tier, ContextBlock)
-│                    Build: tsc. No runtime deps beyond zod. Other packages depend on this.
-├── dbrain/          Persistent memory server — the brain
-│                    Fastify REST API + MCP HTTP on :7878, React dashboard on :7879
-│                    SQLite + FTS5 via better-sqlite3. CLI: dbrain init/start/connect/status
-│                    Build: tsc + copy dashboard assets + chmod bin
-├── dbrain-client/   Typed HTTP client for dbrain's REST API
-│                    Build: tsc. Single class DBrainClient with all endpoints.
-└── dproxy/          Universal CLI adapter for invoking models via local CLIs
-                     Commander-based CLI with context injection pipeline
-                     Build: tsup (single ESM bundle)
+├── core/              Shared types + Zod schemas (Entity, Fact, Tier, ContextBlock, Adapter)
+│                      Build: tsc. No runtime deps beyond zod. Other packages depend on this.
+├── adapter-claude/    Shell-out adapter for Claude Code CLI
+├── adapter-codex/     Shell-out adapter for Codex CLI
+├── adapter-gemini/    Shell-out adapter for Gemini CLI
+├── adapter-ollama/    Shell-out adapter for Ollama CLI
+│                      All adapters: Build: tsc. Depend on core only.
+├── dbrain/            Persistent memory server — the brain
+│                      Fastify REST API + MCP HTTP on :7878, React dashboard on :7879
+│                      SQLite + FTS5 via better-sqlite3. CLI: dbrain init/start/connect/status
+│                      Build: tsc + copy dashboard assets + chmod bin
+├── dbrain-client/     Typed HTTP client for dbrain's REST API
+│                      Build: tsc. Single class DBrainClient with all endpoints.
+└── dproxy/            Universal CLI adapter for invoking models via local CLIs
+                       Commander-based CLI with context injection pipeline
+                       Uses adapter packages for multi-provider support (--provider flag)
+                       Build: tsup (single ESM bundle)
 tools/
-└── tsconfig/        Shared base tsconfig (ES2022, NodeNext, strict)
+└── tsconfig/          Shared base tsconfig (ES2022, NodeNext, strict)
 ```
 
-**Dependency graph**: `core` ← `dbrain-client` ← (consumers). `core` ← `dbrain`. `core` ← `dproxy`. Turbo handles build ordering via `^build`.
+**Dependency graph**: `core` ← `adapter-*` ← `dproxy`. `core` ← `dbrain-client` ← (consumers). `core` ← `dbrain`. Turbo handles build ordering via `^build`.
 
 ### dbrain internals
 
@@ -60,8 +66,11 @@ tools/
 ### dproxy internals
 
 - `src/commands/` — ask (single-shot), chat (REPL), history, memory, template, init
-- `src/lib/` — context-builder.ts assembles prompt context from multiple sources in priority order: day chat log → workspace bootstrap → memory snippets → life/PARA context
+- `src/lib/adapter.ts` — `resolveAdapter()` maps provider name to adapter instance
+- `src/lib/context-builder.ts` — assembles prompt context from multiple sources in priority order: day chat log → workspace bootstrap → memory snippets → life/PARA context
+- `src/lib/stdin.ts` — `readStdin()` for piped input
 - Data stored in `~/.dproxy/` (config.json, history.jsonl, memory/, templates/)
+- Supports 4 providers via `--provider` flag: claude (default), codex, gemini, ollama
 
 ## CLI conventions
 

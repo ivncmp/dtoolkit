@@ -1,41 +1,15 @@
 export type {
+  Adapter,
+  AdapterRequest,
+  AdapterResult,
+  AdapterUsage,
   HistoryEntry,
   SessionInfo,
   TemplateDefinition,
   TemplateVariable,
 } from "@dtoolkit/core";
 
-export interface ClaudeOptions {
-  prompt: string;
-  stdinContent?: string;
-  maxTurns?: number;
-  maxBudgetUsd?: number;
-  model?: string;
-  systemPrompt?: string;
-  appendSystemPrompt?: string;
-  resumeSessionId?: string;
-  continueSession?: boolean;
-  allowedTools?: string[];
-  additionalArgs?: string[];
-}
-
-export interface ClaudeUsage {
-  input: number;
-  output: number;
-  cacheWrite: number;
-  cacheRead: number;
-  total: number;
-}
-
-export interface ClaudeResult {
-  result: string;
-  sessionId: string;
-  costUsd: number;
-  durationMs: number;
-  isError: boolean;
-  usage?: ClaudeUsage;
-  raw?: unknown;
-}
+export type ProviderName = "claude" | "codex" | "gemini" | "ollama" | "opencode";
 
 export interface AppConfig {
   initialized: boolean;
@@ -67,9 +41,13 @@ export interface AppConfig {
     assistantPrefix: string;
     sectionHeader: string;
   };
-  claude: {
-    bin: string;
-    skipPermissions: boolean;
+  provider: {
+    default: ProviderName;
+    claude?: { bin?: string; skipPermissions?: boolean };
+    codex?: { bin?: string; approval?: "suggest" | "auto-edit" | "full-auto" };
+    gemini?: { bin?: string; yolo?: boolean };
+    ollama?: { bin?: string; defaultModel?: string };
+    opencode?: { bin?: string; skipPermissions?: boolean };
   };
   defaults: {
     model?: string;

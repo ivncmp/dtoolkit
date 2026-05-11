@@ -10,11 +10,12 @@ import { createTemplateCommand } from './commands/template.js';
 import { getConfigValue, loadConfig, setConfigValue } from './lib/config.js';
 
 const program = new Command();
+program.enablePositionalOptions();
 
 program
   .name('dproxy')
   .description('Universal adapter for invoking models via local CLIs')
-  .version('0.1.0');
+  .version('1.0.0');
 
 // Init does not require initialization
 program.addCommand(createInitCommand());
@@ -66,6 +67,7 @@ program.addCommand(guarded(configCmd));
 // Default behavior: if args look like a prompt (not a known command), run ask
 program
   .argument('[prompt...]', "Send a quick prompt (shorthand for 'dproxy ask')")
+  .option('-p, --provider <provider>', 'Provider to use (claude, codex, gemini, ollama, opencode)')
   .option('-m, --model <model>', 'Model to use')
   .option('--max-turns <n>', 'Max agent turns', parseInt)
   .option('--max-budget-usd <n>', 'Max budget in USD', parseFloat)

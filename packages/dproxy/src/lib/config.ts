@@ -41,9 +41,13 @@ const DEFAULT_CONFIG: AppConfig = {
     assistantPrefix: 'Assistant:',
     sectionHeader: "## Today's conversation",
   },
-  claude: {
-    bin: 'claude',
-    skipPermissions: false,
+  provider: {
+    default: 'claude',
+    claude: { bin: 'claude', skipPermissions: false },
+    codex: { bin: 'codex', approval: 'suggest' },
+    gemini: { bin: 'gemini', yolo: false },
+    ollama: { bin: 'ollama', defaultModel: 'llama3' },
+    opencode: { bin: 'opencode', skipPermissions: false },
   },
   defaults: {},
   debug: false,
@@ -92,6 +96,11 @@ export async function loadConfig(): Promise<AppConfig> {
   try {
     const raw = await readFile(join(DATA_DIR, 'config.json'), 'utf-8');
     const parsed = JSON.parse(raw);
+    // Migrate legacy `claude` section → `provider.claude`
+    if (parsed.claude && !parsed.provider) {
+      parsed.provider = { default: 'claude', claude: parsed.claude };
+      delete parsed.claude;
+    }
     return deepMerge(
       DEFAULT_CONFIG as unknown as Record<string, unknown>,
       parsed,

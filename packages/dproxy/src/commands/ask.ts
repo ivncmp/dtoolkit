@@ -1,19 +1,21 @@
 import { Command } from 'commander';
 import pc from 'picocolors';
 
-import { execClaude, readStdin } from '../claude.js';
+import { resolveAdapter } from '../lib/adapter.js';
 import { addChatLog } from '../lib/chat-log-store.js';
 import { loadConfig } from '../lib/config.js';
 import { buildSystemPromptContext } from '../lib/context-builder.js';
 import { addHistoryEntry } from '../lib/history-store.js';
 import { getSessionTokens, updateSessionTokens } from '../lib/session-state.js';
-import type { ClaudeOptions } from '../lib/types.js';
+import { readStdin } from '../lib/stdin.js';
+import type { AdapterRequest, ProviderName } from '../lib/types.js';
 
 /** Create the `dproxy ask` Commander command with all CLI options. */
 export function createAskCommand(): Command {
   return new Command('ask')
-    .description('Send a prompt to Claude')
+    .description('Send a prompt to an AI model')
     .argument('[prompt...]', 'The prompt to send')
+    .option('-p, --provider <provider>', 'Provider to use (claude, codex, gemini, ollama, opencode)')
     .option('-m, --model <model>', 'Model to use')
     .option('--max-turns <n>', 'Max agent turns', parseInt)
     .option('--max-budget-usd <n>', 'Max budget in USD', parseFloat)
@@ -43,7 +45,7 @@ export function createAskCommand(): Command {
 }
 
 /**
- * Execute a single-shot prompt: assemble context, call Claude, display output,
+ * Execute a single-shot prompt: assemble context, call the adapter, display output,
  * and persist to history and chat log.
  */
 export async function runAsk(promptParts: string[], opts: Record<string, unknown>): Promise<void> {
@@ -83,48 +85,48 @@ export async function runAsk(promptParts: string[], opts: Record<string, unknown
     )) || undefined;
 
   // Check session token limit before resuming
-  let resumeSessionId = opts.resume as string | undefined;
+  let sessionId = opts.resume as string | undefined;
   const maxSessionTokens = opts.maxSessionTokens as number | undefined;
-  if (resumeSessionId && maxSessionTokens) {
-    const currentTokens = await getSessionTokens(resumeSessionId);
+  if (sessionId && maxSessionTokens) {
+    const currentTokens = await getSessionTokens(sessionId);
     if (currentTokens > maxSessionTokens) {
-      resumeSessionId = undefined;
+      sessionId = undefined;
     }
   }
 
-  const claudeOpts: ClaudeOptions = {
+  // Resolve the adapter
+  const providerName = (opts.provider as ProviderName | undefined) ?? config.provider.default;
+  const adapter = resolveAdapter(providerName, config);
+
+  const request: AdapterRequest = {
     prompt: fullPrompt,
     model: (opts.model as string) ?? config.defaults.model,
     maxTurns: (opts.maxTurns as number) ?? config.defaults.maxTurns,
-    maxBudgetUsd: opts.maxBudgetUsd as number | undefined,
     systemPrompt: opts.systemPrompt as string | undefined,
-    appendSystemPrompt,
-    resumeSessionId,
+    sessionId,
     continueSession: opts.continue as boolean | undefined,
+    options: {
+      appendSystemPrompt,
+      maxBudgetUsd: opts.maxBudgetUsd as number | undefined,
+    },
   };
 
-  const result = await execClaude(claudeOpts);
-  const resultText = result.result;
+  const result = await adapter.execute(request);
 
   // Persist token count for this session
   if (result.sessionId && result.usage) {
-    await updateSessionTokens(result.sessionId, result.usage.total);
+    await updateSessionTokens(result.sessionId, result.usage.totalTokens);
   }
 
   // Append token footer if requested
   if (opts.tokenFooter && result.usage) {
     const u = result.usage;
     const parts: string[] = [];
-    if (u.cacheWrite > 0) parts.push(`cW:${u.cacheWrite.toLocaleString()}`);
-    if (u.cacheRead > 0) parts.push(`cR:${u.cacheRead.toLocaleString()}`);
-    parts.push(`in:${u.input.toLocaleString()}`);
-    parts.push(`out:${u.output.toLocaleString()}`);
-    parts.push(`~${u.total.toLocaleString()}`);
+    parts.push(`in:${u.inputTokens.toLocaleString()}`);
+    parts.push(`out:${u.outputTokens.toLocaleString()}`);
+    parts.push(`~${u.totalTokens.toLocaleString()}`);
     const footer = `\n\n—————————————\n\`${parts.join(' · ')}\``;
-    result.result += footer;
-    if (result.raw && typeof result.raw === 'object') {
-      (result.raw as Record<string, unknown>).result = result.result;
-    }
+    result.text += footer;
   }
 
   // Output
@@ -133,27 +135,27 @@ export async function runAsk(promptParts: string[], opts: Record<string, unknown
   } else if (opts.outputFormat === 'json') {
     console.log(
       JSON.stringify(
-        { result: result.result, sessionId: result.sessionId, costUsd: result.costUsd },
+        { result: result.text, sessionId: result.sessionId, costUsd: result.costUsd },
         null,
         2,
       ),
     );
   } else {
-    console.log(result.result);
+    console.log(result.text);
   }
 
   // Save to history
   if (opts.history !== false) {
     await addHistoryEntry({
       prompt: fullPrompt,
-      result: result.result,
-      sessionId: result.sessionId,
-      costUsd: result.costUsd,
+      result: result.text,
+      sessionId: result.sessionId ?? '',
+      costUsd: result.costUsd ?? 0,
       durationMs: result.durationMs,
       model: (opts.model as string) ?? config.defaults.model,
     });
   }
 
   // Save to daily chat log (if configured)
-  void addChatLog(promptText, resultText);
+  void addChatLog(promptText, result.text);
 }

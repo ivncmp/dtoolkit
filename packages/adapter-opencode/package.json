@@ -1,16 +1,16 @@
 {
-  "name": "@dtoolkit/adapter-claude",
+  "name": "@dtoolkit/adapter-opencode",
   "version": "1.0.0",
-  "description": "dproxy adapter for Claude Code CLI",
+  "description": "dproxy adapter for OpenCode CLI",
   "type": "module",
   "license": "MIT",
   "author": "Iván Campillo <ivncmp@gmail.com>",
   "repository": {
     "type": "git",
     "url": "https://github.com/ivncmp/dtoolkit.git",
-    "directory": "packages/adapter-claude"
+    "directory": "packages/adapter-opencode"
   },
-  "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/adapter-claude",
+  "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/adapter-opencode",
   "publishConfig": {
     "access": "public"
   },
@@ -26,7 +26,7 @@
   },
   "keywords": [
     "ai",
-    "claude",
+    "opencode",
     "adapter",
     "dtoolkit",
     "dproxy"

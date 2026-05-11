@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/dproxy",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Universal adapter for invoking models via local CLIs",
   "type": "module",
   "license": "MIT",
@@ -36,6 +36,11 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
+    "@dtoolkit/adapter-claude": "workspace:*",
+    "@dtoolkit/adapter-codex": "workspace:*",
+    "@dtoolkit/adapter-gemini": "workspace:*",
+    "@dtoolkit/adapter-ollama": "workspace:*",
+    "@dtoolkit/adapter-opencode": "workspace:*",
     "@dtoolkit/core": "workspace:*",
     "picocolors": "^1.1.1",
     "commander": "^13.0.0",

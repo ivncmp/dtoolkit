@@ -1,16 +1,16 @@
 {
-  "name": "@dtoolkit/adapter-openai",
-  "version": "0.0.0",
-  "description": "dproxy adapter for OpenAI API and Codex CLI",
+  "name": "@dtoolkit/adapter-codex",
+  "version": "1.0.0",
+  "description": "dproxy adapter for Codex CLI",
   "type": "module",
   "license": "MIT",
   "author": "Iván Campillo <ivncmp@gmail.com>",
   "repository": {
     "type": "git",
     "url": "https://github.com/ivncmp/dtoolkit.git",
-    "directory": "packages/adapter-openai"
+    "directory": "packages/adapter-codex"
   },
-  "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/adapter-openai",
+  "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/adapter-codex",
   "publishConfig": {
     "access": "public"
   },
@@ -26,7 +26,6 @@
   },
   "keywords": [
     "ai",
-    "openai",
     "codex",
     "adapter",
     "dtoolkit",

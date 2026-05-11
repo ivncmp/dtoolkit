@@ -1,3 +1,10 @@
+export type {
+  Adapter,
+  AdapterRequest,
+  AdapterResult,
+  AdapterUsage,
+} from "./adapter.js";
+
 export {
   EntityType,
   ParaCategory,

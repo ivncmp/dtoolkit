@@ -5,12 +5,12 @@ import { createInterface } from 'node:readline';
 import { Command } from 'commander';
 import pc from 'picocolors';
 
-import { execClaude } from '../claude.js';
+import { resolveAdapter } from '../lib/adapter.js';
 import { addChatLog } from '../lib/chat-log-store.js';
 import { loadConfig, getDataDir, ensureDataDir } from '../lib/config.js';
 import { buildSystemPromptContext } from '../lib/context-builder.js';
 import { addHistoryEntry } from '../lib/history-store.js';
-import type { SessionInfo } from '../lib/types.js';
+import type { SessionInfo, ProviderName } from '../lib/types.js';
 
 const SESSION_FILE = 'current-session.json';
 
@@ -35,7 +35,8 @@ async function saveSession(session: SessionInfo): Promise<void> {
 /** Create the `dproxy chat` Commander command for interactive conversations. */
 export function createChatCommand(): Command {
   return new Command('chat')
-    .description('Start an interactive conversation with Claude')
+    .description('Start an interactive conversation')
+    .option('-p, --provider <provider>', 'Provider to use (claude, codex, gemini, ollama, opencode)')
     .option('-c, --continue', 'Continue last conversation')
     .option('-r, --resume <id>', 'Resume a specific session')
     .option('-m, --model <model>', 'Model to use')
@@ -55,6 +56,10 @@ export function createChatCommand(): Command {
 /** Run the interactive chat REPL: readline loop with session tracking and context injection. */
 async function runChat(opts: Record<string, unknown>): Promise<void> {
   const config = await loadConfig();
+
+  // Resolve the adapter
+  const providerName = (opts.provider as ProviderName | undefined) ?? config.provider.default;
+  const adapter = resolveAdapter(providerName, config);
 
   let sessionId: string | undefined;
 
@@ -84,7 +89,7 @@ async function runChat(opts: Record<string, unknown>): Promise<void> {
       config,
     )) || undefined;
 
-  console.log(pc.bold(pc.blue('Claude Chat')));
+  console.log(pc.bold(pc.blue(`${adapter.provider} Chat`)));
   console.log(pc.dim('Type "exit" or Ctrl+C to quit.\n'));
 
   const rl = createInterface({
@@ -114,17 +119,17 @@ async function runChat(opts: Record<string, unknown>): Promise<void> {
     try {
       process.stdout.write(pc.dim('thinking...\r'));
 
-      const result = await execClaude({
+      const result = await adapter.execute({
         prompt: input,
         model: (opts.model as string) ?? config.defaults.model,
         maxTurns: (opts.maxTurns as number) ?? config.defaults.maxTurns,
-        appendSystemPrompt,
-        resumeSessionId: sessionId,
+        sessionId,
+        options: { appendSystemPrompt },
       });
 
       // Clear "thinking..." and print response
       process.stdout.write('\r' + ' '.repeat(20) + '\r');
-      console.log(pc.cyan('claude > ') + result.result);
+      console.log(pc.cyan(`${adapter.provider} > `) + result.text);
       console.log();
 
       // Capture session ID from first response
@@ -139,15 +144,15 @@ async function runChat(opts: Record<string, unknown>): Promise<void> {
       // Save to history
       await addHistoryEntry({
         prompt: input,
-        result: result.result,
-        sessionId: result.sessionId,
-        costUsd: result.costUsd,
+        result: result.text,
+        sessionId: result.sessionId ?? '',
+        costUsd: result.costUsd ?? 0,
         durationMs: result.durationMs,
         model: (opts.model as string) ?? config.defaults.model,
       });
 
       // Save to daily chat log
-      void addChatLog(input, result.result);
+      void addChatLog(input, result.text);
     } catch (err) {
       console.error(pc.red((err as Error).message));
     }

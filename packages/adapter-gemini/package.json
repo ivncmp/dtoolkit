@@ -1,7 +1,7 @@
 {
   "name": "@dtoolkit/adapter-gemini",
-  "version": "0.0.0",
-  "description": "dproxy adapter for Gemini API and gemini-cli",
+  "version": "1.0.0",
+  "description": "dproxy adapter for Gemini CLI",
   "type": "module",
   "license": "MIT",
   "author": "Iván Campillo <ivncmp@gmail.com>",

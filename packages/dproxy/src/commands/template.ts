@@ -4,7 +4,7 @@ import { Command } from 'commander';
 import pc from 'picocolors';
 import { parse } from 'yaml';
 
-import { readStdin } from '../claude.js';
+import { readStdin } from '../lib/stdin.js';
 import {
   getTemplate,
   saveTemplate,

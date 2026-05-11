@@ -22,7 +22,7 @@ Each product has **one job**, works standalone, and composes with the rest via a
 
 | Package | Version | Description |
 | --- | --- | --- |
-| [`@dtoolkit/core`](packages/core/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/core.svg)](https://www.npmjs.com/package/@dtoolkit/core) | Shared types and Zod schemas (`ContextBlock`, `Fact`, `Entity`, `Tier`) |
+| [`@dtoolkit/core`](packages/core/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/core.svg)](https://www.npmjs.com/package/@dtoolkit/core) | Shared types and Zod schemas (`Adapter`, `ContextBlock`, `Fact`, `Entity`, `Tier`) |
 
 ### Memory & Context
 
@@ -39,9 +39,10 @@ Each product has **one job**, works standalone, and composes with the rest via a
 | --- | --- | --- |
 | [`@dtoolkit/dproxy`](packages/dproxy/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dproxy.svg)](https://www.npmjs.com/package/@dtoolkit/dproxy) | Universal CLI adapter for invoking models |
 | [`@dtoolkit/adapter-claude`](packages/adapter-claude/) | — | Adapter for Claude Code CLI |
-| [`@dtoolkit/adapter-openai`](packages/adapter-openai/) | — | Adapter for OpenAI API / Codex CLI |
-| [`@dtoolkit/adapter-gemini`](packages/adapter-gemini/) | — | Adapter for Gemini API / gemini-cli |
-| [`@dtoolkit/adapter-ollama`](packages/adapter-ollama/) | — | Adapter for local models via Ollama |
+| [`@dtoolkit/adapter-codex`](packages/adapter-codex/) | — | Adapter for Codex CLI |
+| [`@dtoolkit/adapter-gemini`](packages/adapter-gemini/) | — | Adapter for Gemini CLI |
+| [`@dtoolkit/adapter-ollama`](packages/adapter-ollama/) | — | Adapter for Ollama CLI |
+| [`@dtoolkit/adapter-opencode`](packages/adapter-opencode/) | — | Adapter for OpenCode CLI |
 
 ### Team Coordination
 
@@ -92,10 +93,10 @@ Each product has **one job**, works standalone, and composes with the rest via a
               │ transport│ │ metrics  │
               └────┬─────┘ └──────────┘
                    │
-        ┌──────┬───┴───┬────────┐
-        ▼      ▼       ▼        ▼
-     claude  openai  gemini   ollama
-     adapter adapter adapter  adapter
+      ┌────────┬───┴───┬────────┬──────────┐
+      ▼        ▼       ▼        ▼          ▼
+   claude    codex   gemini   ollama    opencode
+   adapter  adapter  adapter  adapter   adapter
 ```
 
 **Design principle:** one layer, one responsibility. If two products need to sync to function, it's wrong.

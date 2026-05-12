@@ -98,7 +98,7 @@ export class GeminiAdapter implements Adapter {
             if (role === "assistant" && typeof parsed["content"] === "string") {
               const text = parsed["content"] as string;
               texts.push(text);
-              yield { type: "text" as const, text };
+              yield { type: "text" as const, text, raw: parsed };
             }
           }
 

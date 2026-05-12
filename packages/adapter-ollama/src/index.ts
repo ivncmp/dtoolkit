@@ -76,7 +76,7 @@ export class OllamaAdapter implements Adapter {
       const clean = raw.replace(ansiRegex, "");
       if (clean) {
         chunks.push(clean);
-        yield { type: "text", text: clean };
+        yield { type: "text", text: clean, raw: clean };
       }
     }
 

@@ -62,7 +62,7 @@ export class ClaudeAdapter implements Adapter {
               if (delta?.["type"] === "text_delta" && typeof delta["text"] === "string") {
                 const text = delta["text"] as string;
                 fullText += text;
-                yield { type: "text", text };
+                yield { type: "text", text, raw: parsed };
               }
             }
           }

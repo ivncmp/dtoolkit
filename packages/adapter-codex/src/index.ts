@@ -88,7 +88,7 @@ export class CodexAdapter implements Adapter {
             if (item && typeof item["text"] === "string") {
               const text = item["text"] as string;
               messages.push(text);
-              yield { type: "text" as const, text };
+              yield { type: "text" as const, text, raw: parsed };
             }
           }
 

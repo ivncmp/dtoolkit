@@ -30,6 +30,7 @@ export interface AdapterStreamEvent {
   type: 'text' | 'result';
   text?: string;
   result?: AdapterResult;
+  raw?: unknown;
 }
 
 export interface Adapter {

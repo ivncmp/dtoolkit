@@ -97,7 +97,7 @@ export class OpenCodeAdapter implements Adapter {
             if (part && typeof part["text"] === "string") {
               const text = part["text"] as string;
               texts.push(text);
-              yield { type: "text" as const, text };
+              yield { type: "text" as const, text, raw: parsed };
             }
           }
 

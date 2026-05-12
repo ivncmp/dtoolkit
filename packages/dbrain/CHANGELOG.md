@@ -1,5 +1,12 @@
 # @dtoolkit/dbrain
 
+## 0.2.5
+
+### Patch Changes
+
+- Updated dependencies [77f2f95]
+  - @dtoolkit/core@0.2.2
+
 ## 0.2.4
 
 ### Patch Changes

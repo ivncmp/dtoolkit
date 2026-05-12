@@ -1,5 +1,11 @@
 # @dtoolkit/core
 
+## 0.2.2
+
+### Patch Changes
+
+- 77f2f95: feat: add raw provider event to AdapterStreamEvent text events for native JSONL passthrough
+
 ## 0.2.1
 
 ### Patch Changes

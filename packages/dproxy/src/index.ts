@@ -1,3 +1,5 @@
+declare const __VERSION__: string;
+
 import { Command } from 'commander';
 import pc from 'picocolors';
 
@@ -16,7 +18,7 @@ program.enablePositionalOptions();
 program
   .name('dproxy')
   .description('Universal adapter for invoking models via local CLIs')
-  .version('1.0.0');
+  .version(__VERSION__);
 
 // Init does not require initialization
 program.addCommand(createInitCommand());

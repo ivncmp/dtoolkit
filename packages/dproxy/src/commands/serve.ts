@@ -1,3 +1,5 @@
+declare const __VERSION__: string;
+
 import { Command } from 'commander';
 import Fastify from 'fastify';
 import pc from 'picocolors';
@@ -67,7 +69,7 @@ async function runServe(opts: Record<string, unknown>): Promise<void> {
     return {
       status: 'ok',
       provider: cfg.provider.default,
-      version: '1.0.0',
+      version: __VERSION__,
     };
   });
 

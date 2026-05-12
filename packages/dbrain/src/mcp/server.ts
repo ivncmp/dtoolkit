@@ -1,9 +1,15 @@
 import { randomBytes } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf-8'));
 
 function genId(prefix: string): string {
   return `${prefix}_${randomBytes(12).toString('base64url')}`;
@@ -14,7 +20,7 @@ export function createMcpServer(app: FastifyInstance) {
 
   const mcp = new McpServer({
     name: 'dbrain',
-    version: '0.1.0',
+    version: pkg.version,
   });
 
   // --- brain context: auto-loaded resource ---

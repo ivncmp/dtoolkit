@@ -81,7 +81,9 @@ export async function runAsk(promptParts: string[], opts: Record<string, unknown
 
   if (opts.stream) {
     for await (const event of streamPrompt(fullPrompt, runnerOpts)) {
-      if (event.type === 'text' && event.text) {
+      if (opts.raw) {
+        process.stdout.write(JSON.stringify(event) + '\n');
+      } else if (event.type === 'text' && event.text) {
         process.stdout.write(event.text);
       } else if (event.type === 'result' && event.result) {
         process.stdout.write('\n');

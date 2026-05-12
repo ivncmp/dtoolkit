@@ -1,5 +1,11 @@
 # @dtoolkit/dproxy
 
+## 1.1.4
+
+### Patch Changes
+
+- 9638eb6: fix: --stream --raw outputs native provider JSONL without AdapterStreamEvent wrapper
+
 ## 1.1.3
 
 ### Patch Changes

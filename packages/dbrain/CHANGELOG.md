@@ -1,5 +1,13 @@
 # @dtoolkit/dbrain
 
+## 0.2.4
+
+### Patch Changes
+
+- a05b65b: fix: read version dynamically instead of hardcoding, fix LineBuffer lint warning
+- Updated dependencies [a05b65b]
+  - @dtoolkit/core@0.2.1
+
 ## 0.2.3
 
 ### Patch Changes

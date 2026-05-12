@@ -2,6 +2,7 @@ export type {
   Adapter,
   AdapterRequest,
   AdapterResult,
+  AdapterStreamEvent,
   AdapterUsage,
   HistoryEntry,
   SessionInfo,

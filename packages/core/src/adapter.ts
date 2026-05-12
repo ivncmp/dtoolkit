@@ -26,7 +26,14 @@ export interface AdapterResult {
   raw?: unknown;
 }
 
+export interface AdapterStreamEvent {
+  type: 'text' | 'result';
+  text?: string;
+  result?: AdapterResult;
+}
+
 export interface Adapter {
   readonly provider: string;
   execute(request: AdapterRequest): Promise<AdapterResult>;
+  stream(request: AdapterRequest): AsyncGenerator<AdapterStreamEvent>;
 }

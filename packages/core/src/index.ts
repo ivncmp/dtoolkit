@@ -2,8 +2,11 @@ export type {
   Adapter,
   AdapterRequest,
   AdapterResult,
+  AdapterStreamEvent,
   AdapterUsage,
 } from "./adapter.js";
+
+export { LineBuffer } from "./line-buffer.js";
 
 export {
   EntityType,

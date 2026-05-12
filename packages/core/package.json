@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Shared types for dtoolkit (ContextBlock, Fact, Entity, Tier, hooks API)",
   "type": "module",
   "license": "MIT",
@@ -30,7 +30,9 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "lint": "eslint src/",

@@ -4,7 +4,7 @@ export class LineBuffer {
   push(chunk: string): string[] {
     this.buffer += chunk;
     const lines = this.buffer.split('\n');
-    this.buffer = lines.pop()!;
+    this.buffer = lines.pop() ?? '';
     return lines.filter((l) => l.trim());
   }
 

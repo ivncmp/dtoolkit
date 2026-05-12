@@ -6,6 +6,7 @@ import { createChatCommand } from './commands/chat.js';
 import { createHistoryCommand } from './commands/history.js';
 import { createInitCommand, requireInit } from './commands/init.js';
 import { createMemoryCommand } from './commands/memory.js';
+import { createServeCommand } from './commands/serve.js';
 import { createTemplateCommand } from './commands/template.js';
 import { getConfigValue, loadConfig, setConfigValue } from './lib/config.js';
 
@@ -33,6 +34,7 @@ program.addCommand(guarded(createChatCommand()));
 program.addCommand(guarded(createHistoryCommand()));
 program.addCommand(guarded(createMemoryCommand()));
 program.addCommand(guarded(createTemplateCommand()));
+program.addCommand(guarded(createServeCommand()));
 
 // Config command — guarded
 const configCmd = new Command('config').description('Manage configuration');

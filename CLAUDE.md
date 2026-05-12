@@ -65,12 +65,14 @@ tools/
 
 ### dproxy internals
 
-- `src/commands/` — ask (single-shot), chat (REPL), history, memory, template, init
+- `src/commands/` — ask (single-shot), chat (REPL), history, memory, template, serve (HTTP API), init
+- `src/lib/runner.ts` — core execution logic shared by CLI (`ask`) and HTTP (`serve`): context building → adapter resolution → execution → persistence
 - `src/lib/adapter.ts` — `resolveAdapter()` maps provider name to adapter instance
 - `src/lib/context-builder.ts` — assembles prompt context from multiple sources in priority order: day chat log → workspace bootstrap → memory snippets → life/PARA context
 - `src/lib/stdin.ts` — `readStdin()` for piped input
+- `src/commands/serve.ts` — Fastify REST API on configurable port (default :7880), full CLI parity with X-API-Key auth
 - Data stored in `~/.dproxy/` (config.json, history.jsonl, memory/, templates/)
-- Supports 4 providers via `--provider` flag: claude (default), codex, gemini, ollama
+- Supports 5 providers via `--provider` flag: claude (default), codex, gemini, ollama, opencode
 
 ## CLI conventions
 

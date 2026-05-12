@@ -1,14 +1,9 @@
 import { Command } from 'commander';
 import pc from 'picocolors';
 
-import { resolveAdapter } from '../lib/adapter.js';
-import { addChatLog } from '../lib/chat-log-store.js';
-import { loadConfig } from '../lib/config.js';
-import { buildSystemPromptContext } from '../lib/context-builder.js';
-import { addHistoryEntry } from '../lib/history-store.js';
-import { getSessionTokens, updateSessionTokens } from '../lib/session-state.js';
+import { executePrompt } from '../lib/runner.js';
 import { readStdin } from '../lib/stdin.js';
-import type { AdapterRequest, ProviderName } from '../lib/types.js';
+import type { ProviderName } from '../lib/types.js';
 
 /** Create the `dproxy ask` Commander command with all CLI options. */
 export function createAskCommand(): Command {
@@ -45,11 +40,10 @@ export function createAskCommand(): Command {
 }
 
 /**
- * Execute a single-shot prompt: assemble context, call the adapter, display output,
- * and persist to history and chat log.
+ * Execute a single-shot prompt via CLI: read stdin, call the runner,
+ * and format output to stdout.
  */
 export async function runAsk(promptParts: string[], opts: Record<string, unknown>): Promise<void> {
-  const config = await loadConfig();
   const stdinContent = await readStdin();
   const promptText = promptParts.join(' ');
 
@@ -58,67 +52,32 @@ export async function runAsk(promptParts: string[], opts: Record<string, unknown
     process.exit(1);
   }
 
-  // Build the full prompt
   let fullPrompt = promptText;
   if (stdinContent) {
     fullPrompt = fullPrompt ? `${fullPrompt}\n\n---\n\n${stdinContent}` : stdinContent;
   }
 
-  // Build context via shared builder
   const memoryOpt =
     opts.memory === false
       ? false
       : typeof opts.memory === 'string'
         ? (opts.memory as string).split(',')
-        : true;
+        : undefined;
 
-  const appendSystemPrompt =
-    (await buildSystemPromptContext(
-      {
-        memory: memoryOpt,
-        life: opts.life !== false,
-        workspace: true,
-        chatLog: true,
-        lifeQuery: fullPrompt,
-      },
-      config,
-    )) || undefined;
-
-  // Check session token limit before resuming
-  let sessionId = opts.resume as string | undefined;
-  const maxSessionTokens = opts.maxSessionTokens as number | undefined;
-  if (sessionId && maxSessionTokens) {
-    const currentTokens = await getSessionTokens(sessionId);
-    if (currentTokens > maxSessionTokens) {
-      sessionId = undefined;
-    }
-  }
-
-  // Resolve the adapter
-  const providerName = (opts.provider as ProviderName | undefined) ?? config.provider.default;
-  const adapter = resolveAdapter(providerName, config);
-
-  const request: AdapterRequest = {
-    prompt: fullPrompt,
-    model: (opts.model as string) ?? config.defaults.model,
-    maxTurns: (opts.maxTurns as number) ?? config.defaults.maxTurns,
+  const result = await executePrompt(fullPrompt, {
+    provider: opts.provider as ProviderName | undefined,
+    model: opts.model as string | undefined,
+    maxTurns: opts.maxTurns as number | undefined,
+    maxBudgetUsd: opts.maxBudgetUsd as number | undefined,
     systemPrompt: opts.systemPrompt as string | undefined,
-    sessionId,
+    memory: memoryOpt,
+    life: opts.life !== false ? undefined : false,
+    sessionId: opts.resume as string | undefined,
     continueSession: opts.continue as boolean | undefined,
-    options: {
-      appendSystemPrompt,
-      maxBudgetUsd: opts.maxBudgetUsd as number | undefined,
-    },
-  };
+    maxSessionTokens: opts.maxSessionTokens as number | undefined,
+    saveHistory: opts.history !== false,
+  });
 
-  const result = await adapter.execute(request);
-
-  // Persist token count for this session
-  if (result.sessionId && result.usage) {
-    await updateSessionTokens(result.sessionId, result.usage.totalTokens);
-  }
-
-  // Append token footer if requested
   if (opts.tokenFooter && result.usage) {
     const u = result.usage;
     const parts: string[] = [];
@@ -129,7 +88,6 @@ export async function runAsk(promptParts: string[], opts: Record<string, unknown
     result.text += footer;
   }
 
-  // Output
   if (opts.raw) {
     console.log(JSON.stringify(result.raw ?? result, null, 2));
   } else if (opts.outputFormat === 'json') {
@@ -143,19 +101,4 @@ export async function runAsk(promptParts: string[], opts: Record<string, unknown
   } else {
     console.log(result.text);
   }
-
-  // Save to history
-  if (opts.history !== false) {
-    await addHistoryEntry({
-      prompt: fullPrompt,
-      result: result.text,
-      sessionId: result.sessionId ?? '',
-      costUsd: result.costUsd ?? 0,
-      durationMs: result.durationMs,
-      model: (opts.model as string) ?? config.defaults.model,
-    });
-  }
-
-  // Save to daily chat log (if configured)
-  void addChatLog(promptText, result.text);
 }

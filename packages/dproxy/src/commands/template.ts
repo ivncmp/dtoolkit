@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import pc from 'picocolors';
 import { parse } from 'yaml';
 
+import { executePrompt } from '../lib/runner.js';
 import { readStdin } from '../lib/stdin.js';
 import {
   getTemplate,
@@ -13,8 +14,6 @@ import {
   renderTemplate,
 } from '../lib/template-store.js';
 import type { TemplateDefinition } from '../lib/types.js';
-
-import { runAsk } from './ask.js';
 
 /** Create the `dproxy template` Commander command with list/show/add/run/delete subcommands. */
 export function createTemplateCommand(): Command {
@@ -136,15 +135,17 @@ export function createTemplateCommand(): Command {
 
       const rendered = renderTemplate(t, vars);
 
-      await runAsk([rendered], {
-        model: opts.model ?? t.claudeOptions?.model,
+      const result = await executePrompt(rendered, {
+        model: (opts.model as string) ?? t.claudeOptions?.model,
         maxTurns: t.claudeOptions?.maxTurns,
         maxBudgetUsd: t.claudeOptions?.maxBudgetUsd,
-        raw: opts.raw,
-        memory: true,
-        history: true,
-        templateUsed: name,
       });
+
+      if (opts.raw) {
+        console.log(JSON.stringify(result.raw ?? result, null, 2));
+      } else {
+        console.log(result.text);
+      }
     });
 
   cmd

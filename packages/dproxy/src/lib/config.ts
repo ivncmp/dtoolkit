@@ -49,6 +49,10 @@ const DEFAULT_CONFIG: AppConfig = {
     ollama: { bin: 'ollama', defaultModel: 'llama3' },
     opencode: { bin: 'opencode', skipPermissions: false },
   },
+  server: {
+    port: 7880,
+    host: '127.0.0.1',
+  },
   defaults: {},
   debug: false,
 };

@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">@dtoolkit/dproxy</h1>
-<p align="center">Universal CLI adapter for invoking models via local CLIs</p>
+<p align="center">Universal adapter for invoking models — CLI and REST API</p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@dtoolkit/dproxy"><img src="https://img.shields.io/npm/v/@dtoolkit/dproxy.svg" alt="npm"></a>
@@ -22,6 +22,7 @@ npm install -g @dtoolkit/dproxy
 dproxy init              # interactive setup wizard
 dproxy "explain this"    # single-shot prompt (default provider)
 dproxy chat              # interactive REPL
+dproxy serve             # start REST API server
 ```
 
 ## Providers
@@ -157,6 +158,327 @@ Interactive setup wizard. Required before first use.
 dproxy init
 ```
 
+### `dproxy serve`
+
+Start the HTTP API server. Provides full CLI parity — everything you can do with the CLI, you can do via HTTP.
+
+```bash
+# Start with defaults (127.0.0.1:7880)
+dproxy serve
+
+# Custom port and host
+dproxy serve --port 3000 --host 0.0.0.0
+
+# Configure via config
+dproxy config set server.port 8080
+dproxy config set server.host 0.0.0.0
+dproxy config set server.apiKey my-secret-key
+```
+
+## REST API
+
+All endpoints are prefixed with `/v1`. When `server.apiKey` is configured, all endpoints (except `/v1/health`) require the `X-API-Key` header.
+
+### CLI → HTTP mapping
+
+| CLI command | HTTP equivalent |
+| --- | --- |
+| `dproxy ask "prompt"` | `POST /v1/ask` |
+| `dproxy history list` | `GET /v1/history` |
+| `dproxy history show <id>` | `GET /v1/history/:id` |
+| `dproxy history search <q>` | `GET /v1/history/search?q=` |
+| `dproxy history clear` | `DELETE /v1/history` |
+| `dproxy memory list` | `GET /v1/memory` |
+| `dproxy memory get <key>` | `GET /v1/memory/:key` |
+| `dproxy memory set <key> <val>` | `PUT /v1/memory/:key` |
+| `dproxy memory search <q>` | `GET /v1/memory/search?q=` |
+| `dproxy memory delete <key>` | `DELETE /v1/memory/:key` |
+| `dproxy template list` | `GET /v1/templates` |
+| `dproxy template show <name>` | `GET /v1/templates/:name` |
+| `dproxy template add <name>` | `PUT /v1/templates/:name` |
+| `dproxy template run <name>` | `POST /v1/templates/:name/run` |
+| `dproxy template delete <name>` | `DELETE /v1/templates/:name` |
+| `dproxy config` | `GET /v1/config` |
+| `dproxy config get <key>` | `GET /v1/config/:key` |
+| `dproxy config set <key> <val>` | `PUT /v1/config/:key` |
+| — | `GET /v1/health` |
+
+### Authentication
+
+```bash
+# Enable API key auth
+dproxy config set server.apiKey my-secret-key
+
+# Then include in all requests
+curl -H "X-API-Key: my-secret-key" http://localhost:7880/v1/health
+```
+
+When no `server.apiKey` is set, all endpoints are open (suitable for local-only use).
+
+### `POST /v1/ask`
+
+Send a prompt to an AI model. Supports all the same options as the CLI.
+
+**Request:**
+
+```json
+{
+  "prompt": "explain what monads are",
+  "provider": "claude",
+  "model": "sonnet",
+  "maxTurns": 5,
+  "maxBudgetUsd": 0.50,
+  "systemPrompt": "You are a Haskell expert",
+  "memory": true,
+  "life": true,
+  "workspace": true,
+  "chatLog": true,
+  "sessionId": "sess_abc123",
+  "continueSession": false,
+  "maxSessionTokens": 100000,
+  "saveHistory": true,
+  "saveChatLog": true
+}
+```
+
+Only `prompt` is required. All other fields are optional and use the same defaults as the CLI.
+
+The `memory` field accepts `true` (inject all), `false` (skip), or an array of key names (inject specific keys only).
+
+**Response:**
+
+```json
+{
+  "text": "A monad is...",
+  "sessionId": "sess_abc123",
+  "costUsd": 0.0042,
+  "durationMs": 1523,
+  "usage": {
+    "inputTokens": 150,
+    "outputTokens": 320,
+    "totalTokens": 470
+  }
+}
+```
+
+**Example:**
+
+```bash
+curl -X POST http://localhost:7880/v1/ask \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: my-secret-key" \
+  -d '{"prompt": "explain monads in one sentence"}'
+```
+
+### `GET /v1/health`
+
+Health check. Does not require API key.
+
+**Response:**
+
+```json
+{
+  "status": "ok",
+  "provider": "claude",
+  "version": "1.0.0"
+}
+```
+
+### `GET /v1/history`
+
+List recent history entries.
+
+| Query param | Default | Description |
+| --- | --- | --- |
+| `limit` | `20` | Number of entries to return |
+
+**Response:**
+
+```json
+{
+  "entries": [
+    {
+      "id": "uuid",
+      "timestamp": "2025-01-15T10:30:00Z",
+      "prompt": "explain monads",
+      "result": "A monad is...",
+      "sessionId": "sess_abc",
+      "costUsd": 0.004,
+      "durationMs": 1200,
+      "model": "sonnet"
+    }
+  ]
+}
+```
+
+### `GET /v1/history/:id`
+
+Get a specific history entry by ID (full or prefix match).
+
+**Response:** The full `HistoryEntry` object, or `404`.
+
+### `GET /v1/history/search?q=<query>`
+
+Search history by prompt or response content (case-insensitive).
+
+**Response:** `{ "entries": [...] }`
+
+### `DELETE /v1/history`
+
+Clear history entries.
+
+| Query param | Default | Description |
+| --- | --- | --- |
+| `before` | — | ISO date string; only clear entries before this date |
+
+**Response:** `{ "removed": 42 }`
+
+### `GET /v1/memory`
+
+List all memory keys.
+
+**Response:** `{ "keys": ["project-rules", "style-guide", "context"] }`
+
+### `GET /v1/memory/search?q=<query>`
+
+Search memory snippets by key name or content.
+
+**Response:**
+
+```json
+{
+  "results": [
+    { "key": "project-rules", "content": "Always use strict TypeScript..." }
+  ]
+}
+```
+
+### `GET /v1/memory/:key`
+
+Get a memory snippet by key.
+
+**Response:** `{ "key": "project-rules", "content": "..." }` or `404`.
+
+### `PUT /v1/memory/:key`
+
+Create or update a memory snippet.
+
+**Request:** `{ "content": "Always use strict TypeScript and ESM." }`
+
+**Response:** `{ "ok": true, "key": "project-rules" }`
+
+### `DELETE /v1/memory/:key`
+
+Delete a memory snippet.
+
+**Response:** `{ "ok": true, "key": "project-rules" }` or `404`.
+
+### `GET /v1/templates`
+
+List all templates.
+
+**Response:**
+
+```json
+{
+  "templates": [
+    {
+      "name": "code-review",
+      "description": "Review code for quality",
+      "prompt": "Review this code: {{code}}"
+    }
+  ]
+}
+```
+
+### `GET /v1/templates/:name`
+
+Get a template by name.
+
+**Response:** The full `TemplateDefinition` object, or `404`.
+
+### `PUT /v1/templates/:name`
+
+Create or update a template. The `name` in the URL takes precedence.
+
+**Request:**
+
+```json
+{
+  "description": "Review code for quality",
+  "prompt": "Review this {{language}} code:\n\n{{code}}",
+  "variables": [
+    { "name": "language", "default": "TypeScript" },
+    { "name": "code", "required": true }
+  ]
+}
+```
+
+**Response:** `{ "ok": true, "name": "code-review" }`
+
+### `POST /v1/templates/:name/run`
+
+Execute a template with variables and get the AI response.
+
+**Request:**
+
+```json
+{
+  "vars": {
+    "language": "Python",
+    "code": "def foo(): pass"
+  },
+  "model": "sonnet",
+  "maxTurns": 3,
+  "provider": "claude"
+}
+```
+
+All fields are optional. Missing variables with defaults use their defaults. Missing required variables return `400`.
+
+**Response:** Same as `POST /v1/ask`.
+
+### `DELETE /v1/templates/:name`
+
+Delete a template.
+
+**Response:** `{ "ok": true, "name": "code-review" }` or `404`.
+
+### `GET /v1/config`
+
+Get the full configuration object.
+
+### `GET /v1/config/:key`
+
+Get a config value by dot-notation key (e.g., `/v1/config/provider.default`).
+
+**Response:** `{ "key": "provider.default", "value": "claude" }` or `404`.
+
+### `PUT /v1/config/:key`
+
+Set a config value. Booleans and numbers are auto-parsed.
+
+**Request:** `{ "value": "ollama" }`
+
+**Response:** `{ "ok": true, "key": "provider.default", "value": "ollama" }`
+
+### Error responses
+
+All errors follow a consistent format:
+
+```json
+{
+  "error": "description of what went wrong"
+}
+```
+
+| Status | Meaning |
+| --- | --- |
+| `400` | Bad request (missing required fields) |
+| `401` | Invalid or missing API key |
+| `404` | Resource not found |
+| `500` | Internal server error |
+
 ## Flags reference
 
 | Flag | Scope | Description |
@@ -176,6 +498,8 @@ dproxy init
 | `--max-session-tokens <n>` | ask | Reset session if context exceeds this |
 | `-c, --continue` | ask, chat | Continue last conversation |
 | `-r, --resume <id>` | ask, chat | Resume a specific session |
+| `--port <port>` | serve | Port to listen on (default: 7880) |
+| `--host <host>` | serve | Host to bind to (default: 127.0.0.1) |
 
 ## Context injection
 
@@ -219,6 +543,26 @@ Configure provider-specific options in `~/.dproxy/config.json`:
   }
 }
 ```
+
+## Server configuration
+
+Configure the HTTP server in `~/.dproxy/config.json`:
+
+```json
+{
+  "server": {
+    "port": 7880,
+    "host": "127.0.0.1",
+    "apiKey": "my-secret-key"
+  }
+}
+```
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `server.port` | `7880` | Port to listen on |
+| `server.host` | `127.0.0.1` | Host to bind to |
+| `server.apiKey` | — | API key for authentication (optional) |
 
 ## Data storage
 

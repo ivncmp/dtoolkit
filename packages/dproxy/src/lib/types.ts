@@ -54,5 +54,10 @@ export interface AppConfig {
     maxTurns?: number;
     outputFormat?: "text" | "json" | "stream-json";
   };
+  server: {
+    port: number;
+    host: string;
+    apiKey?: string;
+  };
   debug: boolean;
 }

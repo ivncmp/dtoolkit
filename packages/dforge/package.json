@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/dforge",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Internal marketplace for skills, hooks, and slash commands",
   "type": "module",
   "license": "MIT",

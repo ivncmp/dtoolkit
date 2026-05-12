@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/dcouncil",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Multi-agent debate for architecture decisions — security, performance, simplicity",
   "type": "module",
   "license": "MIT",

@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/dcontext",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Tool cache + background compactor for AI coding agents",
   "type": "module",
   "license": "MIT",

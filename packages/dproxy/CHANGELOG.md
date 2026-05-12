@@ -1,5 +1,11 @@
 # @dtoolkit/dproxy
 
+## 1.1.2
+
+### Patch Changes
+
+- 6cb2645: feat: add --stream --raw mode for JSONL output, add --stream to root command help
+
 ## 1.1.1
 
 ### Patch Changes

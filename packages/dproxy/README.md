@@ -86,6 +86,10 @@ dproxy --max-turns 5 --max-budget-usd 0.50 "refactor the auth module"
 
 # System prompt override
 dproxy ask --system-prompt "You are a security auditor" "review this code"
+
+# Stream response in real-time
+dproxy ask --stream "explain monads"
+dproxy --stream --token-footer "write a haiku"
 ```
 
 ### `dproxy chat`
@@ -184,6 +188,7 @@ All endpoints are prefixed with `/v1`. When `server.apiKey` is configured, all e
 | CLI command | HTTP equivalent |
 | --- | --- |
 | `dproxy ask "prompt"` | `POST /v1/ask` |
+| `dproxy ask --stream "prompt"` | `POST /v1/ask` with `"stream": true` (SSE) |
 | `dproxy history list` | `GET /v1/history` |
 | `dproxy history show <id>` | `GET /v1/history/:id` |
 | `dproxy history search <q>` | `GET /v1/history/search?q=` |
@@ -217,13 +222,14 @@ When no `server.apiKey` is set, all endpoints are open (suitable for local-only 
 
 ### `POST /v1/ask`
 
-Send a prompt to an AI model. Supports all the same options as the CLI.
+Send a prompt to an AI model. Supports all the same options as the CLI. Set `"stream": true` for real-time Server-Sent Events (SSE).
 
 **Request:**
 
 ```json
 {
   "prompt": "explain what monads are",
+  "stream": false,
   "provider": "claude",
   "model": "sonnet",
   "maxTurns": 5,
@@ -245,7 +251,7 @@ Only `prompt` is required. All other fields are optional and use the same defaul
 
 The `memory` field accepts `true` (inject all), `false` (skip), or an array of key names (inject specific keys only).
 
-**Response:**
+**Response (non-streaming):**
 
 ```json
 {
@@ -261,13 +267,34 @@ The `memory` field accepts `true` (inject all), `false` (skip), or an array of k
 }
 ```
 
-**Example:**
+**Response (streaming):**
+
+When `"stream": true`, the response uses `Content-Type: text/event-stream` (SSE). Each event is a JSON object on a `data:` line:
+
+```
+data: {"type":"text","text":"A monad "}
+data: {"type":"text","text":"is a "}
+data: {"type":"text","text":"design pattern..."}
+data: {"type":"result","result":{"text":"A monad is a design pattern...","sessionId":"sess_abc","costUsd":0.004,"durationMs":1523,"isError":false,"usage":{"inputTokens":150,"outputTokens":320,"totalTokens":470}}}
+data: [DONE]
+```
+
+Two event types: `text` (incremental chunks) and `result` (final aggregated result with metadata). The stream ends with `data: [DONE]`.
+
+**Examples:**
 
 ```bash
+# Non-streaming
 curl -X POST http://localhost:7880/v1/ask \
   -H "Content-Type: application/json" \
   -H "X-API-Key: my-secret-key" \
   -d '{"prompt": "explain monads in one sentence"}'
+
+# Streaming (SSE)
+curl -N -X POST http://localhost:7880/v1/ask \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: my-secret-key" \
+  -d '{"prompt": "explain monads", "stream": true}'
 ```
 
 ### `GET /v1/health`
@@ -488,6 +515,7 @@ All errors follow a consistent format:
 | `--max-turns <n>` | ask, chat | Max agent turns per message |
 | `--max-budget-usd <n>` | ask | Max budget in USD |
 | `-o, --output-format <fmt>` | ask | Output format: `text`, `json`, `stream-json` |
+| `--stream` | ask | Stream response text in real-time |
 | `--system-prompt <text>` | ask | System prompt override |
 | `--no-memory` | ask, chat | Skip memory injection |
 | `--memory <keys>` | ask | Inject specific memory keys (comma-separated) |

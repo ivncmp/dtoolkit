@@ -1,6 +1,11 @@
 import { spawn } from "node:child_process";
 
-import type { Adapter, AdapterRequest, AdapterResult } from "@dtoolkit/core";
+import type {
+  Adapter,
+  AdapterRequest,
+  AdapterResult,
+  AdapterStreamEvent,
+} from "@dtoolkit/core";
 
 export interface OllamaAdapterConfig {
   bin?: string;
@@ -18,29 +23,36 @@ export class OllamaAdapter implements Adapter {
   }
 
   async execute(request: AdapterRequest): Promise<AdapterResult> {
+    let finalResult: AdapterResult | undefined;
+    for await (const event of this.stream(request)) {
+      if (event.type === "result") finalResult = event.result;
+    }
+    if (!finalResult) throw new Error("No result event received from Ollama CLI");
+    return finalResult;
+  }
+
+  async *stream(request: AdapterRequest): AsyncGenerator<AdapterStreamEvent> {
     const model = request.model ?? this.defaultModel;
     const args = this.buildArgs(model, request);
     const startTime = Date.now();
 
-    return new Promise((resolve, reject) => {
-      const proc = spawn(this.bin, args, {
-        stdio: ["pipe", "pipe", "pipe"],
-        env: { ...process.env },
-      });
+    const proc = spawn(this.bin, args, {
+      stdio: ["pipe", "pipe", "pipe"],
+      env: { ...process.env },
+    });
 
-      let stdout = "";
-      let stderr = "";
+    proc.stdin.end();
 
-      proc.stdout.on("data", (data: Buffer) => {
-        stdout += data.toString();
-      });
+    let stderrText = "";
+    proc.stderr.on("data", (data: Buffer) => {
+      stderrText += data.toString();
+    });
 
-      proc.stderr.on("data", (data: Buffer) => {
-        stderr += data.toString();
-      });
+    // eslint-disable-next-line no-control-regex
+    const ansiRegex = /\x1B\[[0-9;]*[A-Za-z]|\x1B\[\?[0-9;]*[A-Za-z]|\r/g;
+    const chunks: string[] = [];
 
-      proc.stdin.end();
-
+    const errorPromise = new Promise<never>((_, reject) => {
       proc.on("error", (err: NodeJS.ErrnoException) => {
         if (err.code === "ENOENT") {
           reject(
@@ -52,26 +64,41 @@ export class OllamaAdapter implements Adapter {
           reject(err);
         }
       });
-
-      proc.on("close", (code: number | null) => {
-        const durationMs = Date.now() - startTime;
-
-        // eslint-disable-next-line no-control-regex
-        const clean = stdout.replace(/\x1B\[[0-9;]*[A-Za-z]|\x1B\[\?[0-9;]*[A-Za-z]|\r/g, "").trim();
-
-        if (code !== 0 && !clean) {
-          reject(new Error(stderr || `${this.bin} exited with code ${code}`));
-          return;
-        }
-
-        resolve({
-          text: clean,
-          durationMs,
-          isError: code !== 0,
-          model,
-        });
-      });
     });
+
+    const stdoutIter = (async function* () {
+      for await (const chunk of proc.stdout) {
+        yield (chunk as Buffer).toString();
+      }
+    })();
+
+    for await (const raw of race(stdoutIter, errorPromise)) {
+      const clean = raw.replace(ansiRegex, "");
+      if (clean) {
+        chunks.push(clean);
+        yield { type: "text", text: clean };
+      }
+    }
+
+    const code = await new Promise<number | null>((resolve) => {
+      proc.on("close", resolve);
+    });
+    const durationMs = Date.now() - startTime;
+    const fullText = chunks.join("").trim();
+
+    if (code !== 0 && !fullText) {
+      throw new Error(stderrText || `${this.bin} exited with code ${code}`);
+    }
+
+    yield {
+      type: "result",
+      result: {
+        text: fullText,
+        durationMs,
+        isError: code !== 0,
+        model,
+      },
+    };
   }
 
   private buildArgs(model: string, request: AdapterRequest): string[] {
@@ -88,4 +115,20 @@ export class OllamaAdapter implements Adapter {
 
 export function createOllamaAdapter(config?: OllamaAdapterConfig): OllamaAdapter {
   return new OllamaAdapter(config);
+}
+
+async function* race<T>(
+  iter: AsyncIterable<T>,
+  errorPromise: Promise<never>,
+): AsyncIterable<T> {
+  const iterator = iter[Symbol.asyncIterator]();
+  try {
+    while (true) {
+      const next = await Promise.race([iterator.next(), errorPromise]);
+      if (next.done) break;
+      yield next.value;
+    }
+  } finally {
+    await iterator.return?.(undefined);
+  }
 }

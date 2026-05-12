@@ -16,7 +16,7 @@ import {
   searchMemory,
   deleteMemory,
 } from '../lib/memory-store.js';
-import { executePrompt } from '../lib/runner.js';
+import { executePrompt, streamPrompt } from '../lib/runner.js';
 import {
   listTemplates,
   getTemplate,
@@ -72,30 +72,32 @@ async function runServe(opts: Record<string, unknown>): Promise<void> {
   });
 
   // --- Ask ---
-  app.post<{
-    Body: {
-      prompt: string;
-      provider?: ProviderName;
-      model?: string;
-      maxTurns?: number;
-      maxBudgetUsd?: number;
-      systemPrompt?: string;
-      memory?: boolean | string[];
-      life?: boolean;
-      workspace?: boolean;
-      chatLog?: boolean;
-      sessionId?: string;
-      continueSession?: boolean;
-      maxSessionTokens?: number;
-      saveHistory?: boolean;
-      saveChatLog?: boolean;
-    };
-  }>('/v1/ask', async (request, reply) => {
+  interface AskBody {
+    prompt: string;
+    stream?: boolean;
+    provider?: ProviderName;
+    model?: string;
+    maxTurns?: number;
+    maxBudgetUsd?: number;
+    systemPrompt?: string;
+    memory?: boolean | string[];
+    life?: boolean;
+    workspace?: boolean;
+    chatLog?: boolean;
+    sessionId?: string;
+    continueSession?: boolean;
+    maxSessionTokens?: number;
+    saveHistory?: boolean;
+    saveChatLog?: boolean;
+  }
+
+  app.post<{ Body: AskBody }>('/v1/ask', async (request, reply) => {
     const body = request.body;
     if (!body?.prompt) {
       return reply.code(400).send({ error: 'prompt is required' });
     }
-    const result = await executePrompt(body.prompt, {
+
+    const runnerOpts = {
       provider: body.provider,
       model: body.model,
       maxTurns: body.maxTurns,
@@ -110,7 +112,29 @@ async function runServe(opts: Record<string, unknown>): Promise<void> {
       maxSessionTokens: body.maxSessionTokens,
       saveHistory: body.saveHistory,
       saveChatLog: body.saveChatLog,
-    });
+    };
+
+    if (body.stream) {
+      reply.raw.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      });
+
+      try {
+        for await (const event of streamPrompt(body.prompt, runnerOpts)) {
+          reply.raw.write(`data: ${JSON.stringify(event)}\n\n`);
+        }
+        reply.raw.write('data: [DONE]\n\n');
+      } catch (err) {
+        reply.raw.write(`data: ${JSON.stringify({ type: 'error', error: (err as Error).message })}\n\n`);
+      }
+
+      reply.raw.end();
+      return reply;
+    }
+
+    const result = await executePrompt(body.prompt, runnerOpts);
     return result;
   });
 

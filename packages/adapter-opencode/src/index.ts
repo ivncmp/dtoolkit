@@ -1,6 +1,13 @@
 import { spawn } from "node:child_process";
 
-import type { Adapter, AdapterRequest, AdapterResult, AdapterUsage } from "@dtoolkit/core";
+import type {
+  Adapter,
+  AdapterRequest,
+  AdapterResult,
+  AdapterStreamEvent,
+  AdapterUsage,
+} from "@dtoolkit/core";
+import { LineBuffer } from "@dtoolkit/core";
 
 export interface OpenCodeAdapterConfig {
   bin?: string;
@@ -18,31 +25,41 @@ export class OpenCodeAdapter implements Adapter {
   }
 
   async execute(request: AdapterRequest): Promise<AdapterResult> {
+    let finalResult: AdapterResult | undefined;
+    for await (const event of this.stream(request)) {
+      if (event.type === "result") finalResult = event.result;
+    }
+    if (!finalResult) throw new Error("No result event received from OpenCode CLI");
+    return finalResult;
+  }
+
+  async *stream(request: AdapterRequest): AsyncGenerator<AdapterStreamEvent> {
     const args = this.buildArgs(request);
     const startTime = Date.now();
+    const lineBuffer = new LineBuffer();
 
-    return new Promise((resolve, reject) => {
-      const proc = spawn(this.bin, args, {
-        stdio: ["pipe", "pipe", "pipe"],
-        env: { ...process.env },
-      });
+    const proc = spawn(this.bin, args, {
+      stdio: ["pipe", "pipe", "pipe"],
+      env: { ...process.env },
+    });
 
-      let stdout = "";
-      let stderr = "";
+    if (request.stdinContent) {
+      proc.stdin.write(request.stdinContent);
+    }
+    proc.stdin.end();
 
-      proc.stdout.on("data", (data: Buffer) => {
-        stdout += data.toString();
-      });
+    let stderrText = "";
+    proc.stderr.on("data", (data: Buffer) => {
+      stderrText += data.toString();
+    });
 
-      proc.stderr.on("data", (data: Buffer) => {
-        stderr += data.toString();
-      });
+    const texts: string[] = [];
+    let sessionId: string | undefined;
+    let usage: AdapterUsage | undefined;
+    let costUsd: number | undefined;
+    const raw: unknown[] = [];
 
-      if (request.stdinContent) {
-        proc.stdin.write(request.stdinContent);
-      }
-      proc.stdin.end();
-
+    const errorPromise = new Promise<never>((_, reject) => {
       proc.on("error", (err: NodeJS.ErrnoException) => {
         if (err.code === "ENOENT") {
           reject(
@@ -54,83 +71,79 @@ export class OpenCodeAdapter implements Adapter {
           reject(err);
         }
       });
+    });
 
-      proc.on("close", (code: number | null) => {
-        const durationMs = Date.now() - startTime;
+    const stdoutIter = (async function* () {
+      for await (const chunk of proc.stdout) {
+        yield (chunk as Buffer).toString();
+      }
+    })();
 
-        if (code !== 0 && !stdout.trim()) {
-          reject(new Error(stderr || `${this.bin} exited with code ${code}`));
-          return;
-        }
+    for await (const chunk of race(stdoutIter, errorPromise)) {
+      const lines = lineBuffer.push(chunk);
+      for (const line of lines) {
+        try {
+          const parsed = JSON.parse(line) as Record<string, unknown>;
+          raw.push(parsed);
 
-        const jsonLines = stdout
-          .trim()
-          .split("\n")
-          .filter((line) => line.trim());
+          if (!sessionId && typeof parsed["sessionID"] === "string") {
+            sessionId = parsed["sessionID"] as string;
+          }
 
-        let text = "";
-        let sessionId: string | undefined;
-        let usage: AdapterUsage | undefined;
-        let costUsd: number | undefined;
-        let raw: unknown;
+          const type = parsed["type"] as string;
 
-        if (jsonLines.length > 0) {
-          try {
-            const events = jsonLines.map((line) => JSON.parse(line));
-            raw = events;
+          if (type === "text") {
+            const part = parsed["part"] as Record<string, unknown> | undefined;
+            if (part && typeof part["text"] === "string") {
+              const text = part["text"] as string;
+              texts.push(text);
+              yield { type: "text" as const, text };
+            }
+          }
 
-            const texts: string[] = [];
-            for (const event of events) {
-              const ev = event as Record<string, unknown>;
-              if (!sessionId && typeof ev["sessionID"] === "string") {
-                sessionId = ev["sessionID"] as string;
+          if (type === "step_finish") {
+            const part = parsed["part"] as Record<string, unknown> | undefined;
+            if (part) {
+              const tokens = part["tokens"] as Record<string, number> | undefined;
+              if (tokens) {
+                usage = {
+                  inputTokens: tokens["input"] ?? 0,
+                  outputTokens: tokens["output"] ?? 0,
+                  totalTokens: tokens["total"] ?? 0,
+                };
               }
-
-              // Extract text from "text" events
-              if (ev["type"] === "text") {
-                const part = ev["part"] as Record<string, unknown> | undefined;
-                if (part && typeof part["text"] === "string") {
-                  texts.push(part["text"] as string);
-                }
-              }
-
-              // Extract usage and cost from step_finish
-              if (ev["type"] === "step_finish") {
-                const part = ev["part"] as Record<string, unknown> | undefined;
-                if (part) {
-                  const tokens = part["tokens"] as Record<string, number> | undefined;
-                  if (tokens) {
-                    usage = {
-                      inputTokens: tokens["input"] ?? 0,
-                      outputTokens: tokens["output"] ?? 0,
-                      totalTokens: tokens["total"] ?? 0,
-                    };
-                  }
-                  if (typeof part["cost"] === "number") {
-                    costUsd = part["cost"] as number;
-                  }
-                }
+              if (typeof part["cost"] === "number") {
+                costUsd = part["cost"] as number;
               }
             }
-            text = texts.length > 0 ? texts.join("") : stdout.trim();
-          } catch {
-            text = stdout.trim();
           }
-        } else {
-          text = stdout.trim();
+        } catch {
+          // non-JSON line
         }
+      }
+    }
 
-        resolve({
-          text,
-          sessionId,
-          costUsd,
-          durationMs,
-          isError: code !== 0,
-          usage,
-          raw,
-        });
-      });
+    const code = await new Promise<number | null>((resolve) => {
+      proc.on("close", resolve);
     });
+    const durationMs = Date.now() - startTime;
+
+    if (code !== 0 && texts.length === 0) {
+      throw new Error(stderrText || `${this.bin} exited with code ${code}`);
+    }
+
+    yield {
+      type: "result",
+      result: {
+        text: texts.join(""),
+        sessionId,
+        costUsd,
+        durationMs,
+        isError: code !== 0,
+        usage,
+        raw,
+      },
+    };
   }
 
   private buildArgs(request: AdapterRequest): string[] {
@@ -159,4 +172,20 @@ export class OpenCodeAdapter implements Adapter {
 
 export function createOpenCodeAdapter(config?: OpenCodeAdapterConfig): OpenCodeAdapter {
   return new OpenCodeAdapter(config);
+}
+
+async function* race<T>(
+  iter: AsyncIterable<T>,
+  errorPromise: Promise<never>,
+): AsyncIterable<T> {
+  const iterator = iter[Symbol.asyncIterator]();
+  try {
+    while (true) {
+      const next = await Promise.race([iterator.next(), errorPromise]);
+      if (next.done) break;
+      yield next.value;
+    }
+  } finally {
+    await iterator.return?.(undefined);
+  }
 }

@@ -32,12 +32,15 @@ pnpm --filter @dtoolkit/dbrain dev       # tsx watch
 ```
 packages/
 ├── core/              Shared types + Zod schemas (Entity, Fact, Tier, ContextBlock, Adapter)
+│                      Includes AdapterStreamEvent, LineBuffer for JSONL parsing
 │                      Build: tsc. No runtime deps beyond zod. Other packages depend on this.
-├── adapter-claude/    Shell-out adapter for Claude Code CLI
-├── adapter-codex/     Shell-out adapter for Codex CLI
-├── adapter-gemini/    Shell-out adapter for Gemini CLI
-├── adapter-ollama/    Shell-out adapter for Ollama CLI
+├── adapter-claude/    Shell-out adapter for Claude Code CLI (stream-json + deltas)
+├── adapter-codex/     Shell-out adapter for Codex CLI (JSONL streaming)
+├── adapter-gemini/    Shell-out adapter for Gemini CLI (stream-json)
+├── adapter-ollama/    Shell-out adapter for Ollama CLI (raw text streaming)
+├── adapter-opencode/  Shell-out adapter for OpenCode CLI (JSONL streaming)
 │                      All adapters: Build: tsc. Depend on core only.
+│                      All implement stream() + execute() (execute derives from stream)
 ├── dbrain/            Persistent memory server — the brain
 │                      Fastify REST API + MCP HTTP on :7878, React dashboard on :7879
 │                      SQLite + FTS5 via better-sqlite3. CLI: dbrain init/start/connect/status
@@ -66,11 +69,11 @@ tools/
 ### dproxy internals
 
 - `src/commands/` — ask (single-shot), chat (REPL), history, memory, template, serve (HTTP API), init
-- `src/lib/runner.ts` — core execution logic shared by CLI (`ask`) and HTTP (`serve`): context building → adapter resolution → execution → persistence
+- `src/lib/runner.ts` — core execution logic shared by CLI (`ask`) and HTTP (`serve`): `executePrompt()` (batch) and `streamPrompt()` (streaming AsyncGenerator) — context building → adapter resolution → execution → persistence
 - `src/lib/adapter.ts` — `resolveAdapter()` maps provider name to adapter instance
 - `src/lib/context-builder.ts` — assembles prompt context from multiple sources in priority order: day chat log → workspace bootstrap → memory snippets → life/PARA context
 - `src/lib/stdin.ts` — `readStdin()` for piped input
-- `src/commands/serve.ts` — Fastify REST API on configurable port (default :7880), full CLI parity with X-API-Key auth
+- `src/commands/serve.ts` — Fastify REST API on configurable port (default :7880), full CLI parity with X-API-Key auth, SSE streaming via `stream: true`
 - Data stored in `~/.dproxy/` (config.json, history.jsonl, memory/, templates/)
 - Supports 5 providers via `--provider` flag: claude (default), codex, gemini, ollama, opencode
 

@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import pc from 'picocolors';
 
-import { executePrompt } from '../lib/runner.js';
+import { executePrompt, streamPrompt } from '../lib/runner.js';
 import { readStdin } from '../lib/stdin.js';
 import type { ProviderName } from '../lib/types.js';
 
@@ -15,6 +15,7 @@ export function createAskCommand(): Command {
     .option('--max-turns <n>', 'Max agent turns', parseInt)
     .option('--max-budget-usd <n>', 'Max budget in USD', parseFloat)
     .option('-o, --output-format <format>', 'Output format: text, json, stream-json')
+    .option('--stream', 'Stream response text as it arrives')
     .option('--system-prompt <text>', 'System prompt override')
     .option('--no-memory', 'Skip memory injection')
     .option('--memory <keys>', 'Inject only specific memory keys (comma-separated)')
@@ -64,7 +65,7 @@ export async function runAsk(promptParts: string[], opts: Record<string, unknown
         ? (opts.memory as string).split(',')
         : undefined;
 
-  const result = await executePrompt(fullPrompt, {
+  const runnerOpts = {
     provider: opts.provider as ProviderName | undefined,
     model: opts.model as string | undefined,
     maxTurns: opts.maxTurns as number | undefined,
@@ -76,7 +77,28 @@ export async function runAsk(promptParts: string[], opts: Record<string, unknown
     continueSession: opts.continue as boolean | undefined,
     maxSessionTokens: opts.maxSessionTokens as number | undefined,
     saveHistory: opts.history !== false,
-  });
+  };
+
+  if (opts.stream) {
+    for await (const event of streamPrompt(fullPrompt, runnerOpts)) {
+      if (event.type === 'text' && event.text) {
+        process.stdout.write(event.text);
+      } else if (event.type === 'result' && event.result) {
+        process.stdout.write('\n');
+        if (opts.tokenFooter && event.result.usage) {
+          const u = event.result.usage;
+          const parts: string[] = [];
+          parts.push(`in:${u.inputTokens.toLocaleString()}`);
+          parts.push(`out:${u.outputTokens.toLocaleString()}`);
+          parts.push(`~${u.totalTokens.toLocaleString()}`);
+          process.stdout.write(`\n—————————————\n\`${parts.join(' · ')}\`\n`);
+        }
+      }
+    }
+    return;
+  }
+
+  const result = await executePrompt(fullPrompt, runnerOpts);
 
   if (opts.tokenFooter && result.usage) {
     const u = result.usage;

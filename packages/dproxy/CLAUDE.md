@@ -20,13 +20,13 @@ pnpm dev            # Build in watch mode
 **Adapter resolution:** `src/lib/adapter.ts` — `resolveAdapter(provider, config)` maps a provider name to an adapter instance from `@dtoolkit/adapter-*`. Adapter config comes from `config.provider.<name>`.
 
 **Adapters** (external packages):
-- `@dtoolkit/adapter-claude` — JSON output, sessions, cost, usage (richest)
-- `@dtoolkit/adapter-codex` — JSONL events, usage, approval modes
-- `@dtoolkit/adapter-gemini` — JSON output, sessions, usage, yolo mode
-- `@dtoolkit/adapter-ollama` — plain text, local models, ANSI stripping
-- `@dtoolkit/adapter-opencode` — JSONL events, sessions, cost, usage
+- `@dtoolkit/adapter-claude` — stream-json + content_block_delta, sessions, cost, usage (richest)
+- `@dtoolkit/adapter-codex` — JSONL streaming, usage, approval modes
+- `@dtoolkit/adapter-gemini` — stream-json, sessions, usage, yolo mode
+- `@dtoolkit/adapter-ollama` — raw text streaming, local models, ANSI stripping
+- `@dtoolkit/adapter-opencode` — JSONL streaming, sessions, cost, usage
 
-All adapters implement `Adapter` from `@dtoolkit/core`.
+All adapters implement `Adapter` from `@dtoolkit/core` with `stream()` (AsyncGenerator) and `execute()` (derived from stream).
 
 **Commands** (`src/commands/`):
 - `init.ts` — interactive setup wizard; required before first use; sets `config.initialized = true`
@@ -48,7 +48,8 @@ All adapters implement `Adapter` from `@dtoolkit/core`.
 - `workspace-store.ts` — reads bootstrap files from `config.workspace.dir`; disabled by default
 - `chat-log-store.ts` — daily conversation log at `config.chatLog.dir`; disabled by default
 - `session-state.ts` — per-session token tracking with 7-day auto-pruning; uses atomic writes
-- `types.ts` — re-exports `Adapter`, `AdapterRequest`, `AdapterResult`, `AdapterUsage` from `@dtoolkit/core`; defines `ProviderName`, `AppConfig`, `SessionInfo`, etc.
+- `runner.ts` — `executePrompt()` (batch) and `streamPrompt()` (streaming AsyncGenerator) — shared core logic for CLI and HTTP
+- `types.ts` — re-exports `Adapter`, `AdapterRequest`, `AdapterResult`, `AdapterStreamEvent`, `AdapterUsage` from `@dtoolkit/core`; defines `ProviderName`, `AppConfig`, `SessionInfo`, etc.
 
 ## Context Injection Pipeline
 
@@ -82,4 +83,4 @@ Override the data directory with `DPROXY_DATA_DIR` env var.
 
 ## Key CLI Flags
 
-Shared across `ask` and `chat`: `-p/--provider` (claude, codex, gemini, ollama, opencode), `--no-memory`, `--memory <keys>` (comma-separated), `--no-life`, `--no-history`, `--raw`, `--token-footer`, `--max-session-tokens <n>`, `-c/--continue`, `-r/--resume <id>`, `-m/--model`, `--max-turns`, `--max-budget-usd`.
+Shared across `ask` and `chat`: `-p/--provider` (claude, codex, gemini, ollama, opencode), `--no-memory`, `--memory <keys>` (comma-separated), `--no-life`, `--no-history`, `--raw`, `--stream`, `--token-footer`, `--max-session-tokens <n>`, `-c/--continue`, `-r/--resume <id>`, `-m/--model`, `--max-turns`, `--max-budget-usd`.

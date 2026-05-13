@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/dreplay",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Session browser for the team — tools, decisions, files touched (privacy-aware)",
   "type": "module",
   "license": "MIT",

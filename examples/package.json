@@ -1,0 +1,21 @@
+{
+  "name": "@dtoolkit/examples",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Usage examples for @dtoolkit/sdk",
+  "scripts": {
+    "start": "tsx src/setup.ts",
+    "start:dbrain": "tsx src/setup.ts dbrain",
+    "start:dproxy": "tsx src/setup.ts dproxy",
+    "dbrain": "tsx --env-file=.env src/dbrain.ts",
+    "dproxy": "tsx --env-file=.env src/dproxy.ts",
+    "demo": "tsx --env-file=.env src/demo.ts"
+  },
+  "dependencies": {
+    "@dtoolkit/sdk": "^0.2.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0"
+  }
+}

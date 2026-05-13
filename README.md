@@ -101,6 +101,18 @@ Each product has **one job**, works standalone, and composes with the rest via a
 
 **Design principle:** one layer, one responsibility. If two products need to sync to function, it's wrong.
 
+## Examples
+
+The [`examples/`](examples/) directory contains ready-to-run TypeScript examples for the `@dtoolkit/sdk` package:
+
+```bash
+cd examples
+npm install
+npm start          # init + start servers + run demo + teardown
+```
+
+No configuration needed — the setup script creates a temporary brain, starts dbrain and dproxy, runs the demo, and cleans up. See the [examples README](examples/README.md) for more details.
+
 ## Quick start
 
 ```bash

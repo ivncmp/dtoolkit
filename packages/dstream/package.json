@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@dtoolkit/core": "workspace:*",
-    "@dtoolkit/dbrain-client": "workspace:*"
+    "@dtoolkit/sdk": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

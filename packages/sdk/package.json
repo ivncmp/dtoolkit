@@ -1,16 +1,16 @@
 {
-  "name": "@dtoolkit/dbrain-client",
-  "version": "0.1.2",
-  "description": "Typed HTTP client for dbrain",
+  "name": "@dtoolkit/sdk",
+  "version": "0.1.0",
+  "description": "Typed HTTP clients for dtoolkit services (dbrain + dproxy)",
   "type": "module",
   "license": "MIT",
   "author": "Iván Campillo <ivncmp@gmail.com>",
   "repository": {
     "type": "git",
     "url": "https://github.com/ivncmp/dtoolkit.git",
-    "directory": "packages/dbrain-client"
+    "directory": "packages/sdk"
   },
-  "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dbrain-client",
+  "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/sdk",
   "publishConfig": {
     "access": "public"
   },
@@ -30,9 +30,10 @@
     "ai",
     "memory",
     "dbrain",
+    "dproxy",
     "client",
-    "mcp",
-    "knowledge"
+    "sdk",
+    "dtoolkit"
   ],
   "scripts": {
     "build": "tsc",

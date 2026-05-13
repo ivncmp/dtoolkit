@@ -23,13 +23,13 @@ Each product has **one job**, works standalone, and composes with the rest via a
 | Package | Version | Description |
 | --- | --- | --- |
 | [`@dtoolkit/core`](packages/core/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/core.svg)](https://www.npmjs.com/package/@dtoolkit/core) | Shared types and Zod schemas (`Adapter`, `ContextBlock`, `Fact`, `Entity`, `Tier`) |
+| [`@dtoolkit/sdk`](packages/sdk/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/sdk.svg)](https://www.npmjs.com/package/@dtoolkit/sdk) | Typed HTTP clients for dtoolkit services (dbrain + dproxy) |
 
 ### Memory & Context
 
 | Package | Version | Description |
 | --- | --- | --- |
 | [`@dtoolkit/dbrain`](packages/dbrain/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dbrain.svg)](https://www.npmjs.com/package/@dtoolkit/dbrain) | Persistent memory server — SQLite + FTS5, MCP, REST API, dashboard |
-| [`@dtoolkit/dbrain-client`](packages/dbrain-client/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dbrain-client.svg)](https://www.npmjs.com/package/@dtoolkit/dbrain-client) | Typed HTTP client for dbrain |
 | [`@dtoolkit/dcontext`](packages/dcontext/) | — | Tool cache + background compactor (local) |
 | [`@dtoolkit/dprime`](packages/dprime/) | — | Auto-briefing before touching a module |
 

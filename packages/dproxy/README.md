@@ -181,7 +181,7 @@ dproxy config set server.apiKey my-secret-key
 
 ## REST API
 
-All endpoints are prefixed with `/v1`. When `server.apiKey` is configured, all endpoints (except `/v1/health`) require the `X-API-Key` header.
+All endpoints are prefixed with `/v1`. When `server.apiKey` is configured, all endpoints (except `/v1/health`) require the `Authorization: Bearer <token>` header.
 
 ### CLI → HTTP mapping
 
@@ -215,7 +215,7 @@ All endpoints are prefixed with `/v1`. When `server.apiKey` is configured, all e
 dproxy config set server.apiKey my-secret-key
 
 # Then include in all requests
-curl -H "X-API-Key: my-secret-key" http://localhost:7880/v1/health
+curl -H "Authorization: Bearer my-secret-key" http://localhost:7880/v1/health
 ```
 
 When no `server.apiKey` is set, all endpoints are open (suitable for local-only use).
@@ -287,13 +287,13 @@ Two event types: `text` (incremental chunks) and `result` (final aggregated resu
 # Non-streaming
 curl -X POST http://localhost:7880/v1/ask \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: my-secret-key" \
+  -H "Authorization: Bearer my-secret-key" \
   -d '{"prompt": "explain monads in one sentence"}'
 
 # Streaming (SSE)
 curl -N -X POST http://localhost:7880/v1/ask \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: my-secret-key" \
+  -H "Authorization: Bearer my-secret-key" \
   -d '{"prompt": "explain monads", "stream": true}'
 ```
 

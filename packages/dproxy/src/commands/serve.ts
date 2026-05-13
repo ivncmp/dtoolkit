@@ -56,9 +56,10 @@ async function runServe(opts: Record<string, unknown>): Promise<void> {
   if (apiKey) {
     app.addHook('onRequest', async (request, reply) => {
       if (request.url === '/v1/health') return;
-      const provided = request.headers['x-api-key'];
-      if (provided !== apiKey) {
-        reply.code(401).send({ error: 'Invalid or missing API key' });
+      const auth = request.headers.authorization;
+      const token = auth?.startsWith('Bearer ') ? auth.slice(7) : undefined;
+      if (token !== apiKey) {
+        reply.code(401).send({ error: 'Invalid or missing authorization token' });
       }
     });
   }
@@ -312,7 +313,7 @@ async function runServe(opts: Record<string, unknown>): Promise<void> {
   console.log(pc.green(`\ndproxy server listening on ${pc.bold(`http://${host}:${port}`)}`));
   console.log(pc.dim(`Provider: ${config.provider.default}`));
   if (apiKey) {
-    console.log(pc.dim('Auth: API key required (X-API-Key header)'));
+    console.log(pc.dim('Auth: Bearer token required (Authorization header)'));
   } else {
     console.log(pc.dim('Auth: disabled (set server.apiKey to enable)'));
   }

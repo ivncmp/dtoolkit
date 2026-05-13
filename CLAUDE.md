@@ -45,8 +45,9 @@ packages/
 │                      Fastify REST API + MCP HTTP on :7878, React dashboard on :7879
 │                      SQLite + FTS5 via better-sqlite3. CLI: dbrain init/start/connect/status
 │                      Build: tsc + copy dashboard assets + chmod bin
-├── dbrain-client/     Typed HTTP client for dbrain's REST API
-│                      Build: tsc. Single class DBrainClient with all endpoints.
+├── sdk/               Typed HTTP clients for dtoolkit services (dbrain + dproxy)
+│                      DBrainClient + DProxyClient, shared HttpClient base
+│                      Build: tsc. Auth: unified Bearer token.
 └── dproxy/            Universal CLI adapter for invoking models via local CLIs
                        Commander-based CLI with context injection pipeline
                        Uses adapter packages for multi-provider support (--provider flag)
@@ -55,7 +56,7 @@ tools/
 └── tsconfig/          Shared base tsconfig (ES2022, NodeNext, strict)
 ```
 
-**Dependency graph**: `core` ← `adapter-*` ← `dproxy`. `core` ← `dbrain-client` ← (consumers). `core` ← `dbrain`. Turbo handles build ordering via `^build`.
+**Dependency graph**: `core` ← `adapter-*` ← `dproxy`. `core` ← `sdk` ← (consumers). `core` ← `dbrain`. Turbo handles build ordering via `^build`.
 
 ### dbrain internals
 
@@ -73,7 +74,7 @@ tools/
 - `src/lib/adapter.ts` — `resolveAdapter()` maps provider name to adapter instance
 - `src/lib/context-builder.ts` — assembles prompt context from multiple sources in priority order: day chat log → workspace bootstrap → memory snippets → life/PARA context
 - `src/lib/stdin.ts` — `readStdin()` for piped input
-- `src/commands/serve.ts` — Fastify REST API on configurable port (default :7880), full CLI parity with X-API-Key auth, SSE streaming via `stream: true`
+- `src/commands/serve.ts` — Fastify REST API on configurable port (default :7880), full CLI parity with Bearer token auth, SSE streaming via `stream: true`
 - Data stored in `~/.dproxy/` (config.json, history.jsonl, memory/, templates/)
 - Supports 5 providers via `--provider` flag: claude (default), codex, gemini, ollama, opencode
 

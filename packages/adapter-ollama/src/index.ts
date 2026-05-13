@@ -6,6 +6,7 @@ import type {
   AdapterResult,
   AdapterStreamEvent,
 } from "@dtoolkit/core";
+import { embedTextFiles } from "@dtoolkit/core";
 
 export interface OllamaAdapterConfig {
   bin?: string;
@@ -32,8 +33,17 @@ export class OllamaAdapter implements Adapter {
   }
 
   async *stream(request: AdapterRequest): AsyncGenerator<AdapterStreamEvent> {
-    const model = request.model ?? this.defaultModel;
-    const args = this.buildArgs(model, request);
+    let effectiveRequest = request;
+    if (request.files?.length) {
+      const { prompt, remaining } = embedTextFiles(request.prompt, request.files);
+      if (remaining.length > 0) {
+        throw new Error("ollama adapter does not yet support binary file attachments");
+      }
+      effectiveRequest = { ...request, prompt, files: undefined };
+    }
+
+    const model = effectiveRequest.model ?? this.defaultModel;
+    const args = this.buildArgs(model, effectiveRequest);
     const startTime = Date.now();
 
     const proc = spawn(this.bin, args, {

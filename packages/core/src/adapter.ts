@@ -1,9 +1,12 @@
+import type { InputFile } from "./file.js";
+
 export interface AdapterRequest {
   prompt: string;
   systemPrompt?: string;
   model?: string;
   maxTurns?: number;
   stdinContent?: string;
+  files?: InputFile[];
   sessionId?: string;
   continueSession?: boolean;
   options?: Record<string, unknown>;

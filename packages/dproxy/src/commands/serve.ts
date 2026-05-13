@@ -26,7 +26,7 @@ import {
   deleteTemplate,
   renderTemplate,
 } from '../lib/template-store.js';
-import type { ProviderName, TemplateDefinition } from '../lib/types.js';
+import type { InputFile, ProviderName, TemplateDefinition } from '../lib/types.js';
 
 /** Create the `dproxy serve` Commander command. */
 export function createServeCommand(): Command {
@@ -87,6 +87,7 @@ async function runServe(opts: Record<string, unknown>): Promise<void> {
     life?: boolean;
     workspace?: boolean;
     chatLog?: boolean;
+    files?: InputFile[];
     sessionId?: string;
     continueSession?: boolean;
     maxSessionTokens?: number;
@@ -110,6 +111,7 @@ async function runServe(opts: Record<string, unknown>): Promise<void> {
       life: body.life,
       workspace: body.workspace,
       chatLog: body.chatLog,
+      files: body.files,
       sessionId: body.sessionId,
       continueSession: body.continueSession,
       maxSessionTokens: body.maxSessionTokens,

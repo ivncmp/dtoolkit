@@ -7,7 +7,7 @@ import type {
   AdapterStreamEvent,
   AdapterUsage,
 } from "@dtoolkit/core";
-import { LineBuffer } from "@dtoolkit/core";
+import { LineBuffer, embedTextFiles } from "@dtoolkit/core";
 
 export interface ClaudeAdapterConfig {
   bin?: string;
@@ -34,11 +34,20 @@ export class ClaudeAdapter implements Adapter {
   }
 
   async *stream(request: AdapterRequest): AsyncGenerator<AdapterStreamEvent> {
-    const args = this.buildArgs(request);
+    let effectiveRequest = request;
+    if (request.files?.length) {
+      const { prompt, remaining } = embedTextFiles(request.prompt, request.files);
+      if (remaining.length > 0) {
+        throw new Error("claude adapter does not yet support binary file attachments");
+      }
+      effectiveRequest = { ...request, prompt, files: undefined };
+    }
+
+    const args = this.buildArgs(effectiveRequest);
     const startTime = Date.now();
     const lineBuffer = new LineBuffer();
 
-    const { stdout, done } = spawnProcess(this.bin, args, request.stdinContent);
+    const { stdout, done } = spawnProcess(this.bin, args, effectiveRequest.stdinContent);
 
     let fullText = "";
     let sessionId: string | undefined;

@@ -39,5 +39,6 @@ export type {
   AdapterResult,
   AdapterStreamEvent,
   AdapterUsage,
+  InputFile,
 } from "@dtoolkit/core";
 export type { HistoryEntry, TemplateDefinition } from "@dtoolkit/core";

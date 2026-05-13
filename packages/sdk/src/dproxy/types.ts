@@ -1,6 +1,7 @@
 import type {
   AdapterUsage,
   HistoryEntry,
+  InputFile,
   TemplateDefinition,
 } from "@dtoolkit/core";
 
@@ -23,6 +24,7 @@ export interface AskOptions {
   life?: boolean;
   workspace?: boolean;
   chatLog?: boolean;
+  files?: InputFile[];
   sessionId?: string;
   continueSession?: boolean;
   maxSessionTokens?: number;

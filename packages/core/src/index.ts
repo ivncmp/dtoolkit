@@ -6,6 +6,9 @@ export type {
   AdapterUsage,
 } from "./adapter.js";
 
+export type { InputFile } from "./file.js";
+export { isTextFile, embedTextFiles, detectMimeType } from "./file.js";
+
 export { LineBuffer } from "./line-buffer.js";
 
 export {

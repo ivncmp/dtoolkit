@@ -13,7 +13,7 @@
     "demo": "tsx --env-file=.env src/demo.ts"
   },
   "dependencies": {
-    "@dtoolkit/sdk": "^0.2.0"
+    "@dtoolkit/sdk": "file:../packages/sdk"
   },
   "devDependencies": {
     "tsx": "^4.19.0"

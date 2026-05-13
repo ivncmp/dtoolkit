@@ -9,6 +9,7 @@ import type {
   AdapterStreamEvent,
   AdapterUsage,
   AppConfig,
+  InputFile,
   ProviderName,
 } from './types.js';
 
@@ -22,6 +23,7 @@ export interface RunnerOptions {
   life?: boolean;
   workspace?: boolean;
   chatLog?: boolean;
+  files?: InputFile[];
   sessionId?: string;
   continueSession?: boolean;
   maxSessionTokens?: number;
@@ -84,6 +86,7 @@ export async function executePrompt(
     model: options.model ?? cfg.defaults.model,
     maxTurns: options.maxTurns ?? cfg.defaults.maxTurns,
     systemPrompt: options.systemPrompt,
+    files: options.files,
     sessionId,
     continueSession: options.continueSession,
     options: {
@@ -167,6 +170,7 @@ export async function* streamPrompt(
     model: options.model ?? cfg.defaults.model,
     maxTurns: options.maxTurns ?? cfg.defaults.maxTurns,
     systemPrompt: options.systemPrompt,
+    files: options.files,
     sessionId,
     continueSession: options.continueSession,
     options: {

@@ -1,9 +1,13 @@
+import { readFile } from 'node:fs/promises';
+import { basename } from 'node:path';
+
+import { detectMimeType, isTextFile } from '@dtoolkit/core';
 import { Command } from 'commander';
 import pc from 'picocolors';
 
 import { executePrompt, streamPrompt } from '../lib/runner.js';
 import { readStdin } from '../lib/stdin.js';
-import type { ProviderName } from '../lib/types.js';
+import type { InputFile, ProviderName } from '../lib/types.js';
 
 /** Create the `dproxy ask` Commander command with all CLI options. */
 export function createAskCommand(): Command {
@@ -20,6 +24,7 @@ export function createAskCommand(): Command {
     .option('--no-memory', 'Skip memory injection')
     .option('--memory <keys>', 'Inject only specific memory keys (comma-separated)')
     .option('--no-life', 'Skip life/PARA context injection')
+    .option('-f, --file <paths...>', 'Attach files to the prompt')
     .option('--no-history', "Don't save to history")
     .option('--raw', 'Print raw JSON response')
     .option('--token-footer', 'Append token usage footer to response text')
@@ -58,6 +63,19 @@ export async function runAsk(promptParts: string[], opts: Record<string, unknown
     fullPrompt = fullPrompt ? `${fullPrompt}\n\n---\n\n${stdinContent}` : stdinContent;
   }
 
+  let files: InputFile[] | undefined;
+  if (opts.file) {
+    files = await Promise.all(
+      (opts.file as string[]).map(async (filePath) => {
+        const name = basename(filePath);
+        const mimeType = detectMimeType(name);
+        const raw = await readFile(filePath);
+        const isText = isTextFile({ name, mimeType, data: '' });
+        return { name, mimeType, data: isText ? raw.toString('utf-8') : raw.toString('base64') };
+      }),
+    );
+  }
+
   const memoryOpt =
     opts.memory === false
       ? false
@@ -73,6 +91,7 @@ export async function runAsk(promptParts: string[], opts: Record<string, unknown
     systemPrompt: opts.systemPrompt as string | undefined,
     memory: memoryOpt,
     life: opts.life !== false ? undefined : false,
+    files,
     sessionId: opts.resume as string | undefined,
     continueSession: opts.continue as boolean | undefined,
     maxSessionTokens: opts.maxSessionTokens as number | undefined,

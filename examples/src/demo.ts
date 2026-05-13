@@ -10,7 +10,15 @@
  *   npm run demo
  */
 
+import { readFile, stat } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import type { InputFile } from "@dtoolkit/sdk";
 import { DBrainClient, DProxyClient, SdkError } from "@dtoolkit/sdk";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const SAMPLES_DIR = resolve(__dirname, "../samples");
 
 const dbrain = new DBrainClient(
   process.env.DBRAIN_URL ?? "http://localhost:7878",
@@ -21,42 +29,175 @@ const dproxy = new DProxyClient(
   process.env.DPROXY_TOKEN || undefined,
 );
 
+const passed: string[] = [];
+const failed: string[] = [];
+
+async function test(name: string, fn: () => Promise<void>): Promise<void> {
+  try {
+    await fn();
+    passed.push(name);
+    console.log(`  OK  ${name}`);
+  } catch (err) {
+    failed.push(name);
+    console.log(`  FAIL  ${name}`);
+    console.log(`        ${(err as Error).message}`);
+  }
+}
+
+function section(title: string): void {
+  console.log(`\n${"=".repeat(50)}`);
+  console.log(`  ${title}`);
+  console.log(`${"=".repeat(50)}\n`);
+}
+
+function fileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  return `${(bytes / 1024).toFixed(1)} KB`;
+}
+
 try {
   // ── dbrain ──────────────────────────────────────────────────────
 
-  console.log("=== dbrain ===\n");
+  section("dbrain");
 
-  const brain = await dbrain.health();
-  console.log(`Brain "${brain.name}" v${brain.version} — ${brain.entities} entities, ${brain.facts} facts`);
+  await test("Health check", async () => {
+    const h = await dbrain.health();
+    console.log(`        "${h.name}" v${h.version} — ${h.entities} entities, ${h.facts} facts`);
+  });
 
-  const entities = await dbrain.listEntities();
-  console.log(`\nEntities (${entities.length}):`);
-  for (const e of entities.slice(0, 5)) {
-    console.log(`  [${e.category}/${e.type}] ${e.name}`);
-  }
-  if (entities.length > 5) console.log(`  ... and ${entities.length - 5} more`);
+  await test("List entities", async () => {
+    const entities = await dbrain.listEntities();
+    console.log(`        Found ${entities.length} entities`);
+    for (const e of entities.slice(0, 3)) {
+      console.log(`        - [${e.category}/${e.type}] ${e.name}`);
+    }
+  });
 
-  const results = await dbrain.search("projects", { limit: 3 });
-  console.log(`\nSearch "projects" (${results.length} results):`);
-  for (const r of results) {
-    console.log(`  [${r.entity.name}] ${r.fact.fact}`);
-  }
+  await test("Full-text search", async () => {
+    const results = await dbrain.search("projects", { limit: 3 });
+    console.log(`        Query "projects" returned ${results.length} results`);
+  });
 
   // ── dproxy ─────────────────────────────────────────────────────
 
-  console.log("\n=== dproxy ===\n");
+  section("dproxy");
 
-  const proxy = await dproxy.health();
-  console.log(`dproxy v${proxy.version} — provider: ${proxy.provider}`);
+  await test("Health check", async () => {
+    const h = await dproxy.health();
+    console.log(`        v${h.version}, provider: ${h.provider}`);
+  });
 
-  const answer = await dproxy.ask("What is 2+2? Reply with just the number.");
-  console.log(`\nAsk: ${answer.text} (${answer.durationMs}ms)`);
+  await test("Batch ask", async () => {
+    const prompt = "What is 2+2? Reply with just the number.";
+    console.log(`        Prompt:   "${prompt}"`);
+    const a = await dproxy.ask(prompt);
+    console.log(`        Answer:   "${a.text.trim()}"  (${a.durationMs}ms)`);
+  });
 
-  process.stdout.write("\nStream: ");
-  for await (const event of dproxy.askStream("Count from 1 to 5, one per line.")) {
-    if (event.type === "text") process.stdout.write(event.text ?? "");
+  await test("Streaming", async () => {
+    const prompt = "Count from 1 to 5, one number per line.";
+    console.log(`        Prompt:   "${prompt}"`);
+    const chunks: string[] = [];
+    for await (const ev of dproxy.askStream(prompt)) {
+      if (ev.type === "text" && ev.text) chunks.push(ev.text);
+    }
+    const text = chunks.join("").trim();
+    console.log(`        Answer:   "${text.replace(/\n/g, ", ")}"`);
+    console.log(`        Chunks:   ${chunks.length}`);
+  });
+
+  await test("System prompt override", async () => {
+    const prompt = "Who are you?";
+    const systemPrompt = "You are a helpful pirate. Keep it under 20 words.";
+    console.log(`        System:   "${systemPrompt}"`);
+    console.log(`        Prompt:   "${prompt}"`);
+    const a = await dproxy.ask(prompt, { systemPrompt, saveHistory: false });
+    console.log(`        Answer:   "${a.text.trim()}"`);
+  });
+
+  // ── files ──────────────────────────────────────────────────────
+
+  section("dproxy + files");
+
+  await test("Text file (inline TypeScript)", async () => {
+    const file: InputFile = {
+      name: "example.ts",
+      mimeType: "application/typescript",
+      data: `const greeting = "hello";\nconsole.log(greeting);`,
+    };
+    const prompt = "What does this code print? Reply with just the output.";
+    console.log(`        File:     ${file.name} (${fileSize(file.data.length)})`);
+    console.log(`        Prompt:   "${prompt}"`);
+    const a = await dproxy.ask(prompt, { files: [file] });
+    console.log(`        Answer:   "${a.text.trim()}"`);
+  });
+
+  await test("Multiple text files", async () => {
+    const files: InputFile[] = [
+      {
+        name: "add.ts",
+        mimeType: "application/typescript",
+        data: `export function add(a: number, b: number): number { return a + b; }`,
+      },
+      {
+        name: "add.test.ts",
+        mimeType: "application/typescript",
+        data: `import { add } from "./add";\nconsole.log(add(3, 4));`,
+      },
+    ];
+    const prompt = "What number does add.test.ts print? Reply with just the number.";
+    console.log(`        Files:    ${files.map((f) => f.name).join(", ")}`);
+    console.log(`        Prompt:   "${prompt}"`);
+    const a = await dproxy.ask(prompt, { files });
+    console.log(`        Answer:   "${a.text.trim()}"`);
+  });
+
+  await test("Image file (PNG)", async () => {
+    const path = resolve(SAMPLES_DIR, "logo.png");
+    const [data, info] = await Promise.all([readFile(path), stat(path)]);
+    const prompt = "Describe this image in one sentence.";
+    console.log(`        File:     logo.png (${fileSize(info.size)})`);
+    console.log(`        Prompt:   "${prompt}"`);
+    const a = await dproxy.ask(prompt, {
+      files: [{ name: "logo.png", mimeType: "image/png", data: data.toString("base64") }],
+    });
+    console.log(`        Answer:   "${a.text.trim().slice(0, 120)}"`);
+  });
+
+  await test("PDF file", async () => {
+    const path = resolve(SAMPLES_DIR, "sample.pdf");
+    const [data, info] = await Promise.all([readFile(path), stat(path)]);
+    const prompt = "What text does this PDF contain? Reply with just the text.";
+    console.log(`        File:     sample.pdf (${fileSize(info.size)})`);
+    console.log(`        Prompt:   "${prompt}"`);
+    const a = await dproxy.ask(prompt, {
+      files: [{ name: "sample.pdf", mimeType: "application/pdf", data: data.toString("base64") }],
+    });
+    console.log(`        Answer:   "${a.text.trim()}"`);
+  });
+
+  await test("Mixed files (code + image)", async () => {
+    const imgData = await readFile(resolve(SAMPLES_DIR, "logo.png"));
+    const files: InputFile[] = [
+      { name: "logo.png", mimeType: "image/png", data: imgData.toString("base64") },
+      { name: "caption.txt", mimeType: "text/plain", data: "This is the official dtoolkit logo." },
+    ];
+    const prompt = "Does the caption.txt accurately describe the image? Reply yes or no.";
+    console.log(`        Files:    ${files.map((f) => f.name).join(", ")}`);
+    console.log(`        Prompt:   "${prompt}"`);
+    const a = await dproxy.ask(prompt, { files });
+    console.log(`        Answer:   "${a.text.trim()}"`);
+  });
+
+  // ── summary ────────────────────────────────────────────────────
+
+  console.log(`\n${"=".repeat(50)}`);
+  console.log(`  Results: ${passed.length} passed, ${failed.length} failed`);
+  console.log(`${"=".repeat(50)}\n`);
+
+  if (failed.length > 0) {
+    process.exit(1);
   }
-  console.log();
 } catch (err) {
   if (err instanceof SdkError) {
     console.error(`\nAPI error: HTTP ${err.status} on ${err.path}\n  ${err.body}`);

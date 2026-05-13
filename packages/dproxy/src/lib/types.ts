@@ -5,6 +5,7 @@ export type {
   AdapterStreamEvent,
   AdapterUsage,
   HistoryEntry,
+  InputFile,
   SessionInfo,
   TemplateDefinition,
   TemplateVariable,

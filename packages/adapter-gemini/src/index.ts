@@ -7,7 +7,7 @@ import type {
   AdapterStreamEvent,
   AdapterUsage,
 } from "@dtoolkit/core";
-import { LineBuffer } from "@dtoolkit/core";
+import { LineBuffer, embedTextFiles } from "@dtoolkit/core";
 
 export interface GeminiAdapterConfig {
   bin?: string;
@@ -34,7 +34,16 @@ export class GeminiAdapter implements Adapter {
   }
 
   async *stream(request: AdapterRequest): AsyncGenerator<AdapterStreamEvent> {
-    const args = this.buildArgs(request);
+    let effectiveRequest = request;
+    if (request.files?.length) {
+      const { prompt, remaining } = embedTextFiles(request.prompt, request.files);
+      if (remaining.length > 0) {
+        throw new Error("gemini adapter does not yet support binary file attachments");
+      }
+      effectiveRequest = { ...request, prompt, files: undefined };
+    }
+
+    const args = this.buildArgs(effectiveRequest);
     const startTime = Date.now();
     const lineBuffer = new LineBuffer();
 

@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/dpolicy",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Policy-as-code for the team harness — centralized rules, versioned, repo-synced",
   "type": "module",
   "license": "MIT",

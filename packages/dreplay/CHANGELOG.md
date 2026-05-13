@@ -1,5 +1,13 @@
 # @dtoolkit/dreplay
 
+## 0.0.3
+
+### Patch Changes
+
+- cf1fb2b: chore: migrate dependency from @dtoolkit/dbrain-client to @dtoolkit/sdk
+- Updated dependencies [cf1fb2b]
+  - @dtoolkit/sdk@0.2.0
+
 ## 0.0.2
 
 ### Patch Changes

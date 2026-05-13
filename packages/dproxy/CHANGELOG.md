@@ -1,5 +1,11 @@
 # @dtoolkit/dproxy
 
+## 1.2.0
+
+### Minor Changes
+
+- cf1fb2b: feat: migrate server auth from X-API-Key header to unified Authorization Bearer token
+
 ## 1.1.4
 
 ### Patch Changes

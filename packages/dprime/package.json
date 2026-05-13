@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/dprime",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Auto-briefing before touching a module — facts, git blame, decisions, gotchas",
   "type": "module",
   "license": "MIT",

@@ -1,5 +1,13 @@
 # @dtoolkit/sdk
 
+## 0.3.1
+
+### Patch Changes
+
+- 6f3e580: Add ASCII art banners to all CLI help outputs (dbrain, dproxy, dcontext). Migrate dbrain CLI to Commander. Add Codex CLI, Gemini CLI, and OpenCode support to dbrain connect and dcontext install/hooks. Move dcontext MD section helpers to core. Remove Ollama adapter.
+- Updated dependencies [6f3e580]
+  - @dtoolkit/core@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes

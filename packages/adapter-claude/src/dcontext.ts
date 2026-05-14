@@ -4,37 +4,11 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 import type { Target, TranscriptEntry } from '@dtoolkit/core';
+import { writeDcontextMdSection, removeDcontextMdSection } from '@dtoolkit/core';
 
 const CLAUDE_DIR = join(homedir(), '.claude');
 const CLAUDE_MD = join(CLAUDE_DIR, 'CLAUDE.md');
 const SETTINGS_JSON = join(CLAUDE_DIR, 'settings.json');
-
-const DBRAIN_START = '<!-- dbrain:start -->';
-const DBRAIN_END = '<!-- dbrain:end -->';
-const DCONTEXT_MARKER = '<!-- dcontext:active -->';
-
-const DBRAIN_DCONTEXT_SECTION = `# dbrain
-
-You have an AI brain connected via MCP (dbrain). Your identity, soul, user profile, and project facts are **automatically injected at session start** by dcontext — you already have them in your context under "Session Context (from dbrain)".
-
-## Tools
-
-- \`recall\` — Search the brain. **Only use when the user asks about something NOT already in your Session Context.** Do not call at session start — your context is already loaded.
-- \`remember\` — Save important facts. Decisions, preferences, personal details, milestones. One atomic fact per call. Use proactively across ALL projects.
-- \`log\` — Store conversation messages at natural breakpoints (end of task, before user leaves, every few exchanges).
-- \`get_entity\` — Full context about a specific entity.
-- \`list_entities\` — List entities by category or type.
-- \`create_entity\` — Create new entity, then \`remember\` facts about it.
-- \`bump\` — Touch a memory to keep it hot.
-- \`overview\` — Brain stats.
-
-## Rules
-
-- Do NOT call \`recall\` or \`wake_up\` at session start. Your context is already loaded by dcontext.
-- Use \`recall\` only mid-conversation when the user asks about something not in the injected context.
-- Never say "I don't know" about the user without searching first.
-- When storing facts, be specific and atomic. "Favorite ice cream is pistachio" not "We talked about food preferences".
-- Use \`remember\` proactively. Decisions, milestones, preferences, people, learnings — if it's worth remembering, store it.`;
 
 const DCONTEXT_HOOKS = {
   SessionStart: [
@@ -75,7 +49,6 @@ class ClaudeTarget implements Target {
   }
 
   private async addClaudeMdSection(): Promise<void> {
-    const section = `${DBRAIN_START}\n${DCONTEXT_MARKER}\n${DBRAIN_DCONTEXT_SECTION}\n${DBRAIN_END}`;
     let content = '';
     try {
       content = await readFile(CLAUDE_MD, 'utf-8');
@@ -83,21 +56,8 @@ class ClaudeTarget implements Target {
       // file doesn't exist yet
     }
 
-    const startIdx = content.indexOf(DBRAIN_START);
-    const endIdx = content.indexOf(DBRAIN_END);
-    if (startIdx !== -1 && endIdx !== -1) {
-      const before = content.slice(0, startIdx).trimEnd();
-      const after = content.slice(endIdx + DBRAIN_END.length).trimStart();
-      const parts = [before, section, after].filter(Boolean);
-      content = parts.join('\n\n');
-    } else if (content.trim()) {
-      content = section + '\n\n' + content.trim();
-    } else {
-      content = section;
-    }
-
     await mkdir(CLAUDE_DIR, { recursive: true });
-    await writeFile(CLAUDE_MD, content.trim() + '\n', 'utf-8');
+    await writeFile(CLAUDE_MD, writeDcontextMdSection(content), 'utf-8');
   }
 
   private async removeClaudeMdSection(): Promise<void> {
@@ -108,17 +68,10 @@ class ClaudeTarget implements Target {
       return;
     }
 
-    if (!content.includes(DCONTEXT_MARKER)) return;
-
-    const startIdx = content.indexOf(DBRAIN_START);
-    const endIdx = content.indexOf(DBRAIN_END);
-    if (startIdx === -1 || endIdx === -1) return;
-
-    const before = content.slice(0, startIdx).trimEnd();
-    const after = content.slice(endIdx + DBRAIN_END.length).trimStart();
-    const result = [before, after].filter(Boolean).join('\n\n');
-
-    await writeFile(CLAUDE_MD, result.trim() + '\n', 'utf-8');
+    const result = removeDcontextMdSection(content);
+    if (result !== null) {
+      await writeFile(CLAUDE_MD, result, 'utf-8');
+    }
   }
 
   async isInstalled(): Promise<boolean> {

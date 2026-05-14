@@ -33,15 +33,16 @@ pnpm --filter @dtoolkit/dbrain dev       # tsx watch
 packages/
 ├── core/              Shared types + Zod schemas (Entity, Fact, Tier, ContextBlock, Adapter)
 │                      Includes AdapterStreamEvent, LineBuffer for JSONL parsing
+│                      Also: shared dcontext MD section helpers (writeDcontextMdSection, etc.)
 │                      Build: tsc. No runtime deps beyond zod. Other packages depend on this.
 ├── adapter-claude/    Shell-out adapter for Claude Code CLI (stream-json + deltas)
 │                      Also: DcontextTarget for Claude Code hooks (settings.json + CLAUDE.md)
 ├── adapter-codex/     Shell-out adapter for Codex CLI (JSONL streaming)
 ├── adapter-gemini/    Shell-out adapter for Gemini CLI (stream-json)
-│                      Also: DcontextTarget for Gemini CLI hooks (settings.json)
+│                      Also: DcontextTarget for Gemini CLI hooks (settings.json + GEMINI.md)
 ├── adapter-ollama/    Shell-out adapter for Ollama CLI (raw text streaming)
 ├── adapter-opencode/  Shell-out adapter for OpenCode CLI (JSONL streaming)
-│                      Also: DcontextTarget for OpenCode hooks (npm plugin)
+│                      Also: DcontextTarget for OpenCode hooks (npm plugin + AGENTS.md)
 │                      All adapters: Build: tsc. Depend on core only.
 │                      All implement stream() + execute() via dproxy.ts
 │                      Claude/Gemini/OpenCode also implement Target via dcontext.ts

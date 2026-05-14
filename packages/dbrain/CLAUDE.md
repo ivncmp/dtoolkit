@@ -63,12 +63,11 @@ dbrain status
 ```bash
 # Connect a client to a running brain (client only)
 dbrain connect claude http://your-server:7878
+dbrain connect gemini http://your-server:7878
+dbrain connect opencode http://your-server:7878
 ```
 
-This fetches the config from the brain and writes three local files:
-- `~/.claude.json` — MCP server registration
-- `~/.claude/settings.json` — Tool permissions
-- `~/.claude/CLAUDE.md` — Behavioral instructions
+Each client gets: MCP server registration, tool permissions/policies, and behavioral instructions in the client's native instruction file (`CLAUDE.md`, `GEMINI.md`, or `AGENTS.md`).
 
 ### Docker (to run as a 24/7 service)
 
@@ -185,9 +184,11 @@ dbrain/
 ```bash
 # On the client machine, with the brain running:
 dbrain connect claude http://your-server:7878
+dbrain connect gemini http://your-server:7878
+dbrain connect opencode http://your-server:7878
 ```
 
-This calls `GET /connect` on the brain, which returns the exact MCP config, permissions, and behavioral instructions needed. The `connect` command writes them to the three local files automatically.
+This calls `GET /connect` on the brain, which returns the exact MCP config, permissions, and behavioral instructions needed. The `connect` command writes them to the client's native config files automatically.
 
 ### Manual (if connect isn't available)
 

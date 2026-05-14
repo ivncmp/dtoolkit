@@ -33,3 +33,11 @@ export type { HistoryEntry, SessionInfo } from "./history.js";
 export type { TemplateDefinition, TemplateVariable } from "./template.js";
 
 export type { Target, TranscriptEntry } from "./transcript.js";
+export {
+  DBRAIN_START,
+  DBRAIN_END,
+  DCONTEXT_MARKER,
+  DBRAIN_DCONTEXT_SECTION,
+  writeDcontextMdSection,
+  removeDcontextMdSection,
+} from "./transcript.js";

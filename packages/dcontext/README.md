@@ -87,9 +87,15 @@ The session briefing includes (in order):
 
 Total briefing capped at 8000 characters.
 
-### CLAUDE.md integration
+### Instruction file integration
 
-When you run `dcontext install claude`, it also modifies the dbrain section in `~/.claude/CLAUDE.md` to tell Claude **not to call `recall` at session start** — since the context is already injected. Run `dbrain connect claude` to restore the original dbrain instructions after uninstalling.
+When you run `dcontext install <target>`, it modifies the dbrain section in the client's instruction file to tell the AI **not to call `recall` at session start** — since the context is already injected. Run `dbrain connect <target>` to restore the original dbrain instructions after uninstalling.
+
+| Target | Instruction file |
+|--------|-----------------|
+| `claude` | `~/.claude/CLAUDE.md` |
+| `gemini` | `~/.gemini/GEMINI.md` |
+| `opencode` | `~/.config/opencode/AGENTS.md` |
 
 ## Commands
 

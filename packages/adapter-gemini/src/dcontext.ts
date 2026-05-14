@@ -1,10 +1,13 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 import type { Target, TranscriptEntry } from '@dtoolkit/core';
+import { writeDcontextMdSection, removeDcontextMdSection } from '@dtoolkit/core';
 
-const SETTINGS_PATH = join(homedir(), '.gemini', 'settings.json');
+const GEMINI_DIR = join(homedir(), '.gemini');
+const GEMINI_MD = join(GEMINI_DIR, 'GEMINI.md');
+const SETTINGS_PATH = join(GEMINI_DIR, 'settings.json');
 
 const DCONTEXT_HOOKS = {
   SessionStart: [
@@ -37,6 +40,8 @@ class GeminiTarget implements Target {
   readonly name = 'gemini';
 
   async install(): Promise<void> {
+    await mkdir(GEMINI_DIR, { recursive: true });
+
     let settings: Record<string, unknown> = {};
     try {
       settings = JSON.parse(await readFile(SETTINGS_PATH, 'utf-8'));
@@ -56,6 +61,7 @@ class GeminiTarget implements Target {
     settings['hooks'] = hooks;
 
     await writeFile(SETTINGS_PATH, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
+    await this.addGeminiMdSection();
   }
 
   async uninstall(): Promise<void> {
@@ -86,6 +92,32 @@ class GeminiTarget implements Target {
     }
 
     await writeFile(SETTINGS_PATH, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
+    await this.removeGeminiMdSection();
+  }
+
+  private async addGeminiMdSection(): Promise<void> {
+    let content = '';
+    try {
+      content = await readFile(GEMINI_MD, 'utf-8');
+    } catch {
+      // file doesn't exist yet
+    }
+
+    await writeFile(GEMINI_MD, writeDcontextMdSection(content), 'utf-8');
+  }
+
+  private async removeGeminiMdSection(): Promise<void> {
+    let content: string;
+    try {
+      content = await readFile(GEMINI_MD, 'utf-8');
+    } catch {
+      return;
+    }
+
+    const result = removeDcontextMdSection(content);
+    if (result !== null) {
+      await writeFile(GEMINI_MD, result, 'utf-8');
+    }
   }
 
   async isInstalled(): Promise<boolean> {

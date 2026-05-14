@@ -5,8 +5,11 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 import type { Target, TranscriptEntry } from '@dtoolkit/core';
+import { writeDcontextMdSection, removeDcontextMdSection } from '@dtoolkit/core';
 
-const CONFIG_PATH = join(homedir(), '.config', 'opencode', 'opencode.json');
+const OPENCODE_DIR = join(homedir(), '.config', 'opencode');
+const CONFIG_PATH = join(OPENCODE_DIR, 'opencode.json');
+const AGENTS_MD = join(OPENCODE_DIR, 'AGENTS.md');
 const DB_PATH = join(homedir(), '.local', 'share', 'opencode', 'state_5.sqlite');
 
 class OpenCodeTarget implements Target {
@@ -25,6 +28,7 @@ class OpenCodeTarget implements Target {
     config['plugins'] = plugins;
 
     await writeFile(CONFIG_PATH, JSON.stringify(config, null, 2) + '\n', 'utf-8');
+    await this.addAgentsMdSection();
   }
 
   async uninstall(): Promise<void> {
@@ -44,6 +48,32 @@ class OpenCodeTarget implements Target {
     }
 
     await writeFile(CONFIG_PATH, JSON.stringify(config, null, 2) + '\n', 'utf-8');
+    await this.removeAgentsMdSection();
+  }
+
+  private async addAgentsMdSection(): Promise<void> {
+    let content = '';
+    try {
+      content = await readFile(AGENTS_MD, 'utf-8');
+    } catch {
+      // file doesn't exist yet
+    }
+
+    await writeFile(AGENTS_MD, writeDcontextMdSection(content), 'utf-8');
+  }
+
+  private async removeAgentsMdSection(): Promise<void> {
+    let content: string;
+    try {
+      content = await readFile(AGENTS_MD, 'utf-8');
+    } catch {
+      return;
+    }
+
+    const result = removeDcontextMdSection(content);
+    if (result !== null) {
+      await writeFile(AGENTS_MD, result, 'utf-8');
+    }
   }
 
   async isInstalled(): Promise<boolean> {

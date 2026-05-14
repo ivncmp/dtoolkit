@@ -1,4 +1,4 @@
-import type { InputFile } from "./file.js";
+import type { InputFile } from './file.js';
 
 export interface AdapterRequest {
   prompt: string;

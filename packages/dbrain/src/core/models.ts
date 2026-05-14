@@ -8,4 +8,4 @@ export {
   FactSchema,
   type TierConfig,
   computeTier,
-} from "@dtoolkit/core";
+} from '@dtoolkit/core';

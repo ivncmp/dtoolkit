@@ -107,7 +107,12 @@ export async function connect(client?: string, url?: string, tokenArg?: string) 
   p.outro(pc.green(`Connected. Restart ${clientNames[selectedClient]} to activate.`));
 }
 
-function configureClaude(config: BrainConfig, _url: string, _token: string, s: ReturnType<typeof p.spinner>) {
+function configureClaude(
+  config: BrainConfig,
+  _url: string,
+  _token: string,
+  s: ReturnType<typeof p.spinner>,
+) {
   s.start('Configuring Claude Code');
 
   const claudeDir = join(homedir(), '.claude');
@@ -187,7 +192,12 @@ function writeDbrainMdSection(filePath: string, content: string) {
 const DBRAIN_MCP_TOML_START = '# dbrain MCP';
 const DBRAIN_MCP_TOML_END = '# /dbrain MCP';
 
-function configureCodex(brainConfig: BrainConfig, url: string, token: string, s: ReturnType<typeof p.spinner>) {
+function configureCodex(
+  brainConfig: BrainConfig,
+  url: string,
+  token: string,
+  s: ReturnType<typeof p.spinner>,
+) {
   s.start('Configuring Codex CLI');
 
   const codexDir = join(homedir(), '.codex');
@@ -249,7 +259,12 @@ priority = 200
 modes = ["default", "autoEdit", "yolo"]
 `;
 
-function configureGemini(config: BrainConfig, url: string, token: string, s: ReturnType<typeof p.spinner>) {
+function configureGemini(
+  config: BrainConfig,
+  url: string,
+  token: string,
+  s: ReturnType<typeof p.spinner>,
+) {
   s.start('Configuring Gemini CLI');
 
   const geminiDir = join(homedir(), '.gemini');
@@ -293,7 +308,12 @@ function configureGemini(config: BrainConfig, url: string, token: string, s: Ret
   );
 }
 
-function configureOpenCode(brainConfig: BrainConfig, url: string, token: string, s: ReturnType<typeof p.spinner>) {
+function configureOpenCode(
+  brainConfig: BrainConfig,
+  url: string,
+  token: string,
+  s: ReturnType<typeof p.spinner>,
+) {
   s.start('Configuring OpenCode');
 
   const opencodeDir = join(homedir(), '.config', 'opencode');

@@ -1,4 +1,4 @@
-export { DProxyClient, type DProxyClientOptions } from "./client.js";
+export { DProxyClient, type DProxyClientOptions } from './client.js';
 
 export type {
   AskOptions,
@@ -9,4 +9,4 @@ export type {
   ProviderName,
   TemplateDefinition,
   TemplateRunOptions,
-} from "./types.js";
+} from './types.js';

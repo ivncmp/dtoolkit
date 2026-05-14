@@ -1,4 +1,4 @@
-export { DBrainClient, type DBrainClientOptions } from "./client.js";
+export { DBrainClient, type DBrainClientOptions } from './client.js';
 
 export type {
   ConnectResponse,
@@ -14,4 +14,4 @@ export type {
   Message,
   PendingMessages,
   SearchResult,
-} from "./types.js";
+} from './types.js';

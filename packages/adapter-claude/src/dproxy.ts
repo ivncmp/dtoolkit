@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawn } from 'node:child_process';
 
 import type {
   Adapter,
@@ -6,8 +6,8 @@ import type {
   AdapterResult,
   AdapterStreamEvent,
   AdapterUsage,
-} from "@dtoolkit/core";
-import { LineBuffer, embedTextFiles } from "@dtoolkit/core";
+} from '@dtoolkit/core';
+import { LineBuffer, embedTextFiles } from '@dtoolkit/core';
 
 export interface ClaudeAdapterConfig {
   bin?: string;
@@ -15,21 +15,21 @@ export interface ClaudeAdapterConfig {
 }
 
 export class ClaudeAdapter implements Adapter {
-  readonly provider = "claude";
+  readonly provider = 'claude';
   private readonly bin: string;
   private readonly skipPermissions: boolean;
 
   constructor(config: ClaudeAdapterConfig = {}) {
-    this.bin = config.bin ?? "claude";
+    this.bin = config.bin ?? 'claude';
     this.skipPermissions = config.skipPermissions ?? false;
   }
 
   async execute(request: AdapterRequest): Promise<AdapterResult> {
     let finalResult: AdapterResult | undefined;
     for await (const event of this.stream(request)) {
-      if (event.type === "result") finalResult = event.result;
+      if (event.type === 'result') finalResult = event.result;
     }
-    if (!finalResult) throw new Error("No result event received from Claude CLI");
+    if (!finalResult) throw new Error('No result event received from Claude CLI');
     return finalResult;
   }
 
@@ -38,7 +38,7 @@ export class ClaudeAdapter implements Adapter {
     if (request.files?.length) {
       const { prompt, remaining } = embedTextFiles(request.prompt, request.files);
       if (remaining.length > 0) {
-        throw new Error("claude adapter does not yet support binary file attachments");
+        throw new Error('claude adapter does not yet support binary file attachments');
       }
       effectiveRequest = { ...request, prompt, files: undefined };
     }
@@ -49,7 +49,7 @@ export class ClaudeAdapter implements Adapter {
 
     const { stdout, done } = spawnProcess(this.bin, args, effectiveRequest.stdinContent);
 
-    let fullText = "";
+    let fullText = '';
     let sessionId: string | undefined;
     let costUsd: number | undefined;
     let usage: AdapterUsage | undefined;
@@ -62,44 +62,44 @@ export class ClaudeAdapter implements Adapter {
       for (const line of lines) {
         try {
           const parsed = JSON.parse(line) as Record<string, unknown>;
-          const type = parsed["type"] as string;
+          const type = parsed['type'] as string;
 
-          if (type === "stream_event") {
-            const event = parsed["event"] as Record<string, unknown> | undefined;
-            if (event?.["type"] === "content_block_delta") {
-              const delta = event["delta"] as Record<string, unknown> | undefined;
-              if (delta?.["type"] === "text_delta" && typeof delta["text"] === "string") {
-                const text = delta["text"] as string;
+          if (type === 'stream_event') {
+            const event = parsed['event'] as Record<string, unknown> | undefined;
+            if (event?.['type'] === 'content_block_delta') {
+              const delta = event['delta'] as Record<string, unknown> | undefined;
+              if (delta?.['type'] === 'text_delta' && typeof delta['text'] === 'string') {
+                const text = delta['text'] as string;
                 fullText += text;
-                yield { type: "text", text, raw: parsed };
+                yield { type: 'text', text, raw: parsed };
               }
             }
           }
 
-          if (type === "assistant") {
-            if (!sessionId) sessionId = parsed["session_id"] as string | undefined;
+          if (type === 'assistant') {
+            if (!sessionId) sessionId = parsed['session_id'] as string | undefined;
           }
 
-          if (type === "result") {
+          if (type === 'result') {
             raw = parsed;
-            const resultText = parsed["result"] as string | undefined;
+            const resultText = parsed['result'] as string | undefined;
             if (resultText && !fullText) {
               fullText = resultText;
             }
-            sessionId = parsed["session_id"] as string | undefined;
-            costUsd = (parsed["cost_usd"] ?? parsed["total_cost_usd"]) as number | undefined;
-            isError = (parsed["is_error"] as boolean) ?? false;
-            model = parsed["model"] as string | undefined;
-            const u = parsed["usage"] as Record<string, number> | undefined;
+            sessionId = parsed['session_id'] as string | undefined;
+            costUsd = (parsed['cost_usd'] ?? parsed['total_cost_usd']) as number | undefined;
+            isError = (parsed['is_error'] as boolean) ?? false;
+            model = parsed['model'] as string | undefined;
+            const u = parsed['usage'] as Record<string, number> | undefined;
             if (u) {
               usage = {
-                inputTokens: u["input_tokens"] ?? 0,
-                outputTokens: u["output_tokens"] ?? 0,
+                inputTokens: u['input_tokens'] ?? 0,
+                outputTokens: u['output_tokens'] ?? 0,
                 totalTokens:
-                  (u["input_tokens"] ?? 0) +
-                  (u["output_tokens"] ?? 0) +
-                  (u["cache_creation_input_tokens"] ?? 0) +
-                  (u["cache_read_input_tokens"] ?? 0),
+                  (u['input_tokens'] ?? 0) +
+                  (u['output_tokens'] ?? 0) +
+                  (u['cache_creation_input_tokens'] ?? 0) +
+                  (u['cache_read_input_tokens'] ?? 0),
               };
             }
           }
@@ -117,7 +117,7 @@ export class ClaudeAdapter implements Adapter {
     }
 
     yield {
-      type: "result",
+      type: 'result',
       result: {
         text: fullText,
         sessionId,
@@ -132,50 +132,56 @@ export class ClaudeAdapter implements Adapter {
   }
 
   private buildArgs(request: AdapterRequest): string[] {
-    const args = ["-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages"];
+    const args = [
+      '-p',
+      '--output-format',
+      'stream-json',
+      '--verbose',
+      '--include-partial-messages',
+    ];
 
     if (this.skipPermissions) {
-      args.push("--dangerously-skip-permissions");
+      args.push('--dangerously-skip-permissions');
     }
 
     if (request.model) {
-      args.push("--model", request.model);
+      args.push('--model', request.model);
     }
 
     if (request.maxTurns !== undefined) {
-      args.push("--max-turns", String(request.maxTurns));
+      args.push('--max-turns', String(request.maxTurns));
     }
 
     if (request.systemPrompt) {
-      args.push("--system-prompt", request.systemPrompt);
+      args.push('--system-prompt', request.systemPrompt);
     }
 
-    const appendSystemPrompt = request.options?.["appendSystemPrompt"] as string | undefined;
+    const appendSystemPrompt = request.options?.['appendSystemPrompt'] as string | undefined;
     if (appendSystemPrompt) {
-      args.push("--append-system-prompt", appendSystemPrompt);
+      args.push('--append-system-prompt', appendSystemPrompt);
     }
 
     if (request.sessionId) {
-      args.push("--resume", request.sessionId);
+      args.push('--resume', request.sessionId);
     }
 
     if (request.continueSession) {
-      args.push("--continue");
+      args.push('--continue');
     }
 
-    const allowedTools = request.options?.["allowedTools"] as string[] | undefined;
+    const allowedTools = request.options?.['allowedTools'] as string[] | undefined;
     if (allowedTools) {
       for (const tool of allowedTools) {
-        args.push("--allowedTools", tool);
+        args.push('--allowedTools', tool);
       }
     }
 
-    const maxBudgetUsd = request.options?.["maxBudgetUsd"] as number | undefined;
+    const maxBudgetUsd = request.options?.['maxBudgetUsd'] as number | undefined;
     if (maxBudgetUsd !== undefined) {
-      args.push("--max-budget-usd", String(maxBudgetUsd));
+      args.push('--max-budget-usd', String(maxBudgetUsd));
     }
 
-    const additionalArgs = request.options?.["additionalArgs"] as string[] | undefined;
+    const additionalArgs = request.options?.['additionalArgs'] as string[] | undefined;
     if (additionalArgs) {
       args.push(...additionalArgs);
     }
@@ -200,7 +206,7 @@ function spawnProcess(
   done: Promise<{ code: number | null; stderrText: string }>;
 } {
   const proc = spawn(bin, args, {
-    stdio: ["pipe", "pipe", "pipe"],
+    stdio: ['pipe', 'pipe', 'pipe'],
     env: { ...process.env },
   });
 
@@ -209,8 +215,8 @@ function spawnProcess(
   }
   proc.stdin.end();
 
-  let stderrText = "";
-  proc.stderr.on("data", (data: Buffer) => {
+  let stderrText = '';
+  proc.stderr.on('data', (data: Buffer) => {
     stderrText += data.toString();
   });
 
@@ -227,16 +233,14 @@ function spawnProcess(
   })();
 
   const done = new Promise<{ code: number | null; stderrText: string }>((resolve, reject) => {
-    proc.on("error", (err: NodeJS.ErrnoException) => {
-      if (err.code === "ENOENT") {
-        reject(
-          new Error(`${bin} CLI not found. Make sure it is installed and on your PATH.`),
-        );
+    proc.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'ENOENT') {
+        reject(new Error(`${bin} CLI not found. Make sure it is installed and on your PATH.`));
       } else {
         reject(err);
       }
     });
-    proc.on("close", (code) => {
+    proc.on('close', (code) => {
       resolve({ code, stderrText });
     });
   });

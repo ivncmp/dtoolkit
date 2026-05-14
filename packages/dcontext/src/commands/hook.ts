@@ -70,7 +70,8 @@ async function runHook(event: string, explicitTarget?: string) {
     return;
   }
 
-  const cwd = (input['cwd'] as string) || env['GEMINI_CWD'] || env['GEMINI_PROJECT_DIR'] || process.cwd();
+  const cwd =
+    (input['cwd'] as string) || env['GEMINI_CWD'] || env['GEMINI_PROJECT_DIR'] || process.cwd();
   const sessionId = target.getSessionId(env, input);
 
   if (event === 'session-start') {

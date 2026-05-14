@@ -9,9 +9,9 @@ export type {
   SessionInfo,
   TemplateDefinition,
   TemplateVariable,
-} from "@dtoolkit/core";
+} from '@dtoolkit/core';
 
-export type ProviderName = "claude" | "codex" | "gemini" | "opencode";
+export type ProviderName = 'claude' | 'codex' | 'gemini' | 'opencode';
 
 export interface AppConfig {
   initialized: boolean;
@@ -46,14 +46,14 @@ export interface AppConfig {
   provider: {
     default: ProviderName;
     claude?: { bin?: string; skipPermissions?: boolean };
-    codex?: { bin?: string; approval?: "suggest" | "auto-edit" | "full-auto" };
+    codex?: { bin?: string; approval?: 'suggest' | 'auto-edit' | 'full-auto' };
     gemini?: { bin?: string; yolo?: boolean };
     opencode?: { bin?: string; skipPermissions?: boolean };
   };
   defaults: {
     model?: string;
     maxTurns?: number;
-    outputFormat?: "text" | "json" | "stream-json";
+    outputFormat?: 'text' | 'json' | 'stream-json';
   };
   server: {
     port: number;

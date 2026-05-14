@@ -1,4 +1,4 @@
-import { HttpClient, enc, qs } from "../http.js";
+import { HttpClient, enc, qs } from '../http.js';
 
 import type {
   ConnectResponse,
@@ -14,7 +14,7 @@ import type {
   Message,
   PendingMessages,
   SearchResult,
-} from "./types.js";
+} from './types.js';
 
 export interface DBrainClientOptions {
   baseUrl: string;
@@ -27,10 +27,10 @@ export class DBrainClient {
   constructor(baseUrl: string, token: string);
   constructor(options: DBrainClientOptions);
   constructor(baseUrlOrOptions: string | DBrainClientOptions, token?: string) {
-    if (typeof baseUrlOrOptions === "string") {
+    if (typeof baseUrlOrOptions === 'string') {
       this.http = new HttpClient({
         baseUrl: baseUrlOrOptions,
-        token: token ?? "",
+        token: token ?? '',
       });
     } else {
       this.http = new HttpClient({
@@ -43,22 +43,19 @@ export class DBrainClient {
   // --- Health ---
 
   async health(): Promise<HealthResponse> {
-    return this.http.get("/health");
+    return this.http.get('/health');
   }
 
   async connect(): Promise<ConnectResponse> {
-    return this.http.get("/connect");
+    return this.http.get('/connect');
   }
 
   // --- Entities ---
 
-  async listEntities(filters?: {
-    category?: string;
-    type?: string;
-  }): Promise<EntityRow[]> {
+  async listEntities(filters?: { category?: string; type?: string }): Promise<EntityRow[]> {
     const params = new URLSearchParams();
-    if (filters?.category) params.set("category", filters.category);
-    if (filters?.type) params.set("type", filters.type);
+    if (filters?.category) params.set('category', filters.category);
+    if (filters?.type) params.set('type', filters.type);
     return this.http.get(`/entities${qs(params)}`);
   }
 
@@ -73,7 +70,7 @@ export class DBrainClient {
     category: string;
     metadata?: Record<string, unknown>;
   }): Promise<{ id: string; name: string; type: string; category: string }> {
-    return this.http.post("/entities", entity);
+    return this.http.post('/entities', entity);
   }
 
   async archiveEntity(id: string): Promise<{ id: string; status: string }> {
@@ -82,12 +79,9 @@ export class DBrainClient {
 
   // --- Facts ---
 
-  async listFacts(
-    entityId: string,
-    filters?: { tier?: string },
-  ): Promise<FactRow[]> {
+  async listFacts(entityId: string, filters?: { tier?: string }): Promise<FactRow[]> {
     const params = new URLSearchParams();
-    if (filters?.tier) params.set("tier", filters.tier);
+    if (filters?.tier) params.set('tier', filters.tier);
     return this.http.get(`/entities/${enc(entityId)}/facts${qs(params)}`);
   }
 
@@ -115,11 +109,11 @@ export class DBrainClient {
     query: string,
     options?: { limit?: number; entityId?: string; tier?: string },
   ): Promise<SearchResult[]> {
-    return this.http.post("/search", { query, ...options });
+    return this.http.post('/search', { query, ...options });
   }
 
   async memorySummary(): Promise<MemorySummaryRow[]> {
-    return this.http.get("/memory/summary");
+    return this.http.get('/memory/summary');
   }
 
   // --- Conversations ---
@@ -129,8 +123,8 @@ export class DBrainClient {
     limit?: number;
   }): Promise<ConversationSummary[]> {
     const params = new URLSearchParams();
-    if (filters?.source) params.set("source", filters.source);
-    if (filters?.limit) params.set("limit", String(filters.limit));
+    if (filters?.source) params.set('source', filters.source);
+    if (filters?.limit) params.set('limit', String(filters.limit));
     return this.http.get(`/conversations${qs(params)}`);
   }
 
@@ -142,7 +136,7 @@ export class DBrainClient {
     source: string,
     id?: string,
   ): Promise<{ id: string; source: string; started_at: string }> {
-    return this.http.post("/conversations", {
+    return this.http.post('/conversations', {
       source,
       ...(id ? { id } : {}),
     });
@@ -163,22 +157,19 @@ export class DBrainClient {
     filters?: { since?: string; processed?: boolean },
   ): Promise<Message[]> {
     const params = new URLSearchParams();
-    if (filters?.since) params.set("since", filters.since);
-    if (filters?.processed !== undefined)
-      params.set("processed", String(filters.processed));
-    return this.http.get(
-      `/conversations/${enc(conversationId)}/messages${qs(params)}`,
-    );
+    if (filters?.since) params.set('since', filters.since);
+    if (filters?.processed !== undefined) params.set('processed', String(filters.processed));
+    return this.http.get(`/conversations/${enc(conversationId)}/messages${qs(params)}`);
   }
 
   async pendingMessages(): Promise<PendingMessages> {
-    return this.http.get("/conversations/pending");
+    return this.http.get('/conversations/pending');
   }
 
   // --- Workspace (Documents) ---
 
   async listDocuments(): Promise<DocumentListItem[]> {
-    return this.http.get("/workspace");
+    return this.http.get('/workspace');
   }
 
   async getDocument(key: string): Promise<Document> {
@@ -192,9 +183,7 @@ export class DBrainClient {
     return this.http.put(`/workspace/${enc(key)}`, doc);
   }
 
-  async deleteDocument(
-    key: string,
-  ): Promise<{ key: string; deleted: boolean }> {
+  async deleteDocument(key: string): Promise<{ key: string; deleted: boolean }> {
     return this.http.del(`/workspace/${enc(key)}`);
   }
 }

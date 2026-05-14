@@ -33,9 +33,7 @@ async function runStatus() {
     try {
       const client = new DBrainClient(url, token);
       const health = await client.health();
-      console.log(
-        `  ${pc.green(url)} — ${health.entities} entities, ${health.facts} facts`,
-      );
+      console.log(`  ${pc.green(url)} — ${health.entities} entities, ${health.facts} facts`);
     } catch {
       console.log(`  ${pc.red(url)} (unreachable)`);
     }
@@ -86,7 +84,9 @@ async function runStatus() {
       }
     }
   } else {
-    console.log(`  ${pc.dim('no entity mapped')} — run ${pc.cyan('dcontext init')} in this directory`);
+    console.log(
+      `  ${pc.dim('no entity mapped')} — run ${pc.cyan('dcontext init')} in this directory`,
+    );
   }
   console.log();
 

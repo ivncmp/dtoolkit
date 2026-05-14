@@ -52,11 +52,7 @@ export async function executePrompt(
   }
 
   const memoryOpt =
-    options.memory === false
-      ? false
-      : Array.isArray(options.memory)
-        ? options.memory
-        : true;
+    options.memory === false ? false : Array.isArray(options.memory) ? options.memory : true;
 
   const appendSystemPrompt =
     (await buildSystemPromptContext(
@@ -136,11 +132,7 @@ export async function* streamPrompt(
   }
 
   const memoryOpt =
-    options.memory === false
-      ? false
-      : Array.isArray(options.memory)
-        ? options.memory
-        : true;
+    options.memory === false ? false : Array.isArray(options.memory) ? options.memory : true;
 
   const appendSystemPrompt =
     (await buildSystemPromptContext(

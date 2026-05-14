@@ -1,6 +1,6 @@
 export interface TemplateVariable {
   name: string;
-  source?: "stdin" | "arg" | "flag";
+  source?: 'stdin' | 'arg' | 'flag';
   required?: boolean;
   default?: string;
 }

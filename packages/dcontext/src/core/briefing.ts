@@ -2,7 +2,6 @@ import { DBrainClient } from '@dtoolkit/sdk';
 
 import type { DcontextConfig } from './config.js';
 
-
 function cleanDocContent(content: string, sectionTitle: string): string {
   const lines = content.split('\n');
   const cleaned: string[] = [];
@@ -12,7 +11,10 @@ function cleanDocContent(content: string, sectionTitle: string): string {
     const trimmed = line.trim();
 
     if (trimmed.startsWith('#')) {
-      const headerText = trimmed.replace(/^#+\s*/, '').trim().toLowerCase();
+      const headerText = trimmed
+        .replace(/^#+\s*/, '')
+        .trim()
+        .toLowerCase();
       if (headerText === sectionTitle.toLowerCase()) continue;
     }
 
@@ -53,7 +55,9 @@ export async function generateBriefing(
 
   const parts: string[] = [];
   parts.push('## Session Context (from dbrain)');
-  parts.push('> **DO NOT call `recall` or `wake_up`.** Your identity, soul, user profile, and project facts are already below. This context was injected by dcontext at session start.');
+  parts.push(
+    '> **DO NOT call `recall` or `wake_up`.** Your identity, soul, user profile, and project facts are already below. This context was injected by dcontext at session start.',
+  );
 
   // identity docs first — they're short and always relevant
   if (config.briefing.includeIdentity && documents.length > 0) {

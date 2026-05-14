@@ -5,12 +5,7 @@ import Fastify from 'fastify';
 import pc from 'picocolors';
 
 import { loadConfig, getConfigValue, setConfigValue } from '../lib/config.js';
-import {
-  listHistory,
-  getHistoryEntry,
-  searchHistory,
-  clearHistory,
-} from '../lib/history-store.js';
+import { listHistory, getHistoryEntry, searchHistory, clearHistory } from '../lib/history-store.js';
 import {
   listMemoryKeys,
   getMemory,
@@ -132,7 +127,9 @@ async function runServe(opts: Record<string, unknown>): Promise<void> {
         }
         reply.raw.write('data: [DONE]\n\n');
       } catch (err) {
-        reply.raw.write(`data: ${JSON.stringify({ type: 'error', error: (err as Error).message })}\n\n`);
+        reply.raw.write(
+          `data: ${JSON.stringify({ type: 'error', error: (err as Error).message })}\n\n`,
+        );
       }
 
       reply.raw.end();

@@ -7,17 +7,15 @@ import type { DcontextConfig } from '../core/config.js';
 import { getDataDir, loadConfig, saveConfig } from '../core/config.js';
 
 export function createInitCommand(): Command {
-  return new Command('init')
-    .description('Interactive setup wizard')
-    .action(async () => {
-      try {
-        await runInit();
-      } catch (err) {
-        if ((err as Error).message?.includes('cancelled')) process.exit(0);
-        console.error(pc.red((err as Error).message));
-        process.exit(1);
-      }
-    });
+  return new Command('init').description('Interactive setup wizard').action(async () => {
+    try {
+      await runInit();
+    } catch (err) {
+      if ((err as Error).message?.includes('cancelled')) process.exit(0);
+      console.error(pc.red((err as Error).message));
+      process.exit(1);
+    }
+  });
 }
 
 async function runInit() {
@@ -35,8 +33,16 @@ async function runInit() {
   }
 
   const options: { value: string; label: string; description: string }[] = [
-    { value: 'connect', label: 'Connect to existing dbrain', description: 'I have a dbrain running already' },
-    { value: 'local', label: 'Start a local dbrain', description: 'Initialize and start a new brain here' },
+    {
+      value: 'connect',
+      label: 'Connect to existing dbrain',
+      description: 'I have a dbrain running already',
+    },
+    {
+      value: 'local',
+      label: 'Start a local dbrain',
+      description: 'Initialize and start a new brain here',
+    },
   ];
 
   if (config.initialized && config.dbrain.url) {
@@ -48,7 +54,9 @@ async function runInit() {
   }
 
   const mode = await p.select({
-    message: config.initialized ? 'What do you want to change?' : 'How do you want to connect to dbrain?',
+    message: config.initialized
+      ? 'What do you want to change?'
+      : 'How do you want to connect to dbrain?',
     options,
   });
 
@@ -131,7 +139,9 @@ async function startLocalDbrain(config: DcontextConfig) {
 
     const client = new DBrainClient('http://localhost:7878', token);
     const health = await client.health();
-    s2.stop(`dbrain running — ${pc.green(String(health.entities))} entities, ${pc.green(String(health.facts))} facts`);
+    s2.stop(
+      `dbrain running — ${pc.green(String(health.entities))} entities, ${pc.green(String(health.facts))} facts`,
+    );
 
     config.dbrain = { url: 'http://localhost:7878', token };
     await finishInit(config);

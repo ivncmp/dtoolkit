@@ -1,6 +1,6 @@
-import type { AdapterStreamEvent } from "@dtoolkit/core";
+import type { AdapterStreamEvent } from '@dtoolkit/core';
 
-import { HttpClient, SdkError, enc, qs } from "../http.js";
+import { HttpClient, SdkError, enc, qs } from '../http.js';
 
 import type {
   AskOptions,
@@ -10,7 +10,7 @@ import type {
   MemorySearchResult,
   TemplateDefinition,
   TemplateRunOptions,
-} from "./types.js";
+} from './types.js';
 
 export interface DProxyClientOptions {
   baseUrl: string;
@@ -22,11 +22,8 @@ export class DProxyClient {
 
   constructor(baseUrl: string, token?: string);
   constructor(options: DProxyClientOptions);
-  constructor(
-    baseUrlOrOptions: string | DProxyClientOptions,
-    token?: string,
-  ) {
-    if (typeof baseUrlOrOptions === "string") {
+  constructor(baseUrlOrOptions: string | DProxyClientOptions, token?: string) {
+    if (typeof baseUrlOrOptions === 'string') {
       this.http = new HttpClient({ baseUrl: baseUrlOrOptions, token });
     } else {
       this.http = new HttpClient({
@@ -39,32 +36,29 @@ export class DProxyClient {
   // --- Health ---
 
   async health(): Promise<DProxyHealthResponse> {
-    return this.http.get("/v1/health");
+    return this.http.get('/v1/health');
   }
 
   // --- Ask ---
 
   async ask(prompt: string, options?: AskOptions): Promise<AskResponse> {
-    return this.http.post("/v1/ask", { prompt, ...options });
+    return this.http.post('/v1/ask', { prompt, ...options });
   }
 
-  async *askStream(
-    prompt: string,
-    options?: AskOptions,
-  ): AsyncGenerator<AdapterStreamEvent> {
-    const res = await this.http.requestRaw("POST", "/v1/ask", {
+  async *askStream(prompt: string, options?: AskOptions): AsyncGenerator<AdapterStreamEvent> {
+    const res = await this.http.requestRaw('POST', '/v1/ask', {
       prompt,
       stream: true,
       ...options,
     });
 
     if (!res.body) {
-      throw new SdkError(0, "Response body is null", "/v1/ask");
+      throw new SdkError(0, 'Response body is null', '/v1/ask');
     }
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    let buffer = "";
+    let buffer = '';
 
     try {
       for (;;) {
@@ -72,26 +66,22 @@ export class DProxyClient {
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
 
         for (const line of lines) {
           const trimmed = line.trim();
-          if (!trimmed || !trimmed.startsWith("data: ")) continue;
+          if (!trimmed || !trimmed.startsWith('data: ')) continue;
 
           const payload = trimmed.slice(6);
-          if (payload === "[DONE]") return;
+          if (payload === '[DONE]') return;
 
           const event = JSON.parse(payload) as
             | AdapterStreamEvent
-            | { type: "error"; error: string };
+            | { type: 'error'; error: string };
 
-          if (event.type === "error") {
-            throw new SdkError(
-              0,
-              (event as { error: string }).error,
-              "/v1/ask",
-            );
+          if (event.type === 'error') {
+            throw new SdkError(0, (event as { error: string }).error, '/v1/ask');
           }
 
           yield event as AdapterStreamEvent;
@@ -106,10 +96,8 @@ export class DProxyClient {
 
   async listHistory(limit?: number): Promise<HistoryEntry[]> {
     const params = new URLSearchParams();
-    if (limit !== undefined) params.set("limit", String(limit));
-    const res = await this.http.get<{ entries: HistoryEntry[] }>(
-      `/v1/history${qs(params)}`,
-    );
+    if (limit !== undefined) params.set('limit', String(limit));
+    const res = await this.http.get<{ entries: HistoryEntry[] }>(`/v1/history${qs(params)}`);
     return res.entries;
   }
 
@@ -119,29 +107,25 @@ export class DProxyClient {
 
   async searchHistory(query: string): Promise<HistoryEntry[]> {
     const params = new URLSearchParams({ q: query });
-    const res = await this.http.get<{ entries: HistoryEntry[] }>(
-      `/v1/history/search${qs(params)}`,
-    );
+    const res = await this.http.get<{ entries: HistoryEntry[] }>(`/v1/history/search${qs(params)}`);
     return res.entries;
   }
 
   async clearHistory(before?: string): Promise<{ removed: number }> {
     const params = new URLSearchParams();
-    if (before) params.set("before", before);
-    return this.http.request("DELETE", `/v1/history${qs(params)}`);
+    if (before) params.set('before', before);
+    return this.http.request('DELETE', `/v1/history${qs(params)}`);
   }
 
   // --- Memory ---
 
   async listMemoryKeys(): Promise<string[]> {
-    const res = await this.http.get<{ keys: string[] }>("/v1/memory");
+    const res = await this.http.get<{ keys: string[] }>('/v1/memory');
     return res.keys;
   }
 
   async getMemory(key: string): Promise<string> {
-    const res = await this.http.get<{ key: string; content: string }>(
-      `/v1/memory/${enc(key)}`,
-    );
+    const res = await this.http.get<{ key: string; content: string }>(`/v1/memory/${enc(key)}`);
     return res.content;
   }
 
@@ -164,9 +148,7 @@ export class DProxyClient {
   // --- Templates ---
 
   async listTemplates(): Promise<TemplateDefinition[]> {
-    const res = await this.http.get<{ templates: TemplateDefinition[] }>(
-      "/v1/templates",
-    );
+    const res = await this.http.get<{ templates: TemplateDefinition[] }>('/v1/templates');
     return res.templates;
   }
 
@@ -174,17 +156,11 @@ export class DProxyClient {
     return this.http.get(`/v1/templates/${enc(name)}`);
   }
 
-  async saveTemplate(
-    name: string,
-    template: TemplateDefinition,
-  ): Promise<void> {
+  async saveTemplate(name: string, template: TemplateDefinition): Promise<void> {
     await this.http.put(`/v1/templates/${enc(name)}`, template);
   }
 
-  async runTemplate(
-    name: string,
-    options?: TemplateRunOptions,
-  ): Promise<AskResponse> {
+  async runTemplate(name: string, options?: TemplateRunOptions): Promise<AskResponse> {
     return this.http.post(`/v1/templates/${enc(name)}/run`, options ?? {});
   }
 
@@ -195,13 +171,11 @@ export class DProxyClient {
   // --- Config ---
 
   async getConfig(): Promise<unknown> {
-    return this.http.get("/v1/config");
+    return this.http.get('/v1/config');
   }
 
   async getConfigValue(key: string): Promise<unknown> {
-    const res = await this.http.get<{ key: string; value: unknown }>(
-      `/v1/config/${key}`,
-    );
+    const res = await this.http.get<{ key: string; value: unknown }>(`/v1/config/${key}`);
     return res.value;
   }
 

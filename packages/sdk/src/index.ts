@@ -1,11 +1,11 @@
 // --- Clients ---
-export { DBrainClient, type DBrainClientOptions } from "./dbrain/index.js";
-export { DProxyClient, type DProxyClientOptions } from "./dproxy/index.js";
+export { DBrainClient, type DBrainClientOptions } from './dbrain/index.js';
+export { DProxyClient, type DProxyClientOptions } from './dproxy/index.js';
 
 // --- Shared ---
-export { SdkError } from "./http.js";
+export { SdkError } from './http.js';
 /** @deprecated Use SdkError instead */
-export { SdkError as DBrainError } from "./http.js";
+export { SdkError as DBrainError } from './http.js';
 
 // --- DBrain types ---
 export type {
@@ -22,7 +22,7 @@ export type {
   Message,
   PendingMessages,
   SearchResult,
-} from "./dbrain/index.js";
+} from './dbrain/index.js';
 
 // --- DProxy types ---
 export type {
@@ -32,13 +32,8 @@ export type {
   MemorySearchResult,
   ProviderName,
   TemplateRunOptions,
-} from "./dproxy/index.js";
+} from './dproxy/index.js';
 
 // --- Re-exported core types ---
-export type {
-  AdapterResult,
-  AdapterStreamEvent,
-  AdapterUsage,
-  InputFile,
-} from "@dtoolkit/core";
-export type { HistoryEntry, TemplateDefinition } from "@dtoolkit/core";
+export type { AdapterResult, AdapterStreamEvent, AdapterUsage, InputFile } from '@dtoolkit/core';
+export type { HistoryEntry, TemplateDefinition } from '@dtoolkit/core';

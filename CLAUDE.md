@@ -128,6 +128,7 @@ Use `../../logo.png` (monorepo logo) unless the package has its own `logo.png`.
 - Tests with vitest
 - Commits in English, no Co-Authored-By lines
 - Node >= 22
+- **Always run `pnpm lint:fix` and `pnpm format` before committing.** Code must pass `pnpm lint` and `pnpm format:check` — CI will reject it otherwise.
 
 ## Linting rules of note
 

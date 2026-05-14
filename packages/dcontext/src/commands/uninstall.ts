@@ -41,6 +41,8 @@ async function runUninstall(targetName: string) {
 
   console.log(pc.green(`✓ Hooks removed for ${target.name}`));
   if (target.name === 'claude') {
-    console.log(pc.dim(`  Run ${pc.cyan('dbrain connect claude')} to restore original dbrain instructions`));
+    console.log(
+      pc.dim(`  Run ${pc.cyan('dbrain connect claude')} to restore original dbrain instructions`),
+    );
   }
 }

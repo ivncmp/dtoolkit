@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawn } from 'node:child_process';
 
 import type {
   Adapter,
@@ -6,8 +6,8 @@ import type {
   AdapterResult,
   AdapterStreamEvent,
   AdapterUsage,
-} from "@dtoolkit/core";
-import { LineBuffer, embedTextFiles } from "@dtoolkit/core";
+} from '@dtoolkit/core';
+import { LineBuffer, embedTextFiles } from '@dtoolkit/core';
 
 export interface OpenCodeAdapterConfig {
   bin?: string;
@@ -15,21 +15,21 @@ export interface OpenCodeAdapterConfig {
 }
 
 export class OpenCodeAdapter implements Adapter {
-  readonly provider = "opencode";
+  readonly provider = 'opencode';
   private readonly bin: string;
   private readonly skipPermissions: boolean;
 
   constructor(config: OpenCodeAdapterConfig = {}) {
-    this.bin = config.bin ?? "opencode";
+    this.bin = config.bin ?? 'opencode';
     this.skipPermissions = config.skipPermissions ?? false;
   }
 
   async execute(request: AdapterRequest): Promise<AdapterResult> {
     let finalResult: AdapterResult | undefined;
     for await (const event of this.stream(request)) {
-      if (event.type === "result") finalResult = event.result;
+      if (event.type === 'result') finalResult = event.result;
     }
-    if (!finalResult) throw new Error("No result event received from OpenCode CLI");
+    if (!finalResult) throw new Error('No result event received from OpenCode CLI');
     return finalResult;
   }
 
@@ -38,7 +38,7 @@ export class OpenCodeAdapter implements Adapter {
     if (request.files?.length) {
       const { prompt, remaining } = embedTextFiles(request.prompt, request.files);
       if (remaining.length > 0) {
-        throw new Error("opencode adapter does not yet support binary file attachments");
+        throw new Error('opencode adapter does not yet support binary file attachments');
       }
       effectiveRequest = { ...request, prompt, files: undefined };
     }
@@ -48,7 +48,7 @@ export class OpenCodeAdapter implements Adapter {
     const lineBuffer = new LineBuffer();
 
     const proc = spawn(this.bin, args, {
-      stdio: ["pipe", "pipe", "pipe"],
+      stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env },
     });
 
@@ -57,8 +57,8 @@ export class OpenCodeAdapter implements Adapter {
     }
     proc.stdin.end();
 
-    let stderrText = "";
-    proc.stderr.on("data", (data: Buffer) => {
+    let stderrText = '';
+    proc.stderr.on('data', (data: Buffer) => {
       stderrText += data.toString();
     });
 
@@ -69,8 +69,8 @@ export class OpenCodeAdapter implements Adapter {
     const raw: unknown[] = [];
 
     const errorPromise = new Promise<never>((_, reject) => {
-      proc.on("error", (err: NodeJS.ErrnoException) => {
-        if (err.code === "ENOENT") {
+      proc.on('error', (err: NodeJS.ErrnoException) => {
+        if (err.code === 'ENOENT') {
           reject(
             new Error(
               `${this.bin} CLI not found. Make sure OpenCode is installed and on your PATH.`,
@@ -95,34 +95,34 @@ export class OpenCodeAdapter implements Adapter {
           const parsed = JSON.parse(line) as Record<string, unknown>;
           raw.push(parsed);
 
-          if (!sessionId && typeof parsed["sessionID"] === "string") {
-            sessionId = parsed["sessionID"] as string;
+          if (!sessionId && typeof parsed['sessionID'] === 'string') {
+            sessionId = parsed['sessionID'] as string;
           }
 
-          const type = parsed["type"] as string;
+          const type = parsed['type'] as string;
 
-          if (type === "text") {
-            const part = parsed["part"] as Record<string, unknown> | undefined;
-            if (part && typeof part["text"] === "string") {
-              const text = part["text"] as string;
+          if (type === 'text') {
+            const part = parsed['part'] as Record<string, unknown> | undefined;
+            if (part && typeof part['text'] === 'string') {
+              const text = part['text'] as string;
               texts.push(text);
-              yield { type: "text" as const, text, raw: parsed };
+              yield { type: 'text' as const, text, raw: parsed };
             }
           }
 
-          if (type === "step_finish") {
-            const part = parsed["part"] as Record<string, unknown> | undefined;
+          if (type === 'step_finish') {
+            const part = parsed['part'] as Record<string, unknown> | undefined;
             if (part) {
-              const tokens = part["tokens"] as Record<string, number> | undefined;
+              const tokens = part['tokens'] as Record<string, number> | undefined;
               if (tokens) {
                 usage = {
-                  inputTokens: tokens["input"] ?? 0,
-                  outputTokens: tokens["output"] ?? 0,
-                  totalTokens: tokens["total"] ?? 0,
+                  inputTokens: tokens['input'] ?? 0,
+                  outputTokens: tokens['output'] ?? 0,
+                  totalTokens: tokens['total'] ?? 0,
                 };
               }
-              if (typeof part["cost"] === "number") {
-                costUsd = part["cost"] as number;
+              if (typeof part['cost'] === 'number') {
+                costUsd = part['cost'] as number;
               }
             }
           }
@@ -133,7 +133,7 @@ export class OpenCodeAdapter implements Adapter {
     }
 
     const code = await new Promise<number | null>((resolve) => {
-      proc.on("close", resolve);
+      proc.on('close', resolve);
     });
     const durationMs = Date.now() - startTime;
 
@@ -142,9 +142,9 @@ export class OpenCodeAdapter implements Adapter {
     }
 
     yield {
-      type: "result",
+      type: 'result',
       result: {
-        text: texts.join(""),
+        text: texts.join(''),
         sessionId,
         costUsd,
         durationMs,
@@ -156,22 +156,22 @@ export class OpenCodeAdapter implements Adapter {
   }
 
   private buildArgs(request: AdapterRequest): string[] {
-    const args = ["run", "--format", "json"];
+    const args = ['run', '--format', 'json'];
 
     if (request.model) {
-      args.push("-m", request.model);
+      args.push('-m', request.model);
     }
 
     if (this.skipPermissions) {
-      args.push("--dangerously-skip-permissions");
+      args.push('--dangerously-skip-permissions');
     }
 
     if (request.sessionId) {
-      args.push("-s", request.sessionId);
+      args.push('-s', request.sessionId);
     }
 
     if (request.continueSession) {
-      args.push("-c");
+      args.push('-c');
     }
 
     args.push(request.prompt);
@@ -183,10 +183,7 @@ export function createOpenCodeAdapter(config?: OpenCodeAdapterConfig): OpenCodeA
   return new OpenCodeAdapter(config);
 }
 
-async function* race<T>(
-  iter: AsyncIterable<T>,
-  errorPromise: Promise<never>,
-): AsyncIterable<T> {
+async function* race<T>(iter: AsyncIterable<T>, errorPromise: Promise<never>): AsyncIterable<T> {
   const iterator = iter[Symbol.asyncIterator]();
   try {
     while (true) {

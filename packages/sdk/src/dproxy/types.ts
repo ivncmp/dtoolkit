@@ -1,15 +1,6 @@
-import type {
-  AdapterUsage,
-  HistoryEntry,
-  InputFile,
-  TemplateDefinition,
-} from "@dtoolkit/core";
+import type { AdapterUsage, HistoryEntry, InputFile, TemplateDefinition } from '@dtoolkit/core';
 
-export type ProviderName =
-  | "claude"
-  | "codex"
-  | "gemini"
-  | "opencode";
+export type ProviderName = 'claude' | 'codex' | 'gemini' | 'opencode';
 
 // --- Ask ---
 

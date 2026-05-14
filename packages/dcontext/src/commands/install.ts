@@ -1,7 +1,6 @@
 import { Command } from 'commander';
 import pc from 'picocolors';
 
-
 import type { TargetName } from '../core/config.js';
 import { loadConfig, saveConfig } from '../core/config.js';
 

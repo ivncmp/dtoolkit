@@ -11,10 +11,7 @@ import { createUninstallCommand } from './commands/uninstall.js';
 
 const program = new Command();
 
-program
-  .name('dcontext')
-  .description('dbrain hooks for AI coding CLIs')
-  .version(__VERSION__);
+program.name('dcontext').description('dbrain hooks for AI coding CLIs').version(__VERSION__);
 
 const guarded = (cmd: Command): Command => {
   cmd.hook('preAction', async () => {

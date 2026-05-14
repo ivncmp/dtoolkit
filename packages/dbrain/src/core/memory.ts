@@ -1,1 +1,1 @@
-export { computeTier, type TierConfig } from "@dtoolkit/core";
+export { computeTier, type TierConfig } from '@dtoolkit/core';

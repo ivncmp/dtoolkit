@@ -1,5 +1,5 @@
 export interface TranscriptEntry {
-  role: "user" | "assistant";
+  role: 'user' | 'assistant';
   content: string;
   timestamp?: string;
 }
@@ -18,9 +18,9 @@ export interface Target {
   ): string | undefined;
 }
 
-export const DBRAIN_START = "<!-- dbrain:start -->";
-export const DBRAIN_END = "<!-- dbrain:end -->";
-export const DCONTEXT_MARKER = "<!-- dcontext:active -->";
+export const DBRAIN_START = '<!-- dbrain:start -->';
+export const DBRAIN_END = '<!-- dbrain:end -->';
+export const DCONTEXT_MARKER = '<!-- dcontext:active -->';
 
 export const DBRAIN_DCONTEXT_SECTION = `# dbrain
 
@@ -45,12 +45,10 @@ You have an AI brain connected via MCP (dbrain). Your identity, soul, user profi
 - When storing facts, be specific and atomic. "Favorite ice cream is pistachio" not "We talked about food preferences".
 - Use \`remember\` proactively. Decisions, milestones, preferences, people, learnings — if it's worth remembering, store it.`;
 
-export function writeDcontextMdSection(
-  existingContent: string,
-): string {
+export function writeDcontextMdSection(existingContent: string): string {
   const section = `${DBRAIN_START}\n${DCONTEXT_MARKER}\n${DBRAIN_DCONTEXT_SECTION}\n${DBRAIN_END}`;
 
-  if (!existingContent.trim()) return section.trim() + "\n";
+  if (!existingContent.trim()) return section.trim() + '\n';
 
   const startIdx = existingContent.indexOf(DBRAIN_START);
   const endIdx = existingContent.indexOf(DBRAIN_END);
@@ -58,15 +56,13 @@ export function writeDcontextMdSection(
     const before = existingContent.slice(0, startIdx).trimEnd();
     const after = existingContent.slice(endIdx + DBRAIN_END.length).trimStart();
     const parts = [before, section, after].filter(Boolean);
-    return parts.join("\n\n").trim() + "\n";
+    return parts.join('\n\n').trim() + '\n';
   }
 
-  return (section + "\n\n" + existingContent.trim()).trim() + "\n";
+  return (section + '\n\n' + existingContent.trim()).trim() + '\n';
 }
 
-export function removeDcontextMdSection(
-  existingContent: string,
-): string | null {
+export function removeDcontextMdSection(existingContent: string): string | null {
   if (!existingContent.includes(DCONTEXT_MARKER)) return null;
 
   const startIdx = existingContent.indexOf(DBRAIN_START);
@@ -75,5 +71,5 @@ export function removeDcontextMdSection(
 
   const before = existingContent.slice(0, startIdx).trimEnd();
   const after = existingContent.slice(endIdx + DBRAIN_END.length).trimStart();
-  return [before, after].filter(Boolean).join("\n\n").trim() + "\n";
+  return [before, after].filter(Boolean).join('\n\n').trim() + '\n';
 }

@@ -88,7 +88,11 @@ class CodexTarget implements Target {
       'timeout = 10000',
     ];
 
-    await writeFile(CONFIG_TOML, (toml.trimEnd() + '\n' + hookLines.join('\n') + '\n').trimStart(), 'utf-8');
+    await writeFile(
+      CONFIG_TOML,
+      (toml.trimEnd() + '\n' + hookLines.join('\n') + '\n').trimStart(),
+      'utf-8',
+    );
   }
 
   private async removeHooksFromConfig(): Promise<void> {
@@ -114,7 +118,14 @@ class CodexTarget implements Target {
       }
 
       if (skipBlock) {
-        if (line.startsWith('[[hooks.') || line.startsWith('type = ') || line.startsWith('command = "dcontext') || line.startsWith('timeout = ') || line.startsWith('matcher = ') || line.startsWith('statusMessage = ')) {
+        if (
+          line.startsWith('[[hooks.') ||
+          line.startsWith('type = ') ||
+          line.startsWith('command = "dcontext') ||
+          line.startsWith('timeout = ') ||
+          line.startsWith('matcher = ') ||
+          line.startsWith('statusMessage = ')
+        ) {
           continue;
         }
         if (line.trim() === '') {
@@ -126,7 +137,11 @@ class CodexTarget implements Target {
       filtered.push(line);
     }
 
-    const result = filtered.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+    const result =
+      filtered
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim() + '\n';
     await writeFile(CONFIG_TOML, result, 'utf-8');
   }
 

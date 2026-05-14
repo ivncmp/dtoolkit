@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/dpair",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Real-time pair-programming with a shared agent between two devs",
   "type": "module",
   "license": "MIT",

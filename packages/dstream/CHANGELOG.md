@@ -1,5 +1,13 @@
 # @dtoolkit/dstream
 
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies [6f3e580]
+  - @dtoolkit/core@0.4.0
+  - @dtoolkit/sdk@0.3.1
+
 ## 0.0.4
 
 ### Patch Changes

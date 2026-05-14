@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-`dproxy` is a universal CLI adapter for invoking models via local CLIs. It supports 5 providers (Claude, Codex, Gemini, Ollama, OpenCode) via pluggable adapters from `@dtoolkit/adapter-*` packages. On top of the raw CLI, it adds persistent memory, context injection, interactive chat, conversation history, and YAML-based prompt templates.
+`dproxy` is a universal CLI adapter for invoking models via local CLIs. It supports 4 providers (Claude, Codex, Gemini, OpenCode) via pluggable adapters from `@dtoolkit/adapter-*` packages. On top of the raw CLI, it adds persistent memory, context injection, interactive chat, conversation history, and YAML-based prompt templates.
 
 ## Build & Dev Commands
 
@@ -23,7 +23,6 @@ pnpm dev            # Build in watch mode
 - `@dtoolkit/adapter-claude` — stream-json + content_block_delta, sessions, cost, usage (richest)
 - `@dtoolkit/adapter-codex` — JSONL streaming, usage, approval modes
 - `@dtoolkit/adapter-gemini` — stream-json, sessions, usage, yolo mode
-- `@dtoolkit/adapter-ollama` — raw text streaming, local models, ANSI stripping
 - `@dtoolkit/adapter-opencode` — JSONL streaming, sessions, cost, usage
 
 All adapters implement `Adapter` from `@dtoolkit/core` with `stream()` (AsyncGenerator) and `execute()` (derived from stream).
@@ -83,4 +82,4 @@ Override the data directory with `DPROXY_DATA_DIR` env var.
 
 ## Key CLI Flags
 
-Shared across `ask` and `chat`: `-p/--provider` (claude, codex, gemini, ollama, opencode), `--no-memory`, `--memory <keys>` (comma-separated), `--no-life`, `--no-history`, `--raw`, `--stream`, `--token-footer`, `--max-session-tokens <n>`, `-c/--continue`, `-r/--resume <id>`, `-m/--model`, `--max-turns`, `--max-budget-usd`.
+Shared across `ask` and `chat`: `-p/--provider` (claude, codex, gemini, opencode), `--no-memory`, `--memory <keys>` (comma-separated), `--no-life`, `--no-history`, `--raw`, `--stream`, `--token-footer`, `--max-session-tokens <n>`, `-c/--continue`, `-r/--resume <id>`, `-m/--model`, `--max-turns`, `--max-budget-usd`.

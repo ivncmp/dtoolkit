@@ -46,7 +46,6 @@ const DEFAULT_CONFIG: AppConfig = {
     claude: { bin: 'claude', skipPermissions: false },
     codex: { bin: 'codex', approval: 'suggest' },
     gemini: { bin: 'gemini', yolo: false },
-    ollama: { bin: 'ollama', defaultModel: 'llama3' },
     opencode: { bin: 'opencode', skipPermissions: false },
   },
   server: {

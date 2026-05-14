@@ -39,7 +39,6 @@
     "@dtoolkit/adapter-claude": "workspace:*",
     "@dtoolkit/adapter-codex": "workspace:*",
     "@dtoolkit/adapter-gemini": "workspace:*",
-    "@dtoolkit/adapter-ollama": "workspace:*",
     "@dtoolkit/adapter-opencode": "workspace:*",
     "@dtoolkit/core": "workspace:*",
     "fastify": "^5.3.3",

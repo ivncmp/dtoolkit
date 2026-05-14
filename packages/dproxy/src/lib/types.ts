@@ -11,7 +11,7 @@ export type {
   TemplateVariable,
 } from "@dtoolkit/core";
 
-export type ProviderName = "claude" | "codex" | "gemini" | "ollama" | "opencode";
+export type ProviderName = "claude" | "codex" | "gemini" | "opencode";
 
 export interface AppConfig {
   initialized: boolean;
@@ -48,7 +48,6 @@ export interface AppConfig {
     claude?: { bin?: string; skipPermissions?: boolean };
     codex?: { bin?: string; approval?: "suggest" | "auto-edit" | "full-auto" };
     gemini?: { bin?: string; yolo?: boolean };
-    ollama?: { bin?: string; defaultModel?: string };
     opencode?: { bin?: string; skipPermissions?: boolean };
   };
   defaults: {

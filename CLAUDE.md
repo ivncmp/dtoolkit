@@ -38,14 +38,14 @@ packages/
 ├── adapter-claude/    Shell-out adapter for Claude Code CLI (stream-json + deltas)
 │                      Also: DcontextTarget for Claude Code hooks (settings.json + CLAUDE.md)
 ├── adapter-codex/     Shell-out adapter for Codex CLI (JSONL streaming)
+│                      Also: DcontextTarget for Codex CLI hooks (config.toml + AGENTS.md)
 ├── adapter-gemini/    Shell-out adapter for Gemini CLI (stream-json)
 │                      Also: DcontextTarget for Gemini CLI hooks (settings.json + GEMINI.md)
-├── adapter-ollama/    Shell-out adapter for Ollama CLI (raw text streaming)
 ├── adapter-opencode/  Shell-out adapter for OpenCode CLI (JSONL streaming)
 │                      Also: DcontextTarget for OpenCode hooks (npm plugin + AGENTS.md)
 │                      All adapters: Build: tsc. Depend on core only.
 │                      All implement stream() + execute() via dproxy.ts
-│                      Claude/Gemini/OpenCode also implement Target via dcontext.ts
+│                      Claude/Codex/Gemini/OpenCode also implement Target via dcontext.ts
 ├── dbrain/            Persistent memory server — the brain
 │                      Fastify REST API + MCP HTTP on :7878, React dashboard on :7879
 │                      SQLite + FTS5 via better-sqlite3. CLI: dbrain init/start/connect/status
@@ -55,7 +55,7 @@ packages/
 │                      Build: tsc. Auth: unified Bearer token.
 ├── dcontext/          dbrain hooks for AI coding CLIs
 │                      Injects identity + project facts at session start, saves exchanges pre-compaction
-│                      Hooks into Claude Code, Gemini CLI, OpenCode via their native hook systems
+│                      Hooks into Claude Code, Codex CLI, Gemini CLI, OpenCode via their native hook systems
 │                      CLI: dcontext init/install/uninstall/status/explore
 │                      Build: tsup (single ESM bundle). Requires dbrain.
 └── dproxy/            Universal CLI adapter for invoking models via local CLIs
@@ -86,7 +86,7 @@ tools/
 - `src/lib/stdin.ts` — `readStdin()` for piped input
 - `src/commands/serve.ts` — Fastify REST API on configurable port (default :7880), full CLI parity with Bearer token auth, SSE streaming via `stream: true`
 - Data stored in `~/.dproxy/` (config.json, history.jsonl, memory/, templates/)
-- Supports 5 providers via `--provider` flag: claude (default), codex, gemini, ollama, opencode
+- Supports 4 providers via `--provider` flag: claude (default), codex, gemini, opencode
 
 ## CLI conventions
 

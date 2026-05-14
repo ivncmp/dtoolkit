@@ -88,19 +88,6 @@ importers:
         specifier: ^5.7.0
         version: 5.9.3
 
-  packages/adapter-ollama:
-    dependencies:
-      '@dtoolkit/core':
-        specifier: workspace:*
-        version: link:../core
-    devDependencies:
-      '@types/node':
-        specifier: ^22.0.0
-        version: 22.19.18
-      typescript:
-        specifier: ^5.7.0
-        version: 5.9.3
-
   packages/adapter-opencode:
     dependencies:
       '@dtoolkit/core':
@@ -172,6 +159,9 @@ importers:
       '@dtoolkit/adapter-claude':
         specifier: workspace:*
         version: link:../adapter-claude
+      '@dtoolkit/adapter-codex':
+        specifier: workspace:*
+        version: link:../adapter-codex
       '@dtoolkit/adapter-gemini':
         specifier: workspace:*
         version: link:../adapter-gemini
@@ -309,9 +299,6 @@ importers:
       '@dtoolkit/adapter-gemini':
         specifier: workspace:*
         version: link:../adapter-gemini
-      '@dtoolkit/adapter-ollama':
-        specifier: workspace:*
-        version: link:../adapter-ollama
       '@dtoolkit/adapter-opencode':
         specifier: workspace:*
         version: link:../adapter-opencode

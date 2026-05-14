@@ -71,7 +71,7 @@ program.addCommand(guarded(configCmd));
 // Default behavior: if args look like a prompt (not a known command), run ask
 program
   .argument('[prompt...]', "Send a quick prompt (shorthand for 'dproxy ask')")
-  .option('-p, --provider <provider>', 'Provider to use (claude, codex, gemini, ollama, opencode)')
+  .option('-p, --provider <provider>', 'Provider to use (claude, codex, gemini, opencode)')
   .option('-m, --model <model>', 'Model to use')
   .option('--max-turns <n>', 'Max agent turns', parseInt)
   .option('--max-budget-usd <n>', 'Max budget in USD', parseFloat)

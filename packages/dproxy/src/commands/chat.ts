@@ -36,7 +36,7 @@ async function saveSession(session: SessionInfo): Promise<void> {
 export function createChatCommand(): Command {
   return new Command('chat')
     .description('Start an interactive conversation')
-    .option('-p, --provider <provider>', 'Provider to use (claude, codex, gemini, ollama, opencode)')
+    .option('-p, --provider <provider>', 'Provider to use (claude, codex, gemini, opencode)')
     .option('-c, --continue', 'Continue last conversation')
     .option('-r, --resume <id>', 'Resume a specific session')
     .option('-m, --model <model>', 'Model to use')

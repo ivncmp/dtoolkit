@@ -14,7 +14,7 @@ export function createAskCommand(): Command {
   return new Command('ask')
     .description('Send a prompt to an AI model')
     .argument('[prompt...]', 'The prompt to send')
-    .option('-p, --provider <provider>', 'Provider to use (claude, codex, gemini, ollama, opencode)')
+    .option('-p, --provider <provider>', 'Provider to use (claude, codex, gemini, opencode)')
     .option('-m, --model <model>', 'Model to use')
     .option('--max-turns <n>', 'Max agent turns', parseInt)
     .option('--max-budget-usd <n>', 'Max budget in USD', parseFloat)

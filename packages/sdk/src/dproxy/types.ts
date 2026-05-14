@@ -9,7 +9,6 @@ export type ProviderName =
   | "claude"
   | "codex"
   | "gemini"
-  | "ollama"
   | "opencode";
 
 // --- Ask ---

@@ -27,21 +27,19 @@ dproxy serve             # start REST API server
 
 ## Providers
 
-dproxy supports 5 providers out of the box. Each provider shells out to its respective CLI:
+dproxy supports 4 providers out of the box. Each provider shells out to its respective CLI:
 
 | Provider | CLI | Features |
 | --- | --- | --- |
 | `claude` (default) | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | Sessions, cost, usage, tools, system prompt |
 | `codex` | [Codex](https://github.com/openai/codex) | Usage, approval modes |
 | `gemini` | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | Sessions, usage, yolo mode |
-| `ollama` | [Ollama](https://ollama.com/) | Local/offline, any model |
 | `opencode` | [OpenCode](https://github.com/nicholasgriffintn/opencode) | Sessions, cost, usage |
 
 ### Switching providers
 
 ```bash
 # Per-command
-dproxy -p ollama "explain this code"
 dproxy ask -p gemini "write a test for this"
 dproxy chat -p codex
 
@@ -58,9 +56,6 @@ Single-shot prompt with context injection. Reads from stdin if piped.
 ```bash
 # Basic usage
 dproxy "explain what this function does"
-
-# With a specific provider and model
-dproxy -p ollama -m codellama "refactor this"
 
 # Pipe content
 cat src/index.ts | dproxy "review this code"
@@ -151,7 +146,7 @@ Get/set configuration values.
 ```bash
 dproxy config                          # show full config
 dproxy config get provider.default     # get a value
-dproxy config set provider.default ollama  # set a value
+dproxy config set provider.default gemini  # set a value
 ```
 
 ### `dproxy init`
@@ -485,9 +480,9 @@ Get a config value by dot-notation key (e.g., `/v1/config/provider.default`).
 
 Set a config value. Booleans and numbers are auto-parsed.
 
-**Request:** `{ "value": "ollama" }`
+**Request:** `{ "value": "gemini" }`
 
-**Response:** `{ "ok": true, "key": "provider.default", "value": "ollama" }`
+**Response:** `{ "ok": true, "key": "provider.default", "value": "gemini" }`
 
 ### Error responses
 
@@ -510,7 +505,7 @@ All errors follow a consistent format:
 
 | Flag | Scope | Description |
 | --- | --- | --- |
-| `-p, --provider <name>` | ask, chat | Provider: `claude`, `codex`, `gemini`, `ollama`, `opencode` |
+| `-p, --provider <name>` | ask, chat | Provider: `claude`, `codex`, `gemini`, `opencode` |
 | `-m, --model <model>` | ask, chat | Model to use |
 | `--max-turns <n>` | ask, chat | Max agent turns per message |
 | `--max-budget-usd <n>` | ask | Max budget in USD |
@@ -559,10 +554,6 @@ Configure provider-specific options in `~/.dproxy/config.json`:
     "gemini": {
       "bin": "gemini",
       "yolo": false
-    },
-    "ollama": {
-      "bin": "ollama",
-      "defaultModel": "llama3"
     },
     "opencode": {
       "bin": "opencode",

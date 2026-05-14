@@ -166,13 +166,37 @@ importers:
 
   packages/dcontext:
     dependencies:
+      '@clack/prompts':
+        specifier: ^1.3.0
+        version: 1.3.0
+      '@dtoolkit/adapter-claude':
+        specifier: workspace:*
+        version: link:../adapter-claude
+      '@dtoolkit/adapter-gemini':
+        specifier: workspace:*
+        version: link:../adapter-gemini
+      '@dtoolkit/adapter-opencode':
+        specifier: workspace:*
+        version: link:../adapter-opencode
       '@dtoolkit/core':
         specifier: workspace:*
         version: link:../core
+      '@dtoolkit/sdk':
+        specifier: workspace:*
+        version: link:../sdk
+      commander:
+        specifier: ^13.0.0
+        version: 13.1.0
+      picocolors:
+        specifier: ^1.1.0
+        version: 1.1.1
     devDependencies:
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.18
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.1(postcss@8.5.14)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.4)
       typescript:
         specifier: ^5.7.0
         version: 5.9.3

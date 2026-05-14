@@ -31,3 +31,5 @@ export { ContextBlockSchema, type ContextBlock } from "./context.js";
 export type { HistoryEntry, SessionInfo } from "./history.js";
 
 export type { TemplateDefinition, TemplateVariable } from "./template.js";
+
+export type { Target, TranscriptEntry } from "./transcript.js";

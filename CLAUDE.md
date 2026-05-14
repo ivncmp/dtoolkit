@@ -35,12 +35,16 @@ packages/
 │                      Includes AdapterStreamEvent, LineBuffer for JSONL parsing
 │                      Build: tsc. No runtime deps beyond zod. Other packages depend on this.
 ├── adapter-claude/    Shell-out adapter for Claude Code CLI (stream-json + deltas)
+│                      Also: DcontextTarget for Claude Code hooks (settings.json + CLAUDE.md)
 ├── adapter-codex/     Shell-out adapter for Codex CLI (JSONL streaming)
 ├── adapter-gemini/    Shell-out adapter for Gemini CLI (stream-json)
+│                      Also: DcontextTarget for Gemini CLI hooks (settings.json)
 ├── adapter-ollama/    Shell-out adapter for Ollama CLI (raw text streaming)
 ├── adapter-opencode/  Shell-out adapter for OpenCode CLI (JSONL streaming)
+│                      Also: DcontextTarget for OpenCode hooks (npm plugin)
 │                      All adapters: Build: tsc. Depend on core only.
-│                      All implement stream() + execute() (execute derives from stream)
+│                      All implement stream() + execute() via dproxy.ts
+│                      Claude/Gemini/OpenCode also implement Target via dcontext.ts
 ├── dbrain/            Persistent memory server — the brain
 │                      Fastify REST API + MCP HTTP on :7878, React dashboard on :7879
 │                      SQLite + FTS5 via better-sqlite3. CLI: dbrain init/start/connect/status
@@ -48,6 +52,11 @@ packages/
 ├── sdk/               Typed HTTP clients for dtoolkit services (dbrain + dproxy)
 │                      DBrainClient + DProxyClient, shared HttpClient base
 │                      Build: tsc. Auth: unified Bearer token.
+├── dcontext/          dbrain hooks for AI coding CLIs
+│                      Injects identity + project facts at session start, saves exchanges pre-compaction
+│                      Hooks into Claude Code, Gemini CLI, OpenCode via their native hook systems
+│                      CLI: dcontext init/install/uninstall/status/explore
+│                      Build: tsup (single ESM bundle). Requires dbrain.
 └── dproxy/            Universal CLI adapter for invoking models via local CLIs
                        Commander-based CLI with context injection pipeline
                        Uses adapter packages for multi-provider support (--provider flag)
@@ -56,7 +65,7 @@ tools/
 └── tsconfig/          Shared base tsconfig (ES2022, NodeNext, strict)
 ```
 
-**Dependency graph**: `core` ← `adapter-*` ← `dproxy`. `core` ← `sdk` ← (consumers). `core` ← `dbrain`. Turbo handles build ordering via `^build`.
+**Dependency graph**: `core` ← `adapter-*` ← `dproxy`/`dcontext`. `core` ← `sdk` ← (consumers). `core` ← `dbrain`. Turbo handles build ordering via `^build`.
 
 ### dbrain internals
 

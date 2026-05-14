@@ -48,6 +48,7 @@ export default tseslint.config(
     files: [
       'packages/*/src/cli/**/*.ts',
       'packages/dbrain/src/dashboard/server.ts',
+      'packages/dcontext/src/**/*.ts',
       'packages/dproxy/src/**/*.ts',
     ],
     rules: {

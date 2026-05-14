@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { homedir, hostname } from 'node:os';
 import { join } from 'node:path';
 
 import * as p from '@clack/prompts';
@@ -138,13 +138,32 @@ function configureClaude(config: BrainConfig, s: ReturnType<typeof p.spinner>) {
   }
   writeFileSync(settingsJson, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
 
-  writeFileSync(claudeMd, config.claudeMd, 'utf-8');
+  const DBRAIN_START = '<!-- dbrain:start -->';
+  const DBRAIN_END = '<!-- dbrain:end -->';
+  const claudeMdText = config.claudeMd.trim().replace('{hostname}', hostname().toLowerCase());
+  const dbrainSection = `${DBRAIN_START}\n${claudeMdText}\n${DBRAIN_END}`;
+
+  let mdContent = dbrainSection;
+  if (existsSync(claudeMd)) {
+    const existing = readFileSync(claudeMd, 'utf-8');
+    const startIdx = existing.indexOf(DBRAIN_START);
+    const endIdx = existing.indexOf(DBRAIN_END);
+    if (startIdx !== -1 && endIdx !== -1) {
+      const before = existing.slice(0, startIdx).trim();
+      const after = existing.slice(endIdx + DBRAIN_END.length).trim();
+      const parts = [before, dbrainSection, after].filter(Boolean);
+      mdContent = parts.join('\n\n');
+    } else if (existing.trim()) {
+      mdContent = dbrainSection + '\n\n' + existing.trim();
+    }
+  }
+  writeFileSync(claudeMd, mdContent.trim() + '\n', 'utf-8');
 
   s.stop('Claude Code configured');
 
   p.note(
     [
-      `${pc.green('~/.claude.json')}          MCP server registered`,
+      `${pc.green('~/.claude.json')}           MCP server registered`,
       `${pc.green('~/.claude/settings.json')}  Permissions granted`,
       `${pc.green('~/.claude/CLAUDE.md')}      Behavioral instructions installed`,
     ].join('\n'),

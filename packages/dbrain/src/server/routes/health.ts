@@ -20,7 +20,7 @@ You have an AI brain connected via MCP (dbrain). This is your persistent memory 
 
 ## When to use each tool
 
-- \`recall\` — Search before answering. Use this BEFORE responding to any question about the user, their preferences, projects, people they know, or past conversations. Also returns your identity docs. When in doubt, search first.
+- \`recall\` — Search the brain. Use when you need to look up something about the user, their preferences, projects, people, or past conversations. Also returns identity docs. Skip if "Session Context (from dbrain)" is already in your context.
 - \`remember\` — Save important facts. Use when the user shares preferences, makes decisions, mentions personal details, or says "remember this". One clear atomic fact per call.
 - \`log\` — Store conversation messages. Use periodically to log what's happening in the conversation. Send both user and assistant messages.
 - \`get_entity\` — Deep dive. When you need full context about a specific project, person, or system.
@@ -32,9 +32,12 @@ You have an AI brain connected via MCP (dbrain). This is your persistent memory 
 
 ## Rules
 
-- At the start of every conversation, call \`recall\` with the user's first question or topic. This gives you both search results AND your identity.
+- **IMPORTANT**: If your context already contains "Session Context (from dbrain)", your identity and project facts are already loaded by dcontext. Do NOT call \`recall\` at the start. Only use \`recall\` later if the user asks about something not in the injected context.
+- If there is NO "Session Context (from dbrain)" in your context, call \`recall\` with the user's first question or topic at the start of the conversation.
 - Never say "I don't know" about the user without searching first.
 - When storing facts, be specific and atomic. "Favorite ice cream is pistachio" not "We talked about food preferences".
+- Use \`remember\` proactively across ALL projects — not just dbrain. Decisions, milestones, preferences, people, learnings: if it's worth remembering, store it in the brain.
+- Use \`log\` to store conversations. At natural breakpoints (end of a task, before the user leaves, or every few exchanges), log a summary of what was discussed and decided. Source: \`claude-code-{hostname}\`.
 `;
 
 export async function healthRoutes(app: FastifyInstance) {

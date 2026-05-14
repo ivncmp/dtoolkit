@@ -97,10 +97,10 @@ dbrain connect claude http://your-server:7878
 `init` and `connect` are deliberately separate commands for different machines:
 
 - **`init`** runs on the **server**. Creates the brain: config file, SQLite database, identity documents, initial entities. It knows nothing about Claude Code or any client.
-- **`connect`** runs on the **client**. Fetches `GET /connect` from the brain server and writes the three local config files Claude Code needs. It knows nothing about how the brain is implemented.
+- **`connect`** runs on the **client**. Fetches `GET /connect` from the brain server and writes the config files the client needs. Supports `claude`, `gemini`, and `opencode`.
 
 This separation means:
-- A brain on a cloud server doesn't need to know about Claude Code's file layout
+- A brain on a cloud server doesn't need to know about any client's file layout
 - A client machine doesn't need the brain's source code or dependencies
 - Any future client type (VS Code extension, mobile app, custom tool) can read `/connect` and self-configure
 

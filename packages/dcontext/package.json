@@ -45,6 +45,7 @@
   "dependencies": {
     "@clack/prompts": "^1.3.0",
     "@dtoolkit/adapter-claude": "workspace:*",
+    "@dtoolkit/adapter-codex": "workspace:*",
     "@dtoolkit/adapter-gemini": "workspace:*",
     "@dtoolkit/adapter-opencode": "workspace:*",
     "@dtoolkit/core": "workspace:*",

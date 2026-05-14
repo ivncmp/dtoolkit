@@ -38,7 +38,7 @@ function readStdinRaw(): Promise<string> {
 }
 
 function detectTarget(env: Record<string, string | undefined>): Target | null {
-  for (const name of ['claude', 'gemini', 'opencode'] as const) {
+  for (const name of ['claude', 'codex', 'gemini', 'opencode'] as const) {
     const target = resolveTarget(name);
     if (target?.detectFromEnv(env)) return target;
   }

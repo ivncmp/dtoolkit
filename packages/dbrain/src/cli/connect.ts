@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
 
-const SUPPORTED_CLIENTS = ['claude', 'gemini', 'opencode'] as const;
+const SUPPORTED_CLIENTS = ['claude', 'codex', 'gemini', 'opencode'] as const;
 type Client = (typeof SUPPORTED_CLIENTS)[number];
 
 interface BrainConfig {
@@ -90,6 +90,8 @@ export async function connect(client?: string, url?: string, tokenArg?: string) 
 
   if (selectedClient === 'claude') {
     configureClaude(config, url, tokenArg, s);
+  } else if (selectedClient === 'codex') {
+    configureCodex(config, url, tokenArg, s);
   } else if (selectedClient === 'gemini') {
     configureGemini(config, url, tokenArg, s);
   } else if (selectedClient === 'opencode') {
@@ -98,6 +100,7 @@ export async function connect(client?: string, url?: string, tokenArg?: string) 
 
   const clientNames: Record<Client, string> = {
     claude: 'Claude Code',
+    codex: 'Codex CLI',
     gemini: 'Gemini CLI',
     opencode: 'OpenCode',
   };
@@ -179,6 +182,63 @@ function writeDbrainMdSection(filePath: string, content: string) {
     }
   }
   writeFileSync(filePath, mdContent.trim() + '\n', 'utf-8');
+}
+
+const DBRAIN_MCP_TOML_START = '# dbrain MCP';
+const DBRAIN_MCP_TOML_END = '# /dbrain MCP';
+
+function configureCodex(brainConfig: BrainConfig, url: string, token: string, s: ReturnType<typeof p.spinner>) {
+  s.start('Configuring Codex CLI');
+
+  const codexDir = join(homedir(), '.codex');
+  const configToml = join(codexDir, 'config.toml');
+  const agentsMd = join(codexDir, 'AGENTS.md');
+
+  mkdirSync(codexDir, { recursive: true });
+
+  let toml = '';
+  if (existsSync(configToml)) {
+    try {
+      toml = readFileSync(configToml, 'utf-8');
+    } catch {
+      /* corrupt config, start fresh */
+    }
+  }
+
+  const mcpSection = [
+    DBRAIN_MCP_TOML_START,
+    '[mcp_servers.dbrain]',
+    `url = "${url}/mcp"`,
+    'default_tools_approval_mode = "approve"',
+    '',
+    '[mcp_servers.dbrain.http_headers]',
+    `Authorization = "Bearer ${token}"`,
+    DBRAIN_MCP_TOML_END,
+  ].join('\n');
+
+  const startIdx = toml.indexOf(DBRAIN_MCP_TOML_START);
+  const endIdx = toml.indexOf(DBRAIN_MCP_TOML_END);
+  if (startIdx !== -1 && endIdx !== -1) {
+    const before = toml.slice(0, startIdx).trimEnd();
+    const after = toml.slice(endIdx + DBRAIN_MCP_TOML_END.length).trimStart();
+    const parts = [before, mcpSection, after].filter(Boolean);
+    toml = parts.join('\n\n');
+  } else {
+    toml = (toml.trimEnd() + '\n\n' + mcpSection).trimStart();
+  }
+
+  writeFileSync(configToml, toml.trim() + '\n', 'utf-8');
+  writeDbrainMdSection(agentsMd, brainConfig.claudeMd);
+
+  s.stop('Codex CLI configured');
+
+  p.note(
+    [
+      `${pc.green('~/.codex/config.toml')}   MCP server registered`,
+      `${pc.green('~/.codex/AGENTS.md')}     Behavioral instructions installed`,
+    ].join('\n'),
+    'Files updated',
+  );
 }
 
 const DBRAIN_POLICY = `[[rule]]

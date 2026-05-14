@@ -19,6 +19,7 @@ Requires a running [dbrain](../dbrain/) instance.
 | CLI | Hook mechanism | Status |
 |-----|---------------|--------|
 | **Claude Code** | Hooks in `~/.claude/settings.json` | v1 |
+| **Codex CLI** | Hooks in `~/.codex/config.toml` | v1 |
 | **Gemini CLI** | Hooks in `~/.gemini/settings.json` | v1 |
 | **OpenCode** | In-process npm plugin | v1 |
 
@@ -94,6 +95,7 @@ When you run `dcontext install <target>`, it modifies the dbrain section in the 
 | Target | Instruction file |
 |--------|-----------------|
 | `claude` | `~/.claude/CLAUDE.md` |
+| `codex` | `~/.codex/AGENTS.md` |
 | `gemini` | `~/.gemini/GEMINI.md` |
 | `opencode` | `~/.config/opencode/AGENTS.md` |
 
@@ -102,7 +104,7 @@ When you run `dcontext install <target>`, it modifies the dbrain section in the 
 | Command | Description |
 |---------|-------------|
 | `dcontext init` | Interactive setup — connect to dbrain, map projects |
-| `dcontext install <target>` | Install hooks (`claude`, `gemini`, `opencode`) |
+| `dcontext install <target>` | Install hooks (`claude`, `codex`, `gemini`, `opencode`) |
 | `dcontext uninstall <target>` | Remove hooks |
 | `dcontext status` | Show config, targets, project mappings, stats |
 | `dcontext explore` | Preview the briefing that would be injected for the current directory |

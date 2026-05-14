@@ -63,6 +63,7 @@ dbrain status
 ```bash
 # Connect a client to a running brain (client only)
 dbrain connect claude http://your-server:7878
+dbrain connect codex http://your-server:7878
 dbrain connect gemini http://your-server:7878
 dbrain connect opencode http://your-server:7878
 ```
@@ -184,6 +185,7 @@ dbrain/
 ```bash
 # On the client machine, with the brain running:
 dbrain connect claude http://your-server:7878
+dbrain connect codex http://your-server:7878
 dbrain connect gemini http://your-server:7878
 dbrain connect opencode http://your-server:7878
 ```

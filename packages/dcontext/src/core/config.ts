@@ -2,7 +2,7 @@ import { appendFile, mkdir, readFile, rename, writeFile } from 'node:fs/promises
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-export type TargetName = 'claude' | 'gemini' | 'opencode';
+export type TargetName = 'claude' | 'codex' | 'gemini' | 'opencode';
 
 export interface TargetConfig {
   installed: boolean;
@@ -48,6 +48,7 @@ const DEFAULT_CONFIG: DcontextConfig = {
   },
   targets: {
     claude: { installed: false },
+    codex: { installed: false },
     gemini: { installed: false },
     opencode: { installed: false },
   },

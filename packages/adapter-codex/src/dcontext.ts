@@ -16,7 +16,7 @@ const DCONTEXT_HOOKS = {
       hooks: [
         {
           type: 'command' as const,
-          command: 'dcontext hook session-start',
+          command: 'dcontext hook session-start --target codex',
           timeout: 5000,
         },
       ],
@@ -27,7 +27,7 @@ const DCONTEXT_HOOKS = {
       hooks: [
         {
           type: 'command' as const,
-          command: 'dcontext hook pre-compact',
+          command: 'dcontext hook pre-compact --target codex',
           timeout: 10000,
         },
       ],
@@ -59,17 +59,32 @@ class CodexTarget implements Target {
 
     if (toml.includes('dcontext hook session-start')) return;
 
+    if (!toml.includes('hooks = true') && !toml.includes('codex_hooks = true')) {
+      if (toml.includes('[features]')) {
+        toml = toml.replace('[features]', '[features]\nhooks = true');
+      } else {
+        toml = toml.trimEnd() + '\n\n[features]\nhooks = true\n';
+      }
+    }
+    toml = toml.replace('codex_hooks = true', 'hooks = true');
+
     const hookLines = [
       '',
       '# dcontext hooks',
       '[[hooks.SessionStart]]',
+      'matcher = "*"',
+      '',
+      '[[hooks.SessionStart.hooks]]',
       'type = "command"',
-      'command = "dcontext hook session-start"',
+      'command = "dcontext hook session-start --target codex"',
       'timeout = 5000',
       '',
-      '[[hooks.Stop]]',
+      '[[hooks.PreCompact]]',
+      'matcher = "*"',
+      '',
+      '[[hooks.PreCompact.hooks]]',
       'type = "command"',
-      'command = "dcontext hook pre-compact"',
+      'command = "dcontext hook pre-compact --target codex"',
       'timeout = 10000',
     ];
 
@@ -99,7 +114,7 @@ class CodexTarget implements Target {
       }
 
       if (skipBlock) {
-        if (line.startsWith('[[hooks.') || line.startsWith('type = ') || line.startsWith('command = "dcontext') || line.startsWith('timeout = ')) {
+        if (line.startsWith('[[hooks.') || line.startsWith('type = ') || line.startsWith('command = "dcontext') || line.startsWith('timeout = ') || line.startsWith('matcher = ') || line.startsWith('statusMessage = ')) {
           continue;
         }
         if (line.trim() === '') {

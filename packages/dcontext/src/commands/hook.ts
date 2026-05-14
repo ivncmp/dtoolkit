@@ -12,9 +12,10 @@ export function createHookCommand(): Command {
   return new Command('hook')
     .description('Handle hook events (internal — called by CLI hooks)')
     .argument('<event>', 'Hook event: session-start, pre-compact')
-    .action(async (event: string) => {
+    .option('--target <name>', 'Explicit target override (claude, codex, gemini, opencode)')
+    .action(async (event: string, opts: { target?: string }) => {
       try {
-        await runHook(event);
+        await runHook(event, opts.target);
       } catch (err) {
         await logError(`hook ${event}: ${(err as Error).message}`);
         process.stdout.write('{}');
@@ -45,7 +46,7 @@ function detectTarget(env: Record<string, string | undefined>): Target | null {
   return resolveTarget('claude');
 }
 
-async function runHook(event: string) {
+async function runHook(event: string, explicitTarget?: string) {
   const raw = await readStdinRaw();
   let input: Record<string, unknown> = {};
   try {
@@ -61,7 +62,9 @@ async function runHook(event: string) {
   }
 
   const env = process.env as Record<string, string | undefined>;
-  const target = detectTarget(env);
+  const target = explicitTarget
+    ? resolveTarget(explicitTarget as Parameters<typeof resolveTarget>[0])
+    : detectTarget(env);
   if (!target) {
     process.stdout.write('{}');
     return;
@@ -71,7 +74,7 @@ async function runHook(event: string) {
   const sessionId = target.getSessionId(env, input);
 
   if (event === 'session-start') {
-    await handleSessionStart(cwd, config);
+    await handleSessionStart(target, cwd, config);
   } else if (event === 'pre-compact') {
     await handlePreCompact(sessionId, target, cwd, config);
   } else {
@@ -79,7 +82,19 @@ async function runHook(event: string) {
   }
 }
 
-async function handleSessionStart(cwd: string, config: DcontextConfig) {
+function formatOutput(target: Target, event: string, context: string): string {
+  if (target.name === 'codex') {
+    return JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: event,
+        additionalContext: context,
+      },
+    });
+  }
+  return JSON.stringify({ additionalContext: context });
+}
+
+async function handleSessionStart(target: Target, cwd: string, config: DcontextConfig) {
   const projectEntity = config.projects[cwd];
   if (!projectEntity) {
     process.stdout.write('{}');
@@ -97,7 +112,7 @@ async function handleSessionStart(cwd: string, config: DcontextConfig) {
     stats.briefings.lastAt = new Date().toISOString();
   });
 
-  process.stdout.write(JSON.stringify({ additionalContext: briefing }));
+  process.stdout.write(formatOutput(target, 'SessionStart', briefing));
 }
 
 async function handlePreCompact(
@@ -117,5 +132,5 @@ async function handlePreCompact(
     return;
   }
 
-  process.stdout.write(JSON.stringify({ additionalContext: notes }));
+  process.stdout.write(formatOutput(target, 'PreCompact', notes));
 }

@@ -30,7 +30,7 @@ Each product has **one job**, works standalone, and composes with the rest via a
 | Package | Version | Description |
 | --- | --- | --- |
 | [`@dtoolkit/dbrain`](packages/dbrain/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dbrain.svg)](https://www.npmjs.com/package/@dtoolkit/dbrain) | Persistent memory server — SQLite + FTS5, MCP, REST API, dashboard |
-| [`@dtoolkit/dcontext`](packages/dcontext/) | — | Tool cache + background compactor (local) |
+| [`@dtoolkit/dcontext`](packages/dcontext/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dcontext.svg)](https://www.npmjs.com/package/@dtoolkit/dcontext) | Hooks for AI coding CLIs — injects dbrain context at session start, saves transcripts pre-compaction |
 | [`@dtoolkit/dprime`](packages/dprime/) | — | Auto-briefing before touching a module |
 
 ### Multi-provider Transport
@@ -102,7 +102,13 @@ Each product has **one job**, works standalone, and composes with the rest via a
 
 ## Examples
 
-The [`examples/`](examples/) directory contains ready-to-run TypeScript examples for the `@dtoolkit/sdk` package:
+The [`examples/`](examples/) directory contains ready-to-run TypeScript examples for the `@dtoolkit/sdk` clients:
+
+| Example | Client | What it covers |
+| --- | --- | --- |
+| [`dbrain.ts`](examples/src/dbrain.ts) | `DBrainClient` | Health, entity CRUD, facts, search, memory summary, conversations |
+| [`dproxy.ts`](examples/src/dproxy.ts) | `DProxyClient` | Batch ask, streaming, system prompts, file attachments, history, memory |
+| [`demo.ts`](examples/src/demo.ts) | Both | Combined smoke test |
 
 ```bash
 cd examples
@@ -110,7 +116,7 @@ npm install
 npm start          # init + start servers + run demo + teardown
 ```
 
-No configuration needed — the setup script creates a temporary brain, starts dbrain and dproxy, runs the demo, and cleans up. See the [examples README](examples/README.md) for more details.
+No configuration needed — the setup script creates a temporary brain, starts dbrain and dproxy, runs the demo, and cleans up. See the [examples README](examples/README.md) for details.
 
 ## Quick start
 

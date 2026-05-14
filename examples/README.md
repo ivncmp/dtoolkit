@@ -3,7 +3,16 @@
 </p>
 
 <h1 align="center">@dtoolkit/examples</h1>
-<p align="center">Usage examples for the <code>@dtoolkit/sdk</code> package</p>
+<p align="center">Usage examples for the <code>@dtoolkit/sdk</code> package — typed HTTP clients for <strong>dbrain</strong> and <strong>dproxy</strong></p>
+
+## What's covered
+
+These examples demonstrate the two SDK clients:
+
+- **`DBrainClient`** — persistent memory server: entities, facts, search, conversations
+- **`DProxyClient`** — universal model proxy: ask (batch & streaming), file attachments, history, memory
+
+> Other dtoolkit packages (`dcontext`, `dproxy` CLI, adapters) are CLI tools without a programmatic SDK — they're not covered here.
 
 ## Quick start
 
@@ -33,12 +42,42 @@ npm run dproxy             # dproxy client only
 
 ## Examples
 
-| File | Description |
-|------|-------------|
-| [src/dbrain.ts](src/dbrain.ts) | Health check, entity CRUD, fact management, search, memory summary, conversations |
-| [src/dproxy.ts](src/dproxy.ts) | Health check, batch ask, streaming, ask with options, history, memory management |
-| [src/demo.ts](src/demo.ts) | Combined quick demo of both clients |
-| [src/setup.ts](src/setup.ts) | Full lifecycle: init temporary brain, start servers, run example, teardown |
+### dbrain ([src/dbrain.ts](src/dbrain.ts))
+
+Covers `DBrainClient` from `@dtoolkit/sdk`:
+
+- Health check — server status, entity/fact counts
+- Entity listing — all entities, filtered by category
+- Full-text search — FTS5 query across all facts
+- Memory summary — per-entity fact counts by tier (hot/warm/cold)
+- Entity CRUD — create entity, add facts, bump, archive
+- Conversations — list recent conversations
+
+### dproxy ([src/dproxy.ts](src/dproxy.ts))
+
+Covers `DProxyClient` from `@dtoolkit/sdk`:
+
+- Health check — server version, active provider
+- Batch ask — single prompt, full response
+- Streaming — SSE-based token-by-token output
+- System prompt override — custom persona, skip history
+- File attachments — inline text, JSON, images (PNG), PDFs, mixed
+- History — list recent entries, fetch full entry
+- Memory — write, read, search, delete key-value memory
+
+### Combined ([src/demo.ts](src/demo.ts))
+
+Quick end-to-end demo hitting both clients. Good for smoke-testing a full dtoolkit setup.
+
+### Setup ([src/setup.ts](src/setup.ts))
+
+Orchestration script that powers `npm start`:
+
+1. Builds packages (if needed)
+2. Inits a temporary dbrain in a temp directory
+3. Starts dbrain + dproxy servers
+4. Runs the specified example
+5. Tears everything down (kills servers, deletes temp dir)
 
 ## Configuration
 

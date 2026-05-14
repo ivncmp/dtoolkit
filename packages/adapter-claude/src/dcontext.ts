@@ -135,12 +135,12 @@ class ClaudeTarget implements Target {
         return !inner?.some((h) => h.command?.startsWith('dcontext '));
       });
       if ((hooks[event] as unknown[]).length === 0) {
-        delete hooks[event];
+        hooks[event] = undefined;
       }
     }
 
-    if (Object.keys(hooks).length === 0) {
-      delete settings.hooks;
+    if (Object.keys(hooks).filter((k) => hooks[k] !== undefined).length === 0) {
+      settings.hooks = undefined;
     }
 
     await writeFile(SETTINGS_JSON, JSON.stringify(settings, null, 2) + '\n', 'utf-8');

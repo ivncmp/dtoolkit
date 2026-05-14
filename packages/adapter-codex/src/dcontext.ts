@@ -10,7 +10,7 @@ const CODEX_DIR = join(homedir(), '.codex');
 const AGENTS_MD = join(CODEX_DIR, 'AGENTS.md');
 const CONFIG_TOML = join(CODEX_DIR, 'config.toml');
 
-const DCONTEXT_HOOKS = {
+const _DCONTEXT_HOOKS = {
   SessionStart: [
     {
       hooks: [

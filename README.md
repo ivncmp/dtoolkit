@@ -24,6 +24,10 @@ Each product has **one job**, works standalone, and composes with the rest via a
 | --- | --- | --- |
 | [`@dtoolkit/core`](packages/core/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/core.svg)](https://www.npmjs.com/package/@dtoolkit/core) | Shared types and Zod schemas (`Adapter`, `ContextBlock`, `Fact`, `Entity`, `Tier`) |
 | [`@dtoolkit/sdk`](packages/sdk/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/sdk.svg)](https://www.npmjs.com/package/@dtoolkit/sdk) | Typed HTTP clients for dtoolkit services (dbrain + dproxy) |
+| [`@dtoolkit/adapter-claude`](packages/adapter-claude/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-claude.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-claude) | Adapter for Claude Code CLI |
+| [`@dtoolkit/adapter-codex`](packages/adapter-codex/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-codex.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-codex) | Adapter for Codex CLI |
+| [`@dtoolkit/adapter-gemini`](packages/adapter-gemini/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-gemini.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-gemini) | Adapter for Gemini CLI |
+| [`@dtoolkit/adapter-opencode`](packages/adapter-opencode/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-opencode.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-opencode) | Adapter for OpenCode CLI |
 
 ### Memory & Context
 
@@ -38,10 +42,6 @@ Each product has **one job**, works standalone, and composes with the rest via a
 | Package | Version | Description |
 | --- | --- | --- |
 | [`@dtoolkit/dproxy`](packages/dproxy/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dproxy.svg)](https://www.npmjs.com/package/@dtoolkit/dproxy) | Universal adapter for invoking models — CLI and REST API |
-| [`@dtoolkit/adapter-claude`](packages/adapter-claude/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-claude.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-claude) | Adapter for Claude Code CLI |
-| [`@dtoolkit/adapter-codex`](packages/adapter-codex/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-codex.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-codex) | Adapter for Codex CLI |
-| [`@dtoolkit/adapter-gemini`](packages/adapter-gemini/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-gemini.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-gemini) | Adapter for Gemini CLI |
-| [`@dtoolkit/adapter-opencode`](packages/adapter-opencode/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-opencode.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-opencode) | Adapter for OpenCode CLI |
 
 ### Team Coordination
 

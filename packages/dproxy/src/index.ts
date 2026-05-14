@@ -15,9 +15,21 @@ import { getConfigValue, loadConfig, setConfigValue } from './lib/config.js';
 const program = new Command();
 program.enablePositionalOptions();
 
+const banner = `\
+     _
+    | |
+  __| |_ __  _ __ _____  ___   _
+ / _\` | '_ \\| '__/ _ \\ \\/ / | | |
+| (_| | |_) | | | (_) >  <| |_| |
+ \\__,_| .__/|_|  \\___/_/\\_\\\\__, |
+      | |                   __/ |
+      |_|                  |___/`;
+
+const description = `${pc.green(banner)}\n\n${pc.green('Universal adapter for invoking models via local CLIs')}\n${pc.dim('Part of the dtoolkit suite')}`;
+
 program
   .name('dproxy')
-  .description('Universal adapter for invoking models via local CLIs')
+  .description(description)
   .version(__VERSION__);
 
 // Init does not require initialization

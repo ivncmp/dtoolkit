@@ -101,6 +101,34 @@ All CLI packages must use these libraries — no exceptions:
 
 Color conventions: errors in `pc.red()`, success in `pc.green()`, secondary info in `pc.dim()`, highlights in `pc.blue()`, headings in `pc.bold()`.
 
+### CLI help banner
+
+Every CLI package must show an ASCII art banner in its `--help` output. The banner is set via Commander's `.description()` and follows this pattern:
+
+```typescript
+import { Command } from 'commander';
+import pc from 'picocolors';
+
+const banner = `\
+     _ _               _
+    | | |             (_)
+  __| | |__  _ __ __ _ _ _ __
+ / _\` | '_ \\| '__/ _\` | | '_ \\
+| (_| | |_) | | | (_| | | | | |
+ \\__,_|_.__/|_|  \\__,_|_|_| |_|`;
+
+const description = `${pc.green(banner)}\n\n${pc.green('One-line tagline here')}\n${pc.dim('Part of the dtoolkit suite')}`;
+
+program.name('dbrain').description(description).version(version);
+```
+
+Rules:
+- ASCII art uses the "Big" figlet font. Pre-generated art for all packages lives in `ascii-art.txt` at the repo root.
+- The art goes in a `banner` const (template literal), wrapped in `pc.green()`.
+- The tagline (one-line description) goes in `pc.green()` on its own line.
+- Below the tagline, always add `pc.dim('Part of the dtoolkit suite')`.
+- Use template literals with escaped backticks `` \` `` and backslashes `\\` — no string concatenation.
+
 ## README conventions
 
 All package READMEs follow this header format:

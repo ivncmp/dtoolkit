@@ -35,7 +35,6 @@ Each product has **one job**, works standalone, and composes with the rest via a
 | --- | --- | --- |
 | [`@dtoolkit/dbrain`](packages/dbrain/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dbrain.svg)](https://www.npmjs.com/package/@dtoolkit/dbrain) | Persistent memory server — SQLite + FTS5, MCP, REST API, dashboard |
 | [`@dtoolkit/dcontext`](packages/dcontext/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dcontext.svg)](https://www.npmjs.com/package/@dtoolkit/dcontext) | Hooks for AI coding CLIs — injects dbrain context at session start, saves transcripts pre-compaction |
-| [`@dtoolkit/dprime`](packages/dprime/) | — | Auto-briefing before touching a module |
 
 ### Multi-provider Transport
 
@@ -77,25 +76,18 @@ Each product has **one job**, works standalone, and composes with the rest via a
                            │
               ContextBlock[] (neutral contract)
                            │
-        ┌──────────────────┼──────────────────┐
-        ▼                  ▼                  ▼
-   ┌─────────┐      ┌──────────┐      ┌──────────┐
-   │ dprime  │      │ dcontext │      │  dbrain  │
-   │ briefing│      │  cache + │      │ memory   │
-   │ builder │      │compactor │      │ server   │
-   └─────────┘      └──────────┘      └──────────┘
-                           │
-                    ┌──────┴──────┐
-                    ▼             ▼
-              ┌──────────┐ ┌──────────┐
-              │  dproxy  │ │  dops    │
-              │ transport│ │ metrics  │
-              └────┬─────┘ └──────────┘
-                   │
-      ┌────────┬───┴───┬──────────┐
-      ▼        ▼       ▼          ▼
-   claude    codex   gemini    opencode
-   adapter  adapter  adapter   adapter
+              ┌────────────┼────────────┐
+              ▼            ▼            ▼
+        ┌──────────┐ ┌──────────┐ ┌──────────┐
+        │ dcontext │ │  dproxy  │ │  dbrain  │
+        │  hooks + │ │ transport│ │ memory   │
+        │ briefing │ │          │ │ server   │
+        └──────────┘ └────┬─────┘ └──────────┘
+                          │
+             ┌────────┬───┴───┬──────────┐
+             ▼        ▼       ▼          ▼
+          claude    codex   gemini    opencode
+          adapter  adapter  adapter   adapter
 ```
 
 **Design principle:** one layer, one responsibility. If two products need to sync to function, it's wrong.

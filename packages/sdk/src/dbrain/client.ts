@@ -1,7 +1,10 @@
 import { HttpClient, enc, qs } from '../http.js';
 
 import type {
+  ApiKeyCreateResponse,
+  ApiKeyListItem,
   ConnectResponse,
+  ConnectionStatus,
   ConversationSummary,
   ConversationWithMessages,
   Document,
@@ -14,11 +17,13 @@ import type {
   Message,
   PendingMessages,
   SearchResult,
+  ShareResult,
 } from './types.js';
 
 export interface DBrainClientOptions {
   baseUrl: string;
   token: string;
+  timeoutMs?: number;
 }
 
 export class DBrainClient {
@@ -36,6 +41,7 @@ export class DBrainClient {
       this.http = new HttpClient({
         baseUrl: baseUrlOrOptions.baseUrl,
         token: baseUrlOrOptions.token,
+        timeoutMs: baseUrlOrOptions.timeoutMs,
       });
     }
   }
@@ -185,5 +191,33 @@ export class DBrainClient {
 
   async deleteDocument(key: string): Promise<{ key: string; deleted: boolean }> {
     return this.http.del(`/workspace/${enc(key)}`);
+  }
+
+  // --- API Keys (shared brains) ---
+
+  async createApiKey(params: {
+    userId: string;
+    userName: string;
+    permissions?: string;
+  }): Promise<ApiKeyCreateResponse> {
+    return this.http.post('/keys', params);
+  }
+
+  async listApiKeys(): Promise<ApiKeyListItem[]> {
+    return this.http.get('/keys');
+  }
+
+  async revokeApiKey(id: string): Promise<{ id: string; revoked: boolean }> {
+    return this.http.del(`/keys/${enc(id)}`);
+  }
+
+  // --- Connections ---
+
+  async listConnections(): Promise<ConnectionStatus[]> {
+    return this.http.get('/connections');
+  }
+
+  async shareFact(factId: string, targetBrain?: string): Promise<ShareResult> {
+    return this.http.post(`/facts/${enc(factId)}/share`, { targetBrain });
   }
 }

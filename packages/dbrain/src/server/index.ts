@@ -8,6 +8,8 @@ import { conversationRoutes } from './routes/conversations.js';
 import { entityRoutes } from './routes/entities.js';
 import { factRoutes } from './routes/facts.js';
 import { healthRoutes } from './routes/health.js';
+import { keyRoutes } from './routes/keys.js';
+import { proxyRoutes } from './routes/proxy.js';
 import { searchRoutes } from './routes/search.js';
 import { workspaceRoutes } from './routes/workspace.js';
 
@@ -31,10 +33,41 @@ export function createServer(config: Config, db: Database.Database) {
   app.addHook('onRequest', async (request, reply) => {
     if (request.method === 'OPTIONS') return;
     if (request.url === '/health') return;
+
     const auth = request.headers.authorization;
-    if (!auth || auth !== `Bearer ${config.token}`) {
-      reply.code(401).send({ error: 'Unauthorized' });
+    if (!auth?.startsWith('Bearer ')) {
+      return reply.code(401).send({ error: 'Unauthorized' });
     }
+
+    const token = auth.slice(7);
+
+    if (token === config.token) {
+      request.brainUser = { userId: '_admin', userName: 'Admin', permissions: 'read+write' };
+      return;
+    }
+
+    if (config.brainType === 'shared') {
+      const key = db
+        .prepare(
+          "SELECT user_id, user_name, permissions FROM api_keys WHERE token = ? AND status = 'active'",
+        )
+        .get(token) as { user_id: string; user_name: string; permissions: string } | undefined;
+
+      if (key) {
+        db.prepare('UPDATE api_keys SET last_used = ? WHERE token = ?').run(
+          new Date().toISOString(),
+          token,
+        );
+        request.brainUser = {
+          userId: key.user_id,
+          userName: key.user_name,
+          permissions: key.permissions as 'read' | 'write' | 'read+write',
+        };
+        return;
+      }
+    }
+
+    return reply.code(401).send({ error: 'Unauthorized' });
   });
 
   app.register(healthRoutes);
@@ -43,6 +76,12 @@ export function createServer(config: Config, db: Database.Database) {
   app.register(searchRoutes);
   app.register(workspaceRoutes);
   app.register(conversationRoutes);
+
+  if (config.brainType === 'shared') {
+    app.register(keyRoutes);
+  }
+
+  app.register(proxyRoutes);
 
   mountMcp(app);
 

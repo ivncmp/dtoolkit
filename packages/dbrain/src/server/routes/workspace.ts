@@ -1,5 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 
+import { requireWrite } from './permissions.js';
+
 export async function workspaceRoutes(app: FastifyInstance) {
   const db = app.db;
 
@@ -15,6 +17,7 @@ export async function workspaceRoutes(app: FastifyInstance) {
   });
 
   app.put('/workspace/:key', async (request, reply) => {
+    if (!requireWrite(request, reply)) return;
     const { key } = request.params as { key: string };
     const { title, content } = request.body as { title: string; content: string };
     const now = new Date().toISOString();
@@ -40,6 +43,7 @@ export async function workspaceRoutes(app: FastifyInstance) {
   });
 
   app.delete('/workspace/:key', async (request, reply) => {
+    if (!requireWrite(request, reply)) return;
     const { key } = request.params as { key: string };
     const result = db.prepare('DELETE FROM documents WHERE key = ?').run(key);
     if (result.changes === 0) return reply.code(404).send({ error: 'Document not found' });

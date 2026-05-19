@@ -65,6 +65,15 @@ export async function init(pathArg?: string, flags?: { nonInteractive?: boolean 
           message: 'Access token (leave default to auto-generate)',
           initialValue: generateToken(),
         }),
+      brainType: () =>
+        p.select({
+          message: 'Brain type?',
+          options: [
+            { value: 'personal', label: 'Personal — Your own brain' },
+            { value: 'shared', label: 'Shared — Team brain (issues per-user API keys)' },
+          ],
+          initialValue: 'personal',
+        }),
       agentName: () =>
         p.text({
           message: "What's my name? (your AI's identity)",
@@ -106,6 +115,9 @@ export async function init(pathArg?: string, flags?: { nonInteractive?: boolean 
     port,
     host: answers.host as string,
     token: answers.token,
+    brainName: answers.agentName,
+    brainType: answers.brainType as 'personal' | 'shared',
+    connections: [],
     tiers: { hotDays: 7, hotMinAccess: 10, warmDays: 30 },
   };
 
@@ -209,6 +221,8 @@ function initNonInteractive(pathArg?: string) {
   const host = process.env.DBRAIN_HOST || '0.0.0.0';
   const token = process.env.DBRAIN_TOKEN || generateToken();
   const agentName = process.env.DBRAIN_AGENT_NAME || 'dBrain';
+  const brainName = process.env.DBRAIN_BRAIN_NAME || agentName;
+  const brainType = (process.env.DBRAIN_BRAIN_TYPE || 'personal') as 'personal' | 'shared';
   const ownerName = process.env.DBRAIN_OWNER_NAME || 'Human';
   const ownerTimezone =
     process.env.DBRAIN_TIMEZONE || Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -223,6 +237,9 @@ function initNonInteractive(pathArg?: string) {
     port,
     host,
     token,
+    brainName,
+    brainType,
+    connections: [],
     tiers: { hotDays: 7, hotMinAccess: 10, warmDays: 30 },
   };
 

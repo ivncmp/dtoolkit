@@ -65,4 +65,62 @@ program
     await status(path);
   });
 
+program
+  .command('keys')
+  .description('Manage API keys (shared brains only)')
+  .argument('<action>', 'create | list | revoke')
+  .option('--url <url>', 'Brain URL (or DBRAIN_URL env)')
+  .option('--token <token>', 'Admin token (or DBRAIN_TOKEN env)')
+  .option('--user-id <userId>', 'User ID (create)')
+  .option('--user-name <userName>', 'User display name (create)')
+  .option('--permissions <perms>', 'read | write | read+write (create, default: read+write)')
+  .option('--key-id <keyId>', 'Key ID (revoke)')
+  .action(
+    async (
+      action: string,
+      opts: {
+        url?: string;
+        token?: string;
+        userId?: string;
+        userName?: string;
+        permissions?: string;
+        keyId?: string;
+      },
+    ) => {
+      const { keys } = await import('./keys.js');
+      await keys(action, opts);
+    },
+  );
+
+program
+  .command('link')
+  .description('Link to a shared brain')
+  .argument('<url>', 'Shared brain URL')
+  .option('--token <token>', 'Access token for the shared brain')
+  .option('--name <name>', 'Connection name (defaults to remote brain name)')
+  .option('--path <path>', 'Local brain data path')
+  .action(async (url: string, opts: { token?: string; name?: string; path?: string }) => {
+    const { link } = await import('./link.js');
+    await link(url, opts);
+  });
+
+program
+  .command('unlink')
+  .description('Remove a connection to a shared brain')
+  .argument('<name>', 'Connection name')
+  .option('--path <path>', 'Local brain data path')
+  .action(async (name: string, opts: { path?: string }) => {
+    const { unlink } = await import('./link.js');
+    await unlink(name, opts);
+  });
+
+program
+  .command('connections')
+  .description('List connected brains with health status')
+  .option('--path <path>', 'Local brain data path')
+  .action(async (opts: { path?: string }) => {
+    const { connections } = await import('./link.js');
+    await connections(opts);
+  });
+
 program.parse();

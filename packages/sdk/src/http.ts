@@ -1,15 +1,18 @@
 export interface HttpClientOptions {
   baseUrl: string;
   token?: string;
+  timeoutMs?: number;
 }
 
 export class HttpClient {
   private readonly baseUrl: string;
   private readonly token: string | undefined;
+  private readonly timeoutMs: number | undefined;
 
   constructor(options: HttpClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/$/, '');
     this.token = options.token;
+    this.timeoutMs = options.timeoutMs;
   }
 
   async request<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -68,6 +71,7 @@ export class HttpClient {
       method,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: this.timeoutMs ? AbortSignal.timeout(this.timeoutMs) : undefined,
     });
   }
 }

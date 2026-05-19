@@ -1,5 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 
+import { requireWrite } from './permissions.js';
+
 interface EntityRow {
   metadata: string | null;
   [k: string]: unknown;
@@ -51,6 +53,7 @@ export async function entityRoutes(app: FastifyInstance) {
   });
 
   app.post('/entities', async (request, reply) => {
+    if (!requireWrite(request, reply)) return;
     const { id, name, type, category, metadata } = request.body as {
       id: string;
       name: string;
@@ -66,6 +69,7 @@ export async function entityRoutes(app: FastifyInstance) {
   });
 
   app.delete('/entities/:id', async (request, reply) => {
+    if (!requireWrite(request, reply)) return;
     const { id } = request.params as { id: string };
     const result = db
       .prepare("UPDATE entities SET status = 'archived', updated_at = ? WHERE id = ?")

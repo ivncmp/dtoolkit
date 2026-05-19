@@ -8,6 +8,9 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
+import { loadConnections } from '../core/config.js';
+import { getAllConnections, getConnection } from '../core/connections.js';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf-8'));
 
@@ -99,7 +102,7 @@ export function createMcpServer(app: FastifyInstance) {
     },
   );
 
-  // --- recall: search memory ---
+  // --- recall: search memory (federated) ---
   mcp.registerTool(
     'recall',
     {
@@ -111,7 +114,7 @@ export function createMcpServer(app: FastifyInstance) {
     },
     async ({ query, limit }) => {
       const ftsQuery = query.split(/\s+/).filter(Boolean).join(' OR ');
-      const results = db
+      const localRows = db
         .prepare(
           `
       SELECT f.*, e.name as entity_name, e.type as entity_type, rank
@@ -136,7 +139,58 @@ export function createMcpServer(app: FastifyInstance) {
       const bumpStmt = db.prepare(
         'UPDATE facts SET last_accessed = ?, access_count = access_count + 1 WHERE id = ?',
       );
-      for (const r of results) bumpStmt.run(now, r.id);
+      for (const r of localRows) bumpStmt.run(now, r.id);
+
+      const localMaxScore = localRows.length > 0 ? Math.max(...localRows.map((r) => -r.rank)) : 1;
+      const localResults = localRows.map((r) => ({
+        fact: r.fact,
+        entity: r.entity_name,
+        entityType: r.entity_type,
+        category: r.category,
+        tier: r.tier,
+        score: -r.rank,
+        normalizedScore: localMaxScore > 0 ? -r.rank / localMaxScore : 0,
+        originBrain: null as string | null,
+      }));
+
+      const connections = loadConnections(app.config.dataPath);
+      let partial = false;
+      const remoteSources: Array<{ name: string; count: number }> = [];
+      const remoteResults: typeof localResults = [];
+
+      if (connections.length > 0) {
+        const clients = getAllConnections(connections);
+        const remoteSearches = clients.map(async ({ name, client }) => {
+          try {
+            const hits = await client.search(query, { limit });
+            remoteSources.push({ name, count: hits.length });
+            const maxScore = hits.length > 0 ? Math.max(...hits.map((h) => h.score)) : 1;
+            for (const h of hits) {
+              remoteResults.push({
+                fact: h.fact.fact,
+                entity: h.entity.name,
+                entityType: h.entity.type,
+                category: h.fact.category,
+                tier: h.fact.tier,
+                score: h.score,
+                normalizedScore: maxScore > 0 ? h.score / maxScore : 0,
+                originBrain: name,
+              });
+            }
+          } catch {
+            partial = true;
+            remoteSources.push({ name, count: 0 });
+          }
+        });
+        await Promise.all(remoteSearches);
+      }
+
+      const localKeys = new Set(localResults.map((r) => `${r.entity}::${r.fact}`));
+      const dedupedRemote = remoteResults.filter((r) => !localKeys.has(`${r.entity}::${r.fact}`));
+
+      const merged = [...localResults, ...dedupedRemote]
+        .sort((a, b) => b.normalizedScore - a.normalizedScore)
+        .slice(0, limit);
 
       const docs = db.prepare('SELECT key, content FROM documents ORDER BY key').all() as {
         key: string;
@@ -149,14 +203,13 @@ export function createMcpServer(app: FastifyInstance) {
             type: 'text' as const,
             text: JSON.stringify({
               identity: Object.fromEntries(docs.map((d) => [d.key, d.content])),
-              results: results.map((r) => ({
-                fact: r.fact,
-                entity: r.entity_name,
-                entityType: r.entity_type,
-                category: r.category,
-                tier: r.tier,
-                score: -r.rank,
-              })),
+              results: merged.map(({ normalizedScore: _, ...r }) => r),
+              federation: {
+                local: localResults.length,
+                remote: remoteResults.length,
+                partial,
+                sources: [{ name: 'local', count: localResults.length }, ...remoteSources],
+              },
             }),
           },
         ],
@@ -416,6 +469,124 @@ Good: "User prefers React over Vue for new frontend projects"`,
           },
         ],
       };
+    },
+  );
+
+  // --- share: push a fact to a connected brain ---
+  mcp.registerTool(
+    'share',
+    {
+      description:
+        'Push a fact to a connected shared brain. The fact and its entity are replicated to the remote brain.',
+      inputSchema: {
+        factId: z.string().describe('ID of the local fact to share'),
+        targetBrain: z
+          .string()
+          .optional()
+          .describe('Connection name (defaults to first connected brain)'),
+      },
+    },
+    async ({ factId, targetBrain }) => {
+      const config = app.config;
+      if (config.brainType === 'shared') {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({ error: 'Shared brains cannot push to other brains' }),
+            },
+          ],
+        };
+      }
+
+      const connections = loadConnections(config.dataPath);
+      if (connections.length === 0) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                error: 'No connected brains. Use `dbrain link` to connect to a shared brain.',
+              }),
+            },
+          ],
+        };
+      }
+
+      const client = getConnection(connections, targetBrain);
+      if (!client) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({ error: `Connection "${targetBrain}" not found` }),
+            },
+          ],
+        };
+      }
+
+      const fact = db
+        .prepare(
+          'SELECT f.*, e.name as entity_name, e.type as entity_type, e.category as entity_category FROM facts f JOIN entities e ON e.id = f.entity_id WHERE f.id = ?',
+        )
+        .get(factId) as
+        | {
+            id: string;
+            entity_id: string;
+            fact: string;
+            category: string;
+            timestamp: string;
+            entity_name: string;
+            entity_type: string;
+            entity_category: string;
+          }
+        | undefined;
+
+      if (!fact) {
+        return {
+          content: [{ type: 'text' as const, text: JSON.stringify({ error: 'Fact not found' }) }],
+        };
+      }
+
+      try {
+        try {
+          await client.getEntity(fact.entity_id);
+        } catch {
+          await client.createEntity({
+            id: fact.entity_id,
+            name: fact.entity_name,
+            type: fact.entity_type,
+            category: fact.entity_category,
+          });
+        }
+
+        const remoteFact = await client.addFact(fact.entity_id, {
+          id: genId('fact'),
+          fact: fact.fact,
+          category: fact.category,
+          timestamp: fact.timestamp,
+          source: 'shared',
+        });
+
+        const target = targetBrain || connections[0]?.name || 'unknown';
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({ shared: true, targetBrain: target, remoteFact }),
+            },
+          ],
+        };
+      } catch (err) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({ error: `Failed to share: ${(err as Error).message}` }),
+            },
+          ],
+        };
+      }
     },
   );
 

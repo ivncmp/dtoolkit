@@ -84,11 +84,48 @@ CREATE TRIGGER IF NOT EXISTS facts_au AFTER UPDATE ON facts BEGIN
 END;
 `;
 
+function migrate(db: Database.Database): void {
+  db.exec('CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY)');
+
+  const row = db.prepare('SELECT MAX(version) as v FROM schema_version').get() as
+    | { v: number | null }
+    | undefined;
+  const current = row?.v ?? 0;
+
+  if (current < 1) {
+    const columns = (db.pragma('table_info(facts)') as { name: string }[]).map((c) => c.name);
+
+    if (!columns.includes('author_id')) {
+      db.exec('ALTER TABLE facts ADD COLUMN author_id TEXT');
+    }
+    if (!columns.includes('origin_brain')) {
+      db.exec('ALTER TABLE facts ADD COLUMN origin_brain TEXT');
+    }
+
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id          TEXT PRIMARY KEY,
+        token       TEXT NOT NULL UNIQUE,
+        user_id     TEXT NOT NULL,
+        user_name   TEXT NOT NULL,
+        permissions TEXT NOT NULL DEFAULT 'read+write',
+        created_at  TEXT NOT NULL,
+        last_used   TEXT,
+        status      TEXT DEFAULT 'active'
+      );
+      CREATE INDEX IF NOT EXISTS idx_api_keys_token ON api_keys(token);
+    `);
+
+    db.prepare('INSERT INTO schema_version (version) VALUES (?)').run(1);
+  }
+}
+
 export function createDatabase(config: Config): Database.Database {
   const dbPath = join(config.dataPath, 'dbrain.db');
   const db = new Database(dbPath);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
   db.exec(SCHEMA);
+  migrate(db);
   return db;
 }

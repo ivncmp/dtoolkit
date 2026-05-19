@@ -94,6 +94,48 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 }
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
 .brain-name{font-size:13px;font-weight:600;color:var(--text)}
+.brain-type-badge{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 6px;border-radius:4px;line-height:1}
+.brain-type-badge.personal{background:oklch(0.90 0.10 250);color:oklch(0.35 0.15 250)}
+.brain-type-badge.shared{background:oklch(0.90 0.10 148);color:oklch(0.30 0.15 148)}
+.sb-user{display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:8px}
+.sb-user-info{flex:1;min-width:0}
+.sb-user-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.sb-user-role{font-size:10px;color:var(--text-3);font-family:var(--mono)}
+.sb-logout{padding:3px 8px;border:1px solid var(--border);border-radius:5px;background:none;color:var(--text-3);font-size:10px;cursor:pointer;flex-shrink:0;transition:all .15s}
+.sb-logout:hover{border-color:#ef4444;color:#ef4444;background:oklch(0.95 0.05 25)}
+.sb-brains-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);padding:0 12px;margin-bottom:6px}
+.sb-brain-item{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text-2);transition:background .15s}
+.sb-brain-item:hover{background:var(--surface-2)}
+.sb-brain-item.current{color:var(--text);font-weight:600}
+.sb-brain-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sb-brain-dot.online{background:var(--online);box-shadow:0 0 4px var(--online)}
+.sb-brain-dot.offline{background:#ef4444}
+.sb-brain-meta{font-size:10px;color:var(--text-3);margin-left:auto;font-family:var(--mono)}
+.author-badge{font-size:10px;font-family:var(--mono);color:var(--text-3);font-style:italic}
+.origin-badge{font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px;background:oklch(0.90 0.10 148);color:oklch(0.30 0.15 148);font-family:var(--mono)}
+.keys-table{width:100%;border-collapse:collapse;font-size:12px;font-family:var(--mono)}
+.keys-table th{text-align:left;padding:8px 10px;color:var(--text-3);font-weight:600;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.keys-table td{padding:8px 10px;border-bottom:1px solid var(--border-subtle);color:var(--text)}
+.keys-table tr:hover td{background:var(--surface-2)}
+.conn-status{display:inline-flex;align-items:center;gap:5px;font-size:12px}
+.conn-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.conn-dot.online{background:var(--online);box-shadow:0 0 4px var(--online)}
+.conn-dot.offline{background:#ef4444}
+.conn-card{padding:14px 16px;background:var(--surface);border:1px solid var(--border-subtle);border-radius:10px;margin-bottom:10px}
+.conn-card-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.conn-card-name{font-size:14px;font-weight:600;color:var(--text)}
+.conn-card-url{font-size:11px;font-family:var(--mono);color:var(--text-3)}
+.conn-card-stats{font-size:12px;color:var(--text-2);margin-top:4px}
+.form-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px}
+.form-field{display:flex;flex-direction:column;gap:4px}
+.form-field label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.3px}
+.form-field input,.form-field select{padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:12px;font-family:var(--mono)}
+.form-btn{padding:6px 14px;border:none;border-radius:6px;background:var(--accent);color:white;font-size:12px;font-weight:600;cursor:pointer}
+.form-btn:hover{opacity:.85}
+.form-btn.danger{background:#ef4444}
+.inline-msg{font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px}
+.inline-msg.success{background:oklch(0.90 0.10 148);color:oklch(0.30 0.15 148)}
+.inline-msg.error{background:oklch(0.90 0.10 25);color:oklch(0.40 0.15 25)}
 .brain-meta{font-size:11px;color:var(--text-3);line-height:1.7;font-family:var(--mono)}
 .main{margin-left:var(--sb);flex:1;min-width:0}
 .topbar{
@@ -283,7 +325,7 @@ const { useState, useEffect, useMemo, useCallback } = React;
 
 const TOKEN_KEY = 'dbrain_token';
 const THEME_KEY = 'dbrain_theme';
-const API_BASE = `http://${window.location.hostname}:7878`;
+const API_BASE = `http://${window.location.hostname}:${Number(window.location.port) - 1}`;
 
 /* ── PALETTES ─────────────────────────────────────────── */
 const PALETTES = {
@@ -297,7 +339,19 @@ function applyPalette(name) {
 }
 
 /* ── API HELPER ───────────────────────────────────────── */
+let _activeBrainPrefix = '';
+function setActiveBrainPrefix(name) { _activeBrainPrefix = name ? `/proxy/${encodeURIComponent(name)}` : ''; }
+
 function api(path, opts = {}) {
+  const token = localStorage.getItem(TOKEN_KEY) || '';
+  const prefix = _activeBrainPrefix;
+  return fetch(`${API_BASE}${prefix}${path}`, {
+    ...opts,
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...opts.headers },
+  }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+}
+
+function localApi(path, opts = {}) {
   const token = localStorage.getItem(TOKEN_KEY) || '';
   return fetch(`${API_BASE}${path}`, {
     ...opts,
@@ -362,13 +416,25 @@ function BackIcon() {
 }
 
 /* ── SIDEBAR ──────────────────────────────────────────── */
-function Sidebar({ route, nav, palette, onTogglePalette, brain }) {
-  const links = [
-    { href: '#/dashboard', label: 'Brain', icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2z" />
-        <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2z" />
-      </svg>) },
+const BrainIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2z" />
+    <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2z" />
+  </svg>
+);
+
+function Sidebar({ route, nav, palette, onTogglePalette, brain, connections, user, onLogout, activeBrain, onBrainSwitch }) {
+  const brainItems = [
+    { name: null, label: brain.name || 'My Brain', badge: brain.brainType, online: true },
+    ...(connections || []).map(c => ({
+      name: c.name,
+      label: c.brainName || c.name,
+      badge: 'shared',
+      online: c.online,
+    })),
+  ];
+
+  const toolLinks = [
     { href: '#/api', label: 'REST API', icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
         <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
@@ -380,12 +446,18 @@ function Sidebar({ route, nav, palette, onTogglePalette, brain }) {
         <line x1="6" y1="7" x2="9.5" y2="10.5" /><line x1="18" y1="7" x2="14.5" y2="10.5" />
         <line x1="6" y1="17" x2="9.5" y2="13.5" /><line x1="18" y1="17" x2="14.5" y2="13.5" />
       </svg>) },
-  ];
+    brain.brainType === 'shared' && { href: '#/keys', label: 'API Keys', icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+      </svg>) },
+  ].filter(Boolean);
+
   const active = (href) => {
     const p = href.replace('#', '');
     if (p === '/dashboard') return route === '/' || route === '/dashboard' || route.startsWith('/entity') || route.startsWith('/conversation');
     return route.startsWith(p);
   };
+
   return (
     <aside className="sidebar">
       <div className="sb-logo">
@@ -396,7 +468,17 @@ function Sidebar({ route, nav, palette, onTogglePalette, brain }) {
         </div>
       </div>
       <nav className="sb-nav">
-        {links.map(l => (
+        {brainItems.map(b => (
+          <button key={b.name ?? '_local'} className={`sb-link ${activeBrain === b.name ? 'active' : ''}`}
+            onClick={() => b.online && onBrainSwitch(b.name)}
+            style={!b.online ? {opacity:.5,cursor:'default'} : {}}>
+            <span className={`sb-brain-dot ${b.online ? 'online' : 'offline'}`} style={{marginRight:-2}}></span>
+            {b.label}
+            <span className={`brain-type-badge ${b.badge}`} style={{marginLeft:'auto'}}>{b.badge}</span>
+          </button>
+        ))}
+        <div className="sb-divider" style={{margin:'6px 0'}}></div>
+        {toolLinks.map(l => (
           <button key={l.href} className={`sb-link ${active(l.href) ? 'active' : ''}`} onClick={() => nav(l.href)}>
             {l.icon}{l.label}
           </button>
@@ -411,17 +493,13 @@ function Sidebar({ route, nav, palette, onTogglePalette, brain }) {
             <button className={`palette-toggle-opt ${palette === 'ocean' ? 'active' : ''}`} onClick={() => onTogglePalette('ocean')}>&#9679; Dark</button>
           </div>
         </div>
-        <div className="brain-card">
-          <div className="brain-card-head">
-            <span className="online-dot"></span>
-            <span className="brain-name">{brain.name || 'dBrain'}</span>
+        {user && <div className="sb-user">
+          <div className="sb-user-info">
+            <span className="sb-user-name">{user.userName}</span>
+            <span className="sb-user-role">{user.isAdmin ? 'admin' : user.permissions}</span>
           </div>
-          <div className="brain-meta">
-            {brain.entities || 0} entities<br />
-            {(brain.facts || 0).toLocaleString()} facts<br />
-            {brain.conversations || 0} conversations
-          </div>
-        </div>
+          <button className="sb-logout" onClick={onLogout}>Logout</button>
+        </div>}
       </div>
     </aside>
   );
@@ -459,7 +537,7 @@ function LoginPage({ onLogin }) {
 }
 
 /* ── DASHBOARD PAGE ───────────────────────────────────── */
-function DashboardPage({ nav, overview, conversations }) {
+function DashboardPage({ nav, overview, conversations, brainName }) {
   const [q, setQ] = useState('');
   const [srcFilter, setSrcFilter] = useState('all');
 
@@ -486,7 +564,7 @@ function DashboardPage({ nav, overview, conversations }) {
   return (
     <>
       <div className="topbar">
-        <span className="topbar-title">Overview</span>
+        <span className="topbar-title">{brainName || 'Overview'}</span>
         <span className="topbar-sep">&middot;</span>
         <div className="search-bar">
           <SearchIcon />
@@ -616,6 +694,8 @@ function EntityDetailPage({ id, nav }) {
                 <div className="fact-meta">
                   <TierPill tier={f.tier} count={null} />
                   <span>accessed {f.access_count || 0}x &middot; last {f.last_accessed ? f.last_accessed.split('T')[0] : 'n/a'}</span>
+                  {f.author_id && <span className="author-badge">by {f.author_id}</span>}
+                  {f.origin_brain && <span className="origin-badge">{f.origin_brain}</span>}
                 </div>
               </div>
             ))}
@@ -830,6 +910,125 @@ dbrain connect claude http://server:7878 --token=sk-dbr_...
   );
 }
 
+/* ── KEYS PAGE (shared brains) ───────────────────────── */
+function KeysPage() {
+  const [keys, setKeys] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(true);
+  const [userId, setUserId] = useState('');
+  const [userName, setUserName] = useState('');
+  const [perms, setPerms] = useState('read+write');
+  const [created, setCreated] = useState(null);
+  const [err, setErr] = useState('');
+
+  const load = () => localApi('/keys').then(setKeys).catch(e => { if (String(e).includes('403')) setIsAdmin(false); }).finally(() => setLoading(false));
+  useEffect(() => { load(); }, []);
+
+  const create = () => {
+    if (!userId.trim() || !userName.trim()) return;
+    setErr(''); setCreated(null);
+    localApi('/keys', { method: 'POST', body: JSON.stringify({ userId: userId.trim(), userName: userName.trim(), permissions: perms }) })
+      .then(k => { setCreated(k); setUserId(''); setUserName(''); load(); })
+      .catch(() => setErr('Failed to create key'));
+  };
+
+  const revoke = (id) => {
+    if (!confirm('Revoke this key?')) return;
+    localApi(`/keys/${id}`, { method: 'DELETE' }).then(() => load()).catch(() => {});
+  };
+
+  if (!isAdmin) return (
+    <>
+      <div className="topbar"><span className="topbar-title">API Keys</span></div>
+      <div className="page"><div className="empty" style={{padding:40}}>
+        <p style={{marginBottom:8}}>Admin access required</p>
+        <p style={{fontSize:12,color:'var(--text-3)'}}>Log in with the master token to manage API keys.</p>
+      </div></div>
+    </>
+  );
+
+  return (
+    <>
+      <div className="topbar"><span className="topbar-title">API Keys</span></div>
+      <div className="page">
+        <div className="sec-head"><span className="sec-title">Create Key</span></div>
+        <div className="form-row">
+          <div className="form-field"><label>User ID</label><input value={userId} onChange={e => setUserId(e.target.value)} placeholder="e.g. ivan" /></div>
+          <div className="form-field"><label>Display Name</label><input value={userName} onChange={e => setUserName(e.target.value)} placeholder="e.g. Iván Campillo" /></div>
+          <div className="form-field"><label>Permissions</label>
+            <select value={perms} onChange={e => setPerms(e.target.value)}>
+              <option value="read+write">read+write</option><option value="read">read</option><option value="write">write</option>
+            </select>
+          </div>
+          <button className="form-btn" onClick={create}>Create</button>
+        </div>
+        {created && <div className="inline-msg success">Key created. Token: <strong>{created.token}</strong> — save it now, it won't be shown again.</div>}
+        {err && <div className="inline-msg error">{err}</div>}
+
+        <div className="sec-head" style={{marginTop:24}}><span className="sec-title">Active Keys</span><span className="sec-badge">{keys.filter(k => k.status === 'active').length}</span></div>
+        {loading ? <div className="empty">Loading...</div> : (
+          <table className="keys-table">
+            <thead><tr><th>User</th><th>Permissions</th><th>Token</th><th>Last Used</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              {keys.map(k => (
+                <tr key={k.id}>
+                  <td>{k.userName} <span style={{color:'var(--text-3)'}}>({k.userId})</span></td>
+                  <td>{k.permissions}</td>
+                  <td style={{color:'var(--text-3)'}}>{k.tokenPreview}</td>
+                  <td style={{color:'var(--text-3)'}}>{k.lastUsed ? k.lastUsed.split('T')[0] : 'never'}</td>
+                  <td>{k.status === 'active' ? <span style={{color:'var(--online)'}}>active</span> : <span style={{color:'#ef4444'}}>revoked</span>}</td>
+                  <td>{k.status === 'active' && <button className="form-btn danger" onClick={() => revoke(k.id)} style={{padding:'3px 8px',fontSize:10}}>Revoke</button>}</td>
+                </tr>
+              ))}
+              {keys.length === 0 && <tr><td colSpan="6" style={{textAlign:'center',color:'var(--text-3)',padding:20}}>No API keys</td></tr>}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </>
+  );
+}
+
+/* ── CONNECTIONS PAGE (personal brains) ──────────────── */
+function ConnectionsPage() {
+  const [conns, setConns] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    localApi('/connections').then(setConns).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <>
+      <div className="topbar"><span className="topbar-title">Connected Brains</span></div>
+      <div className="page">
+        {loading ? <div className="empty">Loading...</div> : conns.length === 0 ? (
+          <div className="empty" style={{padding:40}}>
+            <p style={{marginBottom:8}}>No connected brains</p>
+            <p style={{fontSize:12,color:'var(--text-3)'}}>Use <code style={{background:'var(--surface-2)',padding:'2px 6px',borderRadius:4}}>dbrain link &lt;url&gt; --token &lt;token&gt;</code> to connect to a shared brain.</p>
+          </div>
+        ) : (
+          <>
+            <div className="sec-head"><span className="sec-title">Connections</span><span className="sec-badge">{conns.length}</span></div>
+            {conns.map(c => (
+              <div key={c.name} className="conn-card">
+                <div className="conn-card-head">
+                  <span className={`conn-dot ${c.online ? 'online' : 'offline'}`}></span>
+                  <span className="conn-card-name">{c.brainName || c.name}</span>
+                  <span className="brain-type-badge shared">shared</span>
+                </div>
+                <div className="conn-card-url">{c.url}</div>
+                {c.online && <div className="conn-card-stats">{c.entities} entities &middot; {c.facts} facts</div>}
+                {!c.online && <div className="conn-card-stats" style={{color:'#ef4444'}}>offline</div>}
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+    </>
+  );
+}
+
 /* ── APP ──────────────────────────────────────────────── */
 function App() {
   const { route, segs, nav } = useRouter();
@@ -838,6 +1037,9 @@ function App() {
   const [health, setHealth] = useState(null);
   const [overview, setOverview] = useState(null);
   const [conversations, setConversations] = useState(null);
+  const [connections, setConnections] = useState([]);
+  const [user, setUser] = useState(null);
+  const [activeBrain, setActiveBrain] = useState(null);
   const authed = Boolean(token);
 
   const togglePalette = (p) => {
@@ -850,10 +1052,24 @@ function App() {
 
   useEffect(() => {
     if (!authed) return;
-    api('/health').then(setHealth).catch(() => { localStorage.removeItem(TOKEN_KEY); setToken(''); });
+    localApi('/health').then(setHealth).catch(() => { localStorage.removeItem(TOKEN_KEY); setToken(''); });
+    localApi('/connections').then(setConnections).catch(() => {});
+    localApi('/me').then(setUser).catch(() => {});
+  }, [authed]);
+
+  useEffect(() => {
+    if (!authed) return;
+    setActiveBrainPrefix(activeBrain);
+    setOverview(null);
+    setConversations(null);
     api('/memory/summary').then(setOverview).catch(() => {});
     api('/conversations?limit=200').then(setConversations).catch(() => {});
-  }, [authed]);
+  }, [authed, activeBrain]);
+
+  const handleBrainSwitch = useCallback((name) => {
+    setActiveBrain(name);
+    nav('#/dashboard');
+  }, []);
 
   useEffect(() => {
     if (!authed && route !== '/login') nav('#/login');
@@ -866,11 +1082,16 @@ function App() {
 
   const brain = {
     name: health.name || 'dBrain',
+    brainType: health.brainType || 'personal',
     version: health.version || '0.1.0',
     entities: health.entities || 0,
     facts: overview ? overview.reduce((s, e) => s + e.total, 0) : (health.facts || 0),
     conversations: health.conversations || 0,
   };
+
+  const activeBrainName = activeBrain
+    ? (connections.find(c => c.name === activeBrain)?.brainName || activeBrain)
+    : null;
 
   const renderPage = () => {
     const [sec, ...rest] = segs;
@@ -878,12 +1099,15 @@ function App() {
     if (sec === 'conversation') return <ConversationDetailPage id={rest[0]} nav={nav} />;
     if (sec === 'api') return <APIDocsPage />;
     if (sec === 'mcp') return <MCPDocsPage />;
-    return <DashboardPage nav={nav} overview={overview} conversations={conversations} />;
+    if (sec === 'keys' && brain.brainType === 'shared') return <KeysPage />;
+    return <DashboardPage nav={nav} overview={overview} conversations={conversations} brainName={activeBrainName} />;
   };
 
   return (
     <div className="shell">
-      <Sidebar route={route} nav={nav} palette={palette} onTogglePalette={togglePalette} brain={brain} />
+      <Sidebar route={route} nav={nav} palette={palette} onTogglePalette={togglePalette} brain={brain} connections={connections} user={user}
+        activeBrain={activeBrain} onBrainSwitch={handleBrainSwitch}
+        onLogout={() => { localStorage.removeItem(TOKEN_KEY); setToken(''); setHealth(null); setUser(null); setActiveBrain(null); nav('#/login'); }} />
       <div className="main">{renderPage()}</div>
     </div>
   );

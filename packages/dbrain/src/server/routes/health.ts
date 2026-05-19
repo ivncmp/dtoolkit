@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 
 import type { FastifyInstance } from 'fastify';
 
+import { loadConnections } from '../../core/config.js';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', '..', 'package.json'), 'utf-8'));
 const VERSION = pkg.version;
@@ -58,20 +60,67 @@ export async function healthRoutes(app: FastifyInstance) {
     const { unprocessed } = db
       .prepare('SELECT COUNT(*) as unprocessed FROM messages WHERE processed = 0')
       .get() as { unprocessed: number };
-    const identity = db.prepare("SELECT content FROM documents WHERE key = 'identity'").get() as
-      | { content: string }
-      | undefined;
-    const name = identity?.content?.match(/\*\*Name:\*\* (.+)/)?.[1] || 'dbrain';
+    const config = app.config;
+    let name = config.brainName;
+    if (!name) {
+      const identity = db.prepare("SELECT content FROM documents WHERE key = 'identity'").get() as
+        | { content: string }
+        | undefined;
+      name = identity?.content?.match(/\*\*Name:\*\* (.+)/)?.[1] || 'dbrain';
+    }
     return {
       status: 'awake',
       name,
+      brainType: config.brainType ?? 'personal',
       version: VERSION,
       entities,
       facts,
       documents,
       conversations,
       unprocessed,
+      connectedBrains: loadConnections(config.dataPath).length,
     };
+  });
+
+  app.get('/me', async (request) => {
+    const u = request.brainUser;
+    return {
+      userId: u?.userId ?? '_admin',
+      userName: u?.userName ?? 'Admin',
+      permissions: u?.permissions ?? 'read+write',
+      isAdmin: u?.userId === '_admin',
+    };
+  });
+
+  app.get('/connections', async () => {
+    const conns = loadConnections(app.config.dataPath);
+    const results = await Promise.all(
+      conns.map(async (conn) => {
+        try {
+          const res = await fetch(`${conn.url}/health`, {
+            headers: { Authorization: `Bearer ${conn.token}` },
+            signal: AbortSignal.timeout(3000),
+          });
+          if (!res.ok) return { name: conn.name, url: conn.url, online: false };
+          const h = (await res.json()) as {
+            name: string;
+            entities: number;
+            facts: number;
+          };
+          return {
+            name: conn.name,
+            url: conn.url,
+            online: true,
+            brainName: h.name,
+            entities: h.entities,
+            facts: h.facts,
+          };
+        } catch {
+          return { name: conn.name, url: conn.url, online: false };
+        }
+      }),
+    );
+    return results;
   });
 
   app.get('/connect', async (request) => {

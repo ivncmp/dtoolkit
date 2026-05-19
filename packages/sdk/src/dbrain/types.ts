@@ -7,6 +7,9 @@ export interface HealthResponse {
   documents: number;
   conversations: number;
   unprocessed: number;
+  brainName?: string;
+  brainType?: 'personal' | 'shared';
+  connectedBrains?: number;
 }
 
 export interface ConnectResponse {
@@ -45,6 +48,8 @@ export interface FactRow {
   access_count: number;
   tier: string;
   source: string | null;
+  author_id: string | null;
+  origin_brain: string | null;
 }
 
 export interface EntityWithFacts extends EntityRow {
@@ -89,6 +94,8 @@ export interface SearchResult {
     accessCount: number;
     tier: string;
     source: string | null;
+    authorId: string | null;
+    originBrain: string | null;
   };
   entity: {
     id: string;
@@ -131,4 +138,38 @@ export interface PendingMessages {
     started_at: string;
     unprocessed: number;
   }>;
+}
+
+export interface ConnectionStatus {
+  name: string;
+  url: string;
+  online: boolean;
+  brainName?: string;
+  entities?: number;
+  facts?: number;
+}
+
+export interface ShareResult {
+  shared: boolean;
+  targetBrain: string;
+  remoteFact: { id: string; entityId: string; fact: string };
+}
+
+export interface ApiKeyCreateResponse {
+  id: string;
+  token: string;
+  userId: string;
+  userName: string;
+  permissions: string;
+}
+
+export interface ApiKeyListItem {
+  id: string;
+  tokenPreview: string;
+  userId: string;
+  userName: string;
+  permissions: string;
+  createdAt: string;
+  lastUsed: string | null;
+  status: string;
 }

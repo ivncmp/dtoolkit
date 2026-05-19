@@ -3,11 +3,23 @@ import { join } from 'node:path';
 
 import { z } from 'zod';
 
+// Connections only go personal → shared. No chaining.
+export const ConnectionSchema = z.object({
+  name: z.string(),
+  url: z.string(),
+  token: z.string(),
+});
+
+export type Connection = z.infer<typeof ConnectionSchema>;
+
 export const ConfigSchema = z.object({
   dataPath: z.string(),
   port: z.number().default(7878),
   host: z.string().default('0.0.0.0'),
   token: z.string(),
+  brainName: z.string().optional(),
+  brainType: z.enum(['personal', 'shared']).default('personal'),
+  connections: z.array(ConnectionSchema).default([]),
   tiers: z
     .object({
       hotDays: z.number().default(7),
@@ -24,5 +36,15 @@ export function loadConfig(dataPath: string): Config {
   if (!existsSync(configPath)) {
     throw new Error(`Config not found at ${configPath}. Run 'dbrain init' first.`);
   }
-  return ConfigSchema.parse(JSON.parse(readFileSync(configPath, 'utf-8')));
+  const raw = JSON.parse(readFileSync(configPath, 'utf-8'));
+  if (process.env.DBRAIN_BRAIN_NAME) raw.brainName = process.env.DBRAIN_BRAIN_NAME;
+  if (process.env.DBRAIN_BRAIN_TYPE) raw.brainType = process.env.DBRAIN_BRAIN_TYPE;
+  return ConfigSchema.parse(raw);
+}
+
+export function loadConnections(dataPath: string): Connection[] {
+  const configPath = join(dataPath, 'config.json');
+  if (!existsSync(configPath)) return [];
+  const raw = JSON.parse(readFileSync(configPath, 'utf-8'));
+  return ConfigSchema.parse(raw).connections;
 }

@@ -16,6 +16,8 @@ export const FactSchema = z.object({
   accessCount: z.number().default(0),
   tier: Tier.default('warm'),
   source: z.string().nullable().default(null),
+  authorId: z.string().nullable().default(null),
+  originBrain: z.string().nullable().default(null),
 });
 export type Fact = z.infer<typeof FactSchema>;
 

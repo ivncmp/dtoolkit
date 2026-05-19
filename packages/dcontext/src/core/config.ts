@@ -137,6 +137,29 @@ export async function updateStats(fn: (stats: StatsData) => void): Promise<void>
   await atomicWriteFile(join(DATA_DIR, 'stats.json'), JSON.stringify(stats, null, 2) + '\n');
 }
 
+export async function loadSessionOffset(sessionId: string): Promise<number> {
+  try {
+    const raw = await readFile(join(DATA_DIR, 'sessions.json'), 'utf-8');
+    const sessions = JSON.parse(raw) as Record<string, number>;
+    return sessions[sessionId] ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+export async function saveSessionOffset(sessionId: string, offset: number): Promise<void> {
+  await ensureDataDir();
+  let sessions: Record<string, number> = {};
+  try {
+    const raw = await readFile(join(DATA_DIR, 'sessions.json'), 'utf-8');
+    sessions = JSON.parse(raw) as Record<string, number>;
+  } catch {
+    // fresh file
+  }
+  sessions[sessionId] = offset;
+  await atomicWriteFile(join(DATA_DIR, 'sessions.json'), JSON.stringify(sessions, null, 2) + '\n');
+}
+
 export async function logError(message: string): Promise<void> {
   try {
     await ensureDataDir();

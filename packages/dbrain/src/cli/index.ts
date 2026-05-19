@@ -24,10 +24,7 @@ const banner = `\
 
 const description = `${pc.green(banner)}\n\n${pc.green('Your distributed mind. Wherever you go, I remember.')}\n${pc.dim('Part of the dtoolkit suite')}`;
 
-program
-  .name('dbrain')
-  .description(description)
-  .version(pkg.version);
+program.name('dbrain').description(description).version(pkg.version);
 
 program
   .command('init')

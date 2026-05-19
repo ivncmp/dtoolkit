@@ -41,8 +41,15 @@ export async function conversationRoutes(app: FastifyInstance) {
   app.post('/conversations', async (request, reply) => {
     const { id, source } = request.body as { id?: string; source: string };
     const convId = id || `conv_${randomBytes(12).toString('base64url')}`;
-    const now = new Date().toISOString();
 
+    if (id) {
+      const existing = db
+        .prepare('SELECT id, source, started_at FROM conversations WHERE id = ?')
+        .get(id) as { id: string; source: string; started_at: string } | undefined;
+      if (existing) return reply.code(200).send(existing);
+    }
+
+    const now = new Date().toISOString();
     db.prepare('INSERT INTO conversations (id, source, started_at) VALUES (?, ?, ?)').run(
       convId,
       source,

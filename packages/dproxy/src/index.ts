@@ -27,10 +27,7 @@ const banner = `\
 
 const description = `${pc.green(banner)}\n\n${pc.green('Universal adapter for invoking models via local CLIs')}\n${pc.dim('Part of the dtoolkit suite')}`;
 
-program
-  .name('dproxy')
-  .description(description)
-  .version(__VERSION__);
+program.name('dproxy').description(description).version(__VERSION__);
 
 // Init does not require initialization
 program.addCommand(createInitCommand());

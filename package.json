@@ -23,7 +23,7 @@
     "format:check": "prettier --check \"packages/*/src/**/*.ts\"",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo run build && changeset tag && pnpm -r publish --access public --no-git-checks"
+    "release": "turbo run build && changeset tag && pnpm -r publish --access public --no-git-checks --no-provenance"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

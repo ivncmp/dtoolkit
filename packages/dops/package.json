@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/dops",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Agent observability — tokens, cost, tools, success rate, errors per hook",
   "type": "module",
   "license": "MIT",

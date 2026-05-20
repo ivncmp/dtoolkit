@@ -1,5 +1,16 @@
 # @dtoolkit/sdk
 
+## 0.4.0
+
+### Minor Changes
+
+- 7f5260f: Federation polish: fix empty query crash in search/MCP, add `searchFederated()` and federation types to SDK, add federation awareness to dcontext briefing and status, update all docs with Mermaid diagrams
+
+### Patch Changes
+
+- Updated dependencies [7f5260f]
+  - @dtoolkit/core@0.4.1
+
 ## 0.3.1
 
 ### Patch Changes

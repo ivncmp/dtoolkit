@@ -6,12 +6,34 @@ Your distributed mind. Wherever you go, I remember.
 
 dbrain is a brain for your AIs. It stores who they are, who you are, and everything you've done together. Install it once, and every AI you use — at home, at work, on mobile — connects to the same brain. Same identity, same memories, same knowledge. No matter where you are.
 
-```
-[Home]   Claude Code ──MCP──┐
-[Work]   Claude Code ──MCP──┤     ┌───────────────────────┐
-[Mobile] Gemini ──REST──────┼────→│  dbrain (your mind)   │
-[Server] OpenClaw ──REST────┤     │  identity + memory + knowledge
-[Other]  Custom AI ──API────┘     └───────────────────────┘
+```mermaid
+graph LR
+    subgraph Clients["Your AIs"]
+        home["🏠 Claude Code<br/><small>home</small>"]
+        work["💼 Claude Code<br/><small>work</small>"]
+        mobile["📱 Gemini<br/><small>mobile</small>"]
+        server["🖥️ OpenClaw<br/><small>server</small>"]
+        other["🔌 Custom AI<br/><small>API</small>"]
+    end
+
+    home -- MCP --> personal
+    work -- MCP --> personal
+    mobile -- REST --> personal
+    server -- REST --> personal
+    other -- API --> personal
+
+    subgraph Federation["Federation"]
+        personal["dbrain<br/><strong>personal</strong><br/><small>identity + memory + knowledge</small>"]
+        shared["dbrain<br/><strong>shared / team</strong><br/><small>team knowledge + API keys</small>"]
+    end
+
+    personal -- "federated recall" --> shared
+    personal -- "share facts" --> shared
+
+    style personal fill:#2563eb,color:#fff,stroke:#1e40af
+    style shared fill:#7c3aed,color:#fff,stroke:#5b21b6
+    style Clients fill:#f8fafc,color:#1e293b,stroke:#e2e8f0
+    style Federation fill:#f8fafc,color:#1e293b,stroke:#e2e8f0
 ```
 
 ## Architecture
@@ -22,6 +44,7 @@ The brain has 4 layers:
 2. **Conversations** — Raw chat history from every AI session. Every message pair (user <-> assistant) gets stored. The brain remembers every conversation, from every machine.
 3. **Knowledge** — Structured facts organized by PARA (Projects/Areas/Resources/Archives). Typed entities (person, project, event, system). Hot/warm/cold tiers by access frequency. Memories that matter stay hot, the rest fades — like a real brain.
 4. **Recall** — Full-text search (FTS5) over all facts. Ask a question, get the memory.
+5. **Federation** — Personal brains connect to shared team brains. `recall` automatically federates across connected brains. Per-user API keys for shared brains. Manual `share` to push facts to the team brain.
 
 Optional: with an LLM configured, dbrain periodically reviews unprocessed conversations and extracts facts into the knowledge layer. Like a brain consolidating memories during sleep.
 
@@ -91,6 +114,10 @@ dbrain connect claude http://your-server:7878
 | `dbrain start [path]` | Server | Start the API server + dashboard |
 | `dbrain connect <client> [url]` | Client | Connect a client to a running brain |
 | `dbrain status [path]` | Server | Check brain status |
+| `dbrain link <url>` | Client | Connect to a shared brain |
+| `dbrain unlink <name>` | Client | Disconnect from a shared brain |
+| `dbrain connections` | Client | List connections with health status |
+| `dbrain keys <action>` | Server | Manage per-user API keys (shared brains) |
 
 ### init vs connect (separation of concerns)
 
@@ -117,6 +144,8 @@ Environment variables for `dbrain init --non-interactive`:
 | `DBRAIN_AGENT_NAME` | `dBrain` | AI identity name |
 | `DBRAIN_OWNER_NAME` | `Human` | Owner name |
 | `DBRAIN_TIMEZONE` | Auto-detected | Owner timezone |
+| `DBRAIN_BRAIN_NAME` | from identity | Brain display name |
+| `DBRAIN_BRAIN_TYPE` | `personal` | `personal` or `shared` |
 
 ## Init Wizard
 
@@ -154,7 +183,9 @@ dbrain/
 │   │   ├── init.ts             # Init wizard — server only (brain setup)
 │   │   ├── connect.ts          # Client setup — fetches /connect, writes Claude Code config
 │   │   ├── start.ts            # Wake up the brain + dashboard
-│   │   └── status.ts           # Brain status
+│   │   ├── status.ts           # Brain status
+│   │   ├── link.ts             # link/unlink/connections — brain federation
+│   │   └── keys.ts             # API key management (shared brains)
 │   ├── server/
 │   │   ├── index.ts            # Fastify app + auth + CORS
 │   │   └── routes/
@@ -162,8 +193,10 @@ dbrain/
 │   │       ├── workspace.ts    # Identity layer (documents CRUD)
 │   │       ├── conversations.ts # Chat history storage
 │   │       ├── entities.ts     # Knowledge entities CRUD
-│   │       ├── facts.ts        # Facts CRUD + access bump
-│   │       └── search.ts       # Recall (FTS5 search)
+│   │       ├── facts.ts        # Facts CRUD + access bump + share endpoint
+│   │       ├── search.ts       # Recall (FTS5 search, federated option)
+│   │       ├── keys.ts         # API key CRUD (shared brains only)
+│   │       └── permissions.ts  # Write permission enforcement
 │   ├── mcp/
 │   │   └── server.ts           # MCP HTTP server (same port as REST)
 │   ├── dashboard/
@@ -172,7 +205,8 @@ dbrain/
 │   └── core/
 │       ├── db.ts               # SQLite schema (entities, facts, documents, conversations, messages)
 │       ├── models.ts           # Zod schemas
-│       ├── config.ts           # Config loading
+│       ├── config.ts           # Config loading (brainType, brainName, connections)
+│       ├── connections.ts      # Cached DBrainClient pool for connected brains
 │       └── memory.ts           # Tier logic: hot/warm/cold
 ├── Dockerfile
 └── docker-compose.yml
@@ -268,8 +302,16 @@ GET    /conversations/:id/messages List messages (filter by ?processed=)
 GET    /conversations/pending      Unprocessed messages overview
 
 # Recall
-POST   /search                    Full-text search over all facts
+POST   /search                    Full-text search (supports federated: true)
 GET    /memory/summary            Overview: entities x tiers
+
+# Federation
+GET    /connections                List connected brains with health status
+POST   /keys                      Create per-user API key (shared brains)
+GET    /keys                      List API keys (shared brains)
+DELETE /keys/:id                   Revoke API key (shared brains)
+PATCH  /keys/:id                   Update API key permissions
+POST   /facts/:id/share           Push a fact to a connected brain
 ```
 
 ## Dashboard (port 7879)
@@ -296,6 +338,7 @@ No build step — uses React 18 + Babel from CDN.
 - `bump` — touch a memory to keep it hot
 - `log` — send conversation messages to the brain for storage
 - `overview` — brain stats: entities x tiers, conversations, unprocessed messages
+- `share` — push a fact to a connected shared brain (requires federation)
 
 ### MCP Resource
 

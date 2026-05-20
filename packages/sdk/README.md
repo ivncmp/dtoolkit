@@ -52,6 +52,17 @@ await brain.putDocument("notes", {
   title: "Architecture Notes",
   content: "...",
 });
+
+// Federation (personal brains with shared brain connections)
+const connections = await brain.listConnections();
+const federated = await brain.searchFederated("auth flow");
+console.log(federated.federation); // { local: 3, remote: 2, partial: false, ... }
+await brain.shareFact("fact_abc123", "team-brain");
+
+// API key management (shared brains only)
+const key = await brain.createApiKey({ userId: "ivan", userName: "Ivan" });
+const keys = await brain.listApiKeys();
+await brain.revokeApiKey(key.id);
 ```
 
 ### DProxyClient
@@ -153,6 +164,12 @@ try {
 | `getDocument(key)` | Get a document by key |
 | `putDocument(key, doc)` | Create or update a document |
 | `deleteDocument(key)` | Delete a document |
+| `listConnections()` | List connected brains with health status |
+| `searchFederated(query, options?)` | Federated search across connected brains |
+| `shareFact(factId, targetBrain?)` | Push a fact to a connected brain |
+| `createApiKey(params)` | Create a per-user API key (shared brains) |
+| `listApiKeys()` | List API keys (shared brains) |
+| `revokeApiKey(id)` | Revoke an API key (shared brains) |
 
 ### DProxyClient
 

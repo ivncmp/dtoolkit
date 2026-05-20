@@ -2,7 +2,7 @@
  * @dtoolkit/sdk — dbrain client examples
  *
  * Demonstrates: health check, entity listing, search, memory summary,
- * entity creation, and fact management.
+ * entity creation, fact management, and federation.
  *
  * Usage:
  *   cp .env.example .env   # edit with your values
@@ -108,6 +108,37 @@ async function conversations(): Promise<void> {
   }
 }
 
+// ── Federation ─────────────────────────────────────────────────────
+
+async function federation(): Promise<void> {
+  const health = await dbrain.health();
+  console.log(`\nFederation:`);
+  console.log(`  Brain type: ${health.brainType ?? "personal"}`);
+  console.log(`  Connected brains: ${health.connectedBrains ?? 0}`);
+
+  const connections = await dbrain.listConnections();
+  for (const c of connections) {
+    const status = c.online ? "online" : "offline";
+    console.log(
+      `  ${c.name} (${status})${c.brainName ? ` — ${c.brainName}` : ""}`,
+    );
+  }
+
+  if (connections.length === 0) {
+    console.log("  No connections (use `dbrain link` to connect to a shared brain)");
+    return;
+  }
+
+  const federated = await dbrain.searchFederated("typescript");
+  console.log(
+    `\n  Federated search "typescript": ${federated.results.length} results from ${federated.federation.sources.length} sources`,
+  );
+  for (const r of federated.results.slice(0, 3)) {
+    const origin = r.originBrain ?? "local";
+    console.log(`    [${origin}] ${r.fact.fact}`);
+  }
+}
+
 // ── Run ─────────────────────────────────────────────────────────────
 
 try {
@@ -117,6 +148,7 @@ try {
   await memorySummary();
   await createEntityWithFacts();
   await conversations();
+  await federation();
 } catch (err) {
   if (err instanceof SdkError) {
     console.error(`\nAPI error: HTTP ${err.status} on ${err.path}`);

@@ -9,7 +9,10 @@ export { SdkError as DBrainError } from './http.js';
 
 // --- DBrain types ---
 export type {
+  ApiKeyCreateResponse,
+  ApiKeyListItem,
   ConnectResponse,
+  ConnectionStatus,
   ConversationSummary,
   ConversationWithMessages,
   Document,
@@ -17,11 +20,13 @@ export type {
   EntityRow,
   EntityWithFacts,
   FactRow,
+  FederatedSearchResponse,
   HealthResponse,
   MemorySummaryRow,
   Message,
   PendingMessages,
   SearchResult,
+  ShareResult,
 } from './dbrain/index.js';
 
 // --- DProxy types ---

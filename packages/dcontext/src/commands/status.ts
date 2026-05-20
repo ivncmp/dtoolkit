@@ -34,6 +34,20 @@ async function runStatus() {
       const client = new DBrainClient(url, token);
       const health = await client.health();
       console.log(`  ${pc.green(url)} — ${health.entities} entities, ${health.facts} facts`);
+      const brainType = health.brainType ?? 'personal';
+      console.log(`  Type: ${brainType === 'shared' ? pc.green(brainType) : pc.blue(brainType)}`);
+      if (health.connectedBrains && health.connectedBrains > 0) {
+        console.log(`  Connected: ${pc.green(String(health.connectedBrains))} brain(s)`);
+        try {
+          const conns = await client.listConnections();
+          for (const c of conns) {
+            const s = c.online ? pc.green('online') : pc.red('offline');
+            console.log(`    ${pc.bold(c.name)} ${s}`);
+          }
+        } catch {
+          // skip connection details if endpoint fails
+        }
+      }
     } catch {
       console.log(`  ${pc.red(url)} (unreachable)`);
     }

@@ -31,6 +31,7 @@ function localSearch(
 ) {
   const db = app.db;
   const ftsQuery = query.split(/\s+/).filter(Boolean).join(' OR ');
+  if (!ftsQuery) return [];
   let sql = `
     SELECT f.*, e.name as entity_name, e.type as entity_type, e.category as entity_category, rank
     FROM facts_fts fts
@@ -90,6 +91,12 @@ export async function searchRoutes(app: FastifyInstance) {
       tier?: string;
       federated?: boolean;
     };
+
+    if (!query || !query.trim()) {
+      return federated
+        ? { results: [], federation: { local: 0, remote: 0, partial: false, sources: [] } }
+        : [];
+    }
 
     const localResults = localSearch(app, query, limit, entityId, tier);
 

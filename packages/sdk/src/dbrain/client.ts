@@ -12,6 +12,7 @@ import type {
   EntityRow,
   EntityWithFacts,
   FactRow,
+  FederatedSearchResponse,
   HealthResponse,
   MemorySummaryRow,
   Message,
@@ -116,6 +117,13 @@ export class DBrainClient {
     options?: { limit?: number; entityId?: string; tier?: string },
   ): Promise<SearchResult[]> {
     return this.http.post('/search', { query, ...options });
+  }
+
+  async searchFederated(
+    query: string,
+    options?: { limit?: number; entityId?: string; tier?: string },
+  ): Promise<FederatedSearchResponse> {
+    return this.http.post('/search', { query, ...options, federated: true });
   }
 
   async memorySummary(): Promise<MemorySummaryRow[]> {

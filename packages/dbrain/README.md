@@ -12,12 +12,32 @@
 
 Install it once, connect every AI you use — Claude Code at home, Claude Code at work, Gemini on your phone. All share the same identity, the same memories, the same knowledge.
 
-```
-[Home]   Claude Code ──MCP──┐
-[Work]   Claude Code ──MCP──┤     ┌─────────────────────────────────┐
-[Mobile] Gemini ──REST──────┼────→│  dbrain (your mind)             │
-[Server] OpenClaw ──REST────┤     │  identity + memory + knowledge  │
-[Other]  Custom AI ──API────┘     └─────────────────────────────────┘
+```mermaid
+graph LR
+    subgraph Clients["Your AIs"]
+        home["🏠 Claude Code<br/><small>home</small>"]
+        work["💼 Claude Code<br/><small>work</small>"]
+        mobile["📱 Gemini<br/><small>mobile</small>"]
+        server["🖥️ OpenClaw<br/><small>server</small>"]
+    end
+
+    home -- MCP --> personal
+    work -- MCP --> personal
+    mobile -- REST --> personal
+    server -- REST --> personal
+
+    subgraph Federation["Federation"]
+        personal["dbrain<br/><strong>personal</strong><br/><small>identity + memory + knowledge</small>"]
+        shared["dbrain<br/><strong>shared / team</strong><br/><small>team knowledge + API keys</small>"]
+    end
+
+    personal -- "federated recall" --> shared
+    personal -- "share facts" --> shared
+
+    style personal fill:#2563eb,color:#fff,stroke:#1e40af
+    style shared fill:#7c3aed,color:#fff,stroke:#5b21b6
+    style Clients fill:#f8fafc,color:#1e293b,stroke:#e2e8f0
+    style Federation fill:#f8fafc,color:#1e293b,stroke:#e2e8f0
 ```
 
 ## Install
@@ -61,6 +81,7 @@ The brain has 4 layers:
 | **Conversations** | Raw chat history from every AI session                | `conversations` + `messages` tables                  |
 | **Knowledge**     | Structured facts organized by PARA                    | `entities` + `facts` tables with hot/warm/cold tiers |
 | **Recall**        | Full-text search over all facts                       | FTS5 with OR logic for multi-language queries        |
+| **Federation**    | Personal brains connect to shared team brains         | Per-user API keys, federated recall, manual fact push |
 
 ### Memory tiers
 
@@ -85,6 +106,7 @@ Memories fade if you don't use them — like a real brain.
 | `log`           | Send conversation messages for storage      |
 | `wake_up`       | Full identity load                          |
 | `overview`      | Brain stats                                 |
+| `share`         | Push a fact to a connected shared brain     |
 
 ## REST API
 
@@ -99,8 +121,12 @@ All endpoints require `Authorization: Bearer <token>` except `/health`.
 | `POST`            | `/entities/:id/facts` | Add facts to an entity                         |
 | `PATCH`           | `/facts/:id/access`   | Bump a memory (keep it hot)                    |
 | `GET/POST`        | `/conversations`      | Chat history                                   |
-| `POST`            | `/search`             | Full-text search over all facts                |
+| `POST`            | `/search`             | Full-text search (supports `federated: true`)  |
 | `GET`             | `/memory/summary`     | Overview: entities x tiers                     |
+| `GET`             | `/connections`        | List connected brains with health status       |
+| `POST/GET/DELETE` | `/keys`               | API key management (shared brains only)        |
+| `PATCH`           | `/keys/:id`           | Update API key permissions                     |
+| `POST`            | `/facts/:id/share`    | Push a fact to a connected brain               |
 
 ## CLI commands
 
@@ -110,6 +136,10 @@ All endpoints require `Authorization: Bearer <token>` except `/health`.
 | `dbrain start [path]`            | Server | Start the API server + dashboard          |
 | `dbrain connect <client> [url]`  | Client | Connect a client to a running brain       |
 | `dbrain status [path]`           | Server | Check brain status                        |
+| `dbrain link <url>`              | Client | Connect to a shared brain                 |
+| `dbrain unlink <name>`           | Client | Disconnect from a shared brain            |
+| `dbrain connections`             | Client | List connections with health status        |
+| `dbrain keys <action>`           | Server | Manage per-user API keys (shared brains)  |
 
 ## Dashboard
 
@@ -140,6 +170,8 @@ For non-interactive setup (Docker, CI):
 | `DBRAIN_AGENT_NAME` | `dBrain`       | AI identity name |
 | `DBRAIN_OWNER_NAME` | `Human`        | Owner name       |
 | `DBRAIN_TIMEZONE`   | Auto-detected  | Owner timezone   |
+| `DBRAIN_BRAIN_NAME` | from identity  | Brain display name  |
+| `DBRAIN_BRAIN_TYPE` | `personal`     | `personal` or `shared` |
 
 ## License
 

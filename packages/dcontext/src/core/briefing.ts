@@ -46,9 +46,10 @@ export async function generateBriefing(
   const client = new DBrainClient(config.dbrain.url, config.dbrain.token);
 
   const safeQuery = `"${projectEntity}"`;
-  const [results, documents] = await Promise.all([
+  const [results, documents, health] = await Promise.all([
     client.search(safeQuery, { limit: config.briefing.maxFacts }).catch(() => []),
     config.briefing.includeIdentity ? client.listDocuments() : Promise.resolve([]),
+    client.health().catch(() => null),
   ]);
 
   if (results.length === 0 && documents.length === 0) return null;
@@ -89,6 +90,24 @@ export async function generateBriefing(
     for (const r of results) {
       const category = r.fact.category || 'context';
       parts.push(`- [${category}] ${truncateFact(r.fact.fact, config.briefing.maxCharsPerFact)}`);
+    }
+  }
+
+  if (health && health.connectedBrains && health.connectedBrains > 0) {
+    try {
+      const connections = await client.listConnections();
+      parts.push('');
+      parts.push(`### Connected Brains (${connections.length})`);
+      for (const conn of connections) {
+        const status = conn.online ? 'online' : 'offline';
+        parts.push(`- **${conn.name}** (${status})${conn.brainName ? ` — ${conn.brainName}` : ''}`);
+      }
+      parts.push('');
+      parts.push(
+        '> `recall` automatically searches these brains. Use `share` to push a fact to a connected brain.',
+      );
+    } catch {
+      // skip if connections endpoint fails
     }
   }
 

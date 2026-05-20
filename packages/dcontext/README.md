@@ -60,21 +60,27 @@ dcontext hooks into two moments of a session's lifecycle:
 
 The AI receives the context transparently via hooks — it never calls dcontext directly.
 
-```
-┌─────────────────┐     SessionStart      ┌─────────────┐
-│   Claude Code   │◄─────────────────────  │  dcontext    │
-│   Gemini CLI    │  additionalContext     │  (hooks)     │
-│   OpenCode      │                        │              │
-│                 │     PreCompact         │              │
-│                 │─────────────────────►  │              │
-└─────────────────┘  transcript            └──────┬───────┘
-                                                  │
-                                           search / save
-                                                  │
-                                           ┌──────▼───────┐
-                                           │    dbrain     │
-                                           │  (memory)     │
-                                           └──────────────┘
+```mermaid
+graph LR
+    subgraph Clients["AI Coding CLIs"]
+        claude["Claude Code"]
+        gemini["Gemini CLI"]
+        opencode["OpenCode"]
+    end
+
+    subgraph Hooks["dcontext (hooks)"]
+        hook["SessionStart<br/><small>additionalContext</small><br/><br/>PreCompact<br/><small>transcript</small>"]
+    end
+
+    hook -- "additionalContext" --> Clients
+    Clients -- "transcript" --> hook
+    hook -- "search / save" --> brain
+
+    brain["dbrain<br/><strong>memory</strong>"]
+
+    style Clients fill:#f8fafc,color:#1e293b,stroke:#e2e8f0
+    style Hooks fill:#0f3460,color:#fff,stroke:#16213e
+    style brain fill:#2563eb,color:#fff,stroke:#1e40af
 ```
 
 ### What gets injected
@@ -85,8 +91,11 @@ The session briefing includes (in order):
 2. **Soul** — behavioral guidelines
 3. **User** — who you are (name, timezone)
 4. **Project facts** — recent decisions, milestones, preferences, context (up to 15 facts, truncated to 200 chars each)
+5. **Connected brains** — if the personal brain has connections to shared brains, their names and online/offline status
 
 Total briefing capped at 8000 characters.
+
+> When connected to a brain with shared brain connections, dcontext automatically includes federation status in the briefing. The `share` MCP tool is available for pushing facts to team brains.
 
 ### Instruction file integration
 

@@ -31,6 +31,7 @@ You have an AI brain connected via MCP (dbrain). This is your persistent memory 
 - \`bump\` — Keep memories alive. When you use a fact to answer a question, bump it so it stays hot.
 - \`overview\` — Brain stats. When the user asks "what do you know?" or you need a high-level picture.
 - \`wake_up\` — Full identity load. Only needed if you want the complete identity documents outside of a recall.
+- \`share\` — Push to team brain. When the user wants to share a fact with a connected shared brain.
 
 ## Rules
 
@@ -40,6 +41,7 @@ You have an AI brain connected via MCP (dbrain). This is your persistent memory 
 - When storing facts, be specific and atomic. "Favorite ice cream is pistachio" not "We talked about food preferences".
 - Use \`remember\` proactively across ALL projects — not just dbrain. Decisions, milestones, preferences, people, learnings: if it's worth remembering, store it in the brain.
 - Use \`log\` to store conversations. At natural breakpoints (end of a task, before the user leaves, or every few exchanges), log a summary of what was discussed and decided. Source: \`claude-code-{hostname}\`.
+- When connected to shared brains, \`recall\` automatically federates — results include facts from all connected brains. You don't need to do anything special.
 `;
 
 export async function healthRoutes(app: FastifyInstance) {

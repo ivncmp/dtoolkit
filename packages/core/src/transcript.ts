@@ -36,6 +36,7 @@ You have an AI brain connected via MCP (dbrain). Your identity, soul, user profi
 - \`create_entity\` — Create new entity, then \`remember\` facts about it.
 - \`bump\` — Touch a memory to keep it hot.
 - \`overview\` — Brain stats.
+- \`share\` — Push a fact to a connected shared brain. Use when the user wants to share a decision or finding with the team brain.
 
 ## Rules
 
@@ -43,7 +44,8 @@ You have an AI brain connected via MCP (dbrain). Your identity, soul, user profi
 - Use \`recall\` only mid-conversation when the user asks about something not in the injected context.
 - Never say "I don't know" about the user without searching first.
 - When storing facts, be specific and atomic. "Favorite ice cream is pistachio" not "We talked about food preferences".
-- Use \`remember\` proactively. Decisions, milestones, preferences, people, learnings — if it's worth remembering, store it.`;
+- Use \`remember\` proactively. Decisions, milestones, preferences, people, learnings — if it's worth remembering, store it.
+- When connected to shared brains, \`recall\` automatically federates — results include both local and shared brain memories. Use \`share\` to manually push important facts to the team brain.`;
 
 export function writeDcontextMdSection(existingContent: string): string {
   const section = `${DBRAIN_START}\n${DCONTEXT_MARKER}\n${DBRAIN_DCONTEXT_SECTION}\n${DBRAIN_END}`;

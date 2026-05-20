@@ -113,7 +113,26 @@ export function createMcpServer(app: FastifyInstance) {
       },
     },
     async ({ query, limit }) => {
-      const ftsQuery = query.split(/\s+/).filter(Boolean).join(' OR ');
+      const words = query.split(/\s+/).filter(Boolean);
+      if (words.length === 0) {
+        const docs = db.prepare('SELECT key, content FROM documents ORDER BY key').all() as {
+          key: string;
+          content: string;
+        }[];
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                identity: Object.fromEntries(docs.map((d) => [d.key, d.content])),
+                results: [],
+                federation: { local: 0, remote: 0, partial: false, sources: [] },
+              }),
+            },
+          ],
+        };
+      }
+      const ftsQuery = words.join(' OR ');
       const localRows = db
         .prepare(
           `

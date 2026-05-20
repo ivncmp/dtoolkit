@@ -106,6 +106,16 @@ export interface SearchResult {
   score: number;
 }
 
+export interface FederatedSearchResponse {
+  results: Array<SearchResult & { originBrain: string | null }>;
+  federation: {
+    local: number;
+    remote: number;
+    partial: boolean;
+    sources: Array<{ name: string; count: number }>;
+  };
+}
+
 export interface MemorySummaryRow {
   id: string;
   name: string;

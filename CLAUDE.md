@@ -48,7 +48,8 @@ packages/
 │                      Claude/Codex/Gemini/OpenCode also implement Target via dcontext.ts
 ├── dbrain/            Persistent memory server — the brain
 │                      Fastify REST API + MCP HTTP on :7878, React dashboard on :7879
-│                      SQLite + FTS5 via better-sqlite3. CLI: dbrain init/start/connect/status
+│                      SQLite + FTS5 via better-sqlite3. Federation: personal→shared brain connections.
+│                      CLI: dbrain init/start/connect/status/link/unlink/connections/keys
 │                      Build: tsc + copy dashboard assets + chmod bin
 ├── sdk/               Typed HTTP clients for dtoolkit services (dbrain + dproxy)
 │                      DBrainClient + DProxyClient, shared HttpClient base
@@ -70,12 +71,15 @@ tools/
 
 ### dbrain internals
 
-- `src/cli/` — CLI commands (init wizard, connect client setup, start server, status)
-- `src/server/` — Fastify app with routes: entities, facts, conversations, search, workspace, health
-- `src/mcp/` — MCP server on same port as REST
-- `src/core/` — db.ts (SQLite schema + FTS5), models.ts (Zod), config.ts, memory.ts (tier logic)
+- `src/cli/` — CLI commands (init wizard, connect client setup, start server, status, link/unlink, keys)
+- `src/server/` — Fastify app with routes: entities, facts, conversations, search, workspace, health, keys, connections
+- `src/server/routes/keys.ts` — API key CRUD (shared brains only)
+- `src/server/routes/permissions.ts` — write permission enforcement
+- `src/mcp/` — MCP server on same port as REST (recall with federation, share tool)
+- `src/core/` — db.ts (SQLite schema + FTS5 + migrations), models.ts (Zod), config.ts (brainType, connections), connections.ts (cached client pool), memory.ts (tier logic)
 - `src/dashboard/` — Single-file React app served via Fastify static (CDN deps, no build step)
 - init = server-side (creates brain), connect = client-side (configures Claude Code files)
+- Federation: recall auto-federates across connections, share pushes facts, search supports `federated: true`
 
 ### dproxy internals
 

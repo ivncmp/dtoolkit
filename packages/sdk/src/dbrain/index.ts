@@ -12,6 +12,7 @@ export type {
   EntityRow,
   EntityWithFacts,
   FactRow,
+  FederatedSearchResponse,
   HealthResponse,
   MemorySummaryRow,
   Message,

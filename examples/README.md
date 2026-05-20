@@ -9,7 +9,7 @@
 
 These examples demonstrate the two SDK clients:
 
-- **`DBrainClient`** — persistent memory server: entities, facts, search, conversations
+- **`DBrainClient`** — persistent memory server: entities, facts, search, conversations, federation
 - **`DProxyClient`** — universal model proxy: ask (batch & streaming), file attachments, history, memory
 
 > Other dtoolkit packages (`dcontext`, `dproxy` CLI, adapters) are CLI tools without a programmatic SDK — they're not covered here.
@@ -52,6 +52,7 @@ Covers `DBrainClient` from `@dtoolkit/sdk`:
 - Memory summary — per-entity fact counts by tier (hot/warm/cold)
 - Entity CRUD — create entity, add facts, bump, archive
 - Conversations — list recent conversations
+- Federation — brain type, connected brains, federated cross-brain search
 
 ### dproxy ([src/dproxy.ts](src/dproxy.ts))
 

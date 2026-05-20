@@ -33,7 +33,7 @@ Each product has **one job**, works standalone, and composes with the rest via a
 
 | Package | Version | Description |
 | --- | --- | --- |
-| [`@dtoolkit/dbrain`](packages/dbrain/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dbrain.svg)](https://www.npmjs.com/package/@dtoolkit/dbrain) | Persistent memory server — SQLite + FTS5, MCP, REST API, dashboard |
+| [`@dtoolkit/dbrain`](packages/dbrain/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dbrain.svg)](https://www.npmjs.com/package/@dtoolkit/dbrain) | Persistent memory server — SQLite + FTS5, MCP, REST API, federation, dashboard |
 | [`@dtoolkit/dcontext`](packages/dcontext/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dcontext.svg)](https://www.npmjs.com/package/@dtoolkit/dcontext) | Hooks for AI coding CLIs — injects dbrain context at session start, saves transcripts pre-compaction |
 
 ### Multi-provider Transport
@@ -68,26 +68,44 @@ Each product has **one job**, works standalone, and composes with the rest via a
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Your Agent                           │
-│                  (Claude Code, OpenCode, …)                 │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-              ContextBlock[] (neutral contract)
-                           │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-        ┌──────────┐ ┌──────────┐ ┌──────────┐
-        │ dcontext │ │  dproxy  │ │  dbrain  │
-        │  hooks + │ │ transport│ │ memory   │
-        │ briefing │ │          │ │ server   │
-        └──────────┘ └────┬─────┘ └──────────┘
-                          │
-             ┌────────┬───┴───┬──────────┐
-             ▼        ▼       ▼          ▼
-          claude    codex   gemini    opencode
-          adapter  adapter  adapter   adapter
+```mermaid
+graph TB
+    subgraph Agent["Your Agent"]
+        CC["Claude Code / OpenCode / Gemini / ..."]
+    end
+
+    CC -- "ContextBlock[]" --> dcontext
+    CC -- "ContextBlock[]" --> dproxy
+    CC -- "MCP / REST" --> personal
+
+    subgraph Harness["dtoolkit harness"]
+        dcontext["dcontext<br/><small>hooks + briefing</small>"]
+        dproxy["dproxy<br/><small>transport</small>"]
+    end
+
+    subgraph Memory["Memory layer"]
+        personal["dbrain <small>(personal)</small><br/><small>identity + memory + knowledge</small>"]
+        shared["dbrain <small>(shared / team)</small><br/><small>team knowledge + API keys</small>"]
+    end
+
+    dcontext -- "search / save" --> personal
+    personal -- "federated recall<br/>share facts" --> shared
+
+    subgraph Adapters["Provider adapters"]
+        ac["adapter-claude"]
+        ax["adapter-codex"]
+        ag["adapter-gemini"]
+        ao["adapter-opencode"]
+    end
+
+    dproxy --> ac & ax & ag & ao
+
+    style Agent fill:#1a1a2e,color:#fff,stroke:#16213e
+    style Harness fill:#0f3460,color:#fff,stroke:#16213e
+    style Memory fill:#533483,color:#fff,stroke:#16213e
+    style Adapters fill:#1a1a2e,color:#fff,stroke:#16213e
+    style personal fill:#e94560,color:#fff,stroke:#533483
+    style shared fill:#7c3aed,color:#fff,stroke:#533483
 ```
 
 **Design principle:** one layer, one responsibility. If two products need to sync to function, it's wrong.
@@ -98,7 +116,7 @@ The [`examples/`](examples/) directory contains ready-to-run TypeScript examples
 
 | Example | Client | What it covers |
 | --- | --- | --- |
-| [`dbrain.ts`](examples/src/dbrain.ts) | `DBrainClient` | Health, entity CRUD, facts, search, memory summary, conversations |
+| [`dbrain.ts`](examples/src/dbrain.ts) | `DBrainClient` | Health, entity CRUD, facts, search, memory summary, conversations, federation |
 | [`dproxy.ts`](examples/src/dproxy.ts) | `DProxyClient` | Batch ask, streaming, system prompts, file attachments, history, memory |
 | [`demo.ts`](examples/src/demo.ts) | Both | Combined smoke test |
 

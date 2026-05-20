@@ -1,5 +1,13 @@
 # @dtoolkit/dguard
 
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies [7f5260f]
+  - @dtoolkit/core@0.4.1
+  - @dtoolkit/dpolicy@0.0.5
+
 ## 0.0.4
 
 ### Patch Changes

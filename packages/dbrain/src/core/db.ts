@@ -118,6 +118,16 @@ function migrate(db: Database.Database): void {
 
     db.prepare('INSERT INTO schema_version (version) VALUES (?)').run(1);
   }
+
+  if (current < 2) {
+    const columns = (db.pragma('table_info(facts)') as { name: string }[]).map((c) => c.name);
+
+    if (!columns.includes('compacted_at')) {
+      db.exec('ALTER TABLE facts ADD COLUMN compacted_at TEXT');
+    }
+
+    db.prepare('INSERT INTO schema_version (version) VALUES (?)').run(2);
+  }
 }
 
 export function createDatabase(config: Config): Database.Database {

@@ -25,7 +25,7 @@ export async function factRoutes(app: FastifyInstance) {
     if (!db.prepare('SELECT id FROM entities WHERE id = ?').get(entityId))
       return reply.code(404).send({ error: 'Entity not found' });
 
-    let sql = 'SELECT * FROM facts WHERE entity_id = ?';
+    let sql = "SELECT * FROM facts WHERE entity_id = ? AND status = 'active'";
     const params: string[] = [entityId];
     if (tier) {
       sql += ' AND tier = ?';

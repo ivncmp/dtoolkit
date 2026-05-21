@@ -15,6 +15,8 @@ export { EntityType, ParaCategory, EntitySchema, type Entity } from './entity.js
 
 export { Tier, FactSchema, type Fact, type TierConfig, computeTier } from './fact.js';
 
+export { diceCoefficient } from './similarity.js';
+
 export { ContextBlockSchema, type ContextBlock } from './context.js';
 
 export type { HistoryEntry, SessionInfo } from './history.js';

@@ -119,6 +119,7 @@ export async function init(pathArg?: string, flags?: { nonInteractive?: boolean 
     brainType: answers.brainType as 'personal' | 'shared',
     connections: [],
     tiers: { hotDays: 7, hotMinAccess: 10, warmDays: 30 },
+    compact: { threshold: 0.85, limit: 1000 },
   };
 
   const s = p.spinner();
@@ -241,6 +242,7 @@ function initNonInteractive(pathArg?: string) {
     brainType,
     connections: [],
     tiers: { hotDays: 7, hotMinAccess: 10, warmDays: 30 },
+    compact: { threshold: 0.85, limit: 1000 },
   };
 
   mkdirSync(dataPath, { recursive: true });

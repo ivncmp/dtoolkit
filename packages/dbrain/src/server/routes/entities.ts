@@ -42,7 +42,9 @@ export async function entityRoutes(app: FastifyInstance) {
     if (!entity) return reply.code(404).send({ error: 'Entity not found' });
 
     const facts = db
-      .prepare('SELECT * FROM facts WHERE entity_id = ? ORDER BY tier ASC, access_count DESC')
+      .prepare(
+        "SELECT * FROM facts WHERE entity_id = ? AND status = 'active' ORDER BY tier ASC, access_count DESC",
+      )
       .all(id) as FactRow[];
 
     return {

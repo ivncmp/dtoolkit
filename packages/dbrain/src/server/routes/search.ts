@@ -37,7 +37,7 @@ function localSearch(
     FROM facts_fts fts
     JOIN facts f ON f.rowid = fts.rowid
     JOIN entities e ON e.id = f.entity_id
-    WHERE facts_fts MATCH ?
+    WHERE facts_fts MATCH ? AND f.status = 'active'
   `;
   const params: (string | number)[] = [ftsQuery];
   if (entityId) {
@@ -177,7 +177,7 @@ export async function searchRoutes(app: FastifyInstance) {
         COUNT(CASE WHEN f.tier = 'warm' THEN 1 END) as warm,
         COUNT(CASE WHEN f.tier = 'cold' THEN 1 END) as cold,
         COUNT(f.id) as total
-      FROM entities e LEFT JOIN facts f ON f.entity_id = e.id
+      FROM entities e LEFT JOIN facts f ON f.entity_id = e.id AND f.status = 'active'
       WHERE e.status = 'active' GROUP BY e.id ORDER BY total DESC
     `,
       )

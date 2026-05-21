@@ -140,7 +140,7 @@ export function createMcpServer(app: FastifyInstance) {
       FROM facts_fts fts
       JOIN facts f ON f.rowid = fts.rowid
       JOIN entities e ON e.id = f.entity_id
-      WHERE facts_fts MATCH ?
+      WHERE facts_fts MATCH ? AND f.status = 'active'
       ORDER BY rank LIMIT ?
     `,
         )
@@ -311,7 +311,7 @@ Good: "User prefers React over Vue for new frontend projects"`,
 
       const facts = db
         .prepare(
-          'SELECT id, fact, category, tier, access_count, last_accessed FROM facts WHERE entity_id = ? ORDER BY tier ASC, access_count DESC',
+          "SELECT id, fact, category, tier, access_count, last_accessed FROM facts WHERE entity_id = ? AND status = 'active' ORDER BY tier ASC, access_count DESC",
         )
         .all(id);
 
@@ -626,7 +626,7 @@ Good: "User prefers React over Vue for new frontend projects"`,
         COUNT(CASE WHEN f.tier = 'warm' THEN 1 END) as warm,
         COUNT(CASE WHEN f.tier = 'cold' THEN 1 END) as cold,
         COUNT(f.id) as total
-      FROM entities e LEFT JOIN facts f ON f.entity_id = e.id
+      FROM entities e LEFT JOIN facts f ON f.entity_id = e.id AND f.status = 'active'
       WHERE e.status = 'active' GROUP BY e.id ORDER BY total DESC
     `,
         )

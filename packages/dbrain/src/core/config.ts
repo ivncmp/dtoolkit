@@ -27,6 +27,14 @@ export const ConfigSchema = z.object({
       warmDays: z.number().default(30),
     })
     .default({ hotDays: 7, hotMinAccess: 10, warmDays: 30 }),
+  compact: z
+    .object({
+      threshold: z.number().min(0).max(1).default(0.85),
+      limit: z.number().min(1).default(1000),
+      schedule: z.string().optional(),
+      provider: z.string().optional(),
+    })
+    .default({ threshold: 0.85, limit: 1000 }),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -37,6 +45,7 @@ export function loadConfig(dataPath: string): Config {
     throw new Error(`Config not found at ${configPath}. Run 'dbrain init' first.`);
   }
   const raw = JSON.parse(readFileSync(configPath, 'utf-8'));
+  raw.dataPath = dataPath;
   if (process.env.DBRAIN_BRAIN_NAME) raw.brainName = process.env.DBRAIN_BRAIN_NAME;
   if (process.env.DBRAIN_BRAIN_TYPE) raw.brainType = process.env.DBRAIN_BRAIN_TYPE;
   return ConfigSchema.parse(raw);

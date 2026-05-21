@@ -93,6 +93,20 @@ program
   );
 
 program
+  .command('compact')
+  .description('Compact the brain (deduplicate facts, recalculate tiers)')
+  .option('--path <path>', 'Data path')
+  .option('--dedup', 'Deduplicate cold facts only')
+  .option('--tiers', 'Recalculate tiers only')
+  .option('--dry-run', 'Preview without writing')
+  .option('--threshold <n>', 'Similarity threshold (0-1, default 0.85)')
+  .option('--limit <n>', 'Max facts per batch (default 1000)')
+  .action(async (opts: Record<string, string | boolean | undefined>) => {
+    const { compactCommand } = await import('./compact.js');
+    await compactCommand(opts);
+  });
+
+program
   .command('link')
   .description('Link to a shared brain')
   .argument('<url>', 'Shared brain URL')

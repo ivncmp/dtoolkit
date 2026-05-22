@@ -4,6 +4,7 @@ import Fastify from 'fastify';
 import type { Config } from '../core/config.js';
 import { mountMcp } from '../mcp/server.js';
 
+import { compactRoutes } from './routes/compact.js';
 import { conversationRoutes } from './routes/conversations.js';
 import { entityRoutes } from './routes/entities.js';
 import { factRoutes } from './routes/facts.js';
@@ -76,6 +77,7 @@ export function createServer(config: Config, db: Database.Database) {
   app.register(searchRoutes);
   app.register(workspaceRoutes);
   app.register(conversationRoutes);
+  app.register(compactRoutes);
 
   if (config.brainType === 'shared') {
     app.register(keyRoutes);

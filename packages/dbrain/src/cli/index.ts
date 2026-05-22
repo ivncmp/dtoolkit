@@ -107,6 +107,15 @@ program
   });
 
 program
+  .command('configure')
+  .description('Reconfigure the brain (interactive)')
+  .argument('[path]', 'Data path')
+  .action(async (path: string | undefined) => {
+    const { configure } = await import('./configure.js');
+    await configure(path);
+  });
+
+program
   .command('link')
   .description('Link to a shared brain')
   .argument('<url>', 'Shared brain URL')

@@ -8,6 +8,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
+import { compact } from '../core/compact.js';
 import { loadConnections } from '../core/config.js';
 import { getAllConnections, getConnection } from '../core/connections.js';
 
@@ -647,6 +648,58 @@ Good: "User prefers React over Vue for new frontend projects"`,
           {
             type: 'text' as const,
             text: JSON.stringify({ entities, conversations, messages, unprocessed }),
+          },
+        ],
+      };
+    },
+  );
+
+  // --- compact: trigger brain compaction ---
+  mcp.registerTool(
+    'compact',
+    {
+      description:
+        'Compact the brain: deduplicate similar cold facts and recalculate memory tiers. Use this to clean up the brain periodically.',
+      inputSchema: {
+        dryRun: z.boolean().optional().default(false).describe('Preview without writing changes'),
+        steps: z
+          .array(z.enum(['dedup', 'tiers']))
+          .optional()
+          .describe('Steps to run (default: both)'),
+      },
+    },
+    async ({ dryRun, steps }) => {
+      const activeSteps = steps ?? ['dedup', 'tiers'];
+      const result = compact({
+        db,
+        tiers: app.config.tiers,
+        threshold: app.config.compact.threshold,
+        limit: app.config.compact.limit,
+        dryRun,
+        steps: activeSteps,
+      });
+
+      if (!dryRun) {
+        const now = new Date().toISOString();
+        const payload = JSON.stringify({ ...result, at: now });
+        db.prepare(
+          `INSERT INTO documents (key, title, content, updated_at)
+           VALUES ('compact_last_run', 'Last Compact Run', ?, ?)
+           ON CONFLICT(key) DO UPDATE SET content = excluded.content, updated_at = excluded.updated_at`,
+        ).run(payload, now);
+      }
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              ...result,
+              dryRun,
+              message: dryRun
+                ? `Dry run: would deduplicate ${result.factsDeduped} facts and update ${result.tiersUpdated} tiers`
+                : `Compacted: ${result.factsDeduped} deduplicated, ${result.tiersUpdated} tiers updated`,
+            }),
           },
         ],
       };

@@ -88,21 +88,23 @@ function deduplicateFacts(
 
   for (const [entityId, group] of byEntity) {
     if (group.length < 2) {
-      toMark.push(group[0]!.id);
+      toMark.push(group[0].id);
       continue;
     }
 
     const dominated = new Set<string>();
 
     for (let i = 0; i < group.length; i++) {
-      if (dominated.has(group[i]!.id)) continue;
+      const fi = group[i];
+      if (dominated.has(fi.id)) continue;
 
       for (let j = i + 1; j < group.length; j++) {
-        if (dominated.has(group[j]!.id)) continue;
+        const fj = group[j];
+        if (dominated.has(fj.id)) continue;
 
-        const score = diceCoefficient(group[i]!.fact, group[j]!.fact);
+        const score = diceCoefficient(fi.fact, fj.fact);
         if (score >= threshold) {
-          const [keep, drop] = pickWinner(group[i]!, group[j]!);
+          const [keep, drop] = pickWinner(fi, fj);
           dominated.add(drop.id);
 
           onProgress?.(

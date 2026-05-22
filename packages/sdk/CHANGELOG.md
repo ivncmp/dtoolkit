@@ -1,5 +1,12 @@
 # @dtoolkit/sdk
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [31c13d1]
+  - @dtoolkit/core@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes

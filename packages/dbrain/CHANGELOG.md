@@ -1,5 +1,17 @@
 # @dtoolkit/dbrain
 
+## 0.4.0
+
+### Minor Changes
+
+- 31c13d1: Add brain compaction system: structural dedup of cold facts with Dice coefficient similarity, scheduled compaction via cron, REST and MCP compact endpoints, and interactive `dbrain configure` command.
+
+### Patch Changes
+
+- Updated dependencies [31c13d1]
+  - @dtoolkit/core@0.5.0
+  - @dtoolkit/sdk@0.4.1
+
 ## 0.3.2
 
 ### Patch Changes

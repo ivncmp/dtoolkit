@@ -107,6 +107,7 @@ Memories fade if you don't use them — like a real brain.
 | `wake_up`       | Full identity load                          |
 | `overview`      | Brain stats                                 |
 | `share`         | Push a fact to a connected shared brain     |
+| `compact`       | Run compaction (dedup + tier recalc)        |
 
 ## REST API
 
@@ -127,6 +128,8 @@ All endpoints require `Authorization: Bearer <token>` except `/health`.
 | `POST/GET/DELETE` | `/keys`               | API key management (shared brains only)        |
 | `PATCH`           | `/keys/:id`           | Update API key permissions                     |
 | `POST`            | `/facts/:id/share`    | Push a fact to a connected brain               |
+| `GET`             | `/me`                 | Current user/admin info                        |
+| `POST`            | `/compact`            | Run compaction (admin-only)                    |
 
 ## CLI commands
 
@@ -139,6 +142,8 @@ All endpoints require `Authorization: Bearer <token>` except `/health`.
 | `dbrain link <url>`              | Client | Connect to a shared brain                 |
 | `dbrain unlink <name>`           | Client | Disconnect from a shared brain            |
 | `dbrain connections`             | Client | List connections with health status        |
+| `dbrain compact [path]`          | Server | Run compaction (dedup + tier recalc)      |
+| `dbrain configure [path]`       | Server | Interactive config editor                 |
 | `dbrain keys <action>`           | Server | Manage per-user API keys (shared brains)  |
 
 ## Dashboard

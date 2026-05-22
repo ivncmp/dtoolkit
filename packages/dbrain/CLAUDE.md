@@ -114,6 +114,8 @@ dbrain connect claude http://your-server:7878
 | `dbrain start [path]` | Server | Start the API server + dashboard |
 | `dbrain connect <client> [url]` | Client | Connect a client to a running brain |
 | `dbrain status [path]` | Server | Check brain status |
+| `dbrain compact [path]` | Server | Run compaction (dedup + tier recalc) |
+| `dbrain configure [path]` | Server | Interactive config editor |
 | `dbrain link <url>` | Client | Connect to a shared brain |
 | `dbrain unlink <name>` | Client | Disconnect from a shared brain |
 | `dbrain connections` | Client | List connections with health status |
@@ -184,6 +186,8 @@ dbrain/
 │   │   ├── connect.ts          # Client setup — fetches /connect, writes Claude Code config
 │   │   ├── start.ts            # Wake up the brain + dashboard
 │   │   ├── status.ts           # Brain status
+│   │   ├── compact.ts          # Manual compaction trigger
+│   │   ├── configure.ts        # Interactive config editor
 │   │   ├── link.ts             # link/unlink/connections — brain federation
 │   │   └── keys.ts             # API key management (shared brains)
 │   ├── server/
@@ -195,6 +199,7 @@ dbrain/
 │   │       ├── entities.ts     # Knowledge entities CRUD
 │   │       ├── facts.ts        # Facts CRUD + access bump + share endpoint
 │   │       ├── search.ts       # Recall (FTS5 search, federated option)
+│   │       ├── compact.ts      # POST /compact (admin-only compaction)
 │   │       ├── keys.ts         # API key CRUD (shared brains only)
 │   │       └── permissions.ts  # Write permission enforcement
 │   ├── mcp/
@@ -205,6 +210,7 @@ dbrain/
 │   └── core/
 │       ├── db.ts               # SQLite schema (entities, facts, documents, conversations, messages)
 │       ├── models.ts           # Zod schemas
+│       ├── compact.ts          # Compaction logic: dedup + tier recalc
 │       ├── config.ts           # Config loading (brainType, brainName, connections)
 │       ├── connections.ts      # Cached DBrainClient pool for connected brains
 │       └── memory.ts           # Tier logic: hot/warm/cold
@@ -312,6 +318,10 @@ GET    /keys                      List API keys (shared brains)
 DELETE /keys/:id                   Revoke API key (shared brains)
 PATCH  /keys/:id                   Update API key permissions
 POST   /facts/:id/share           Push a fact to a connected brain
+
+# Admin
+GET    /me                        Current user/admin info
+POST   /compact                   Run compaction (admin-only, dedup + tier recalc)
 ```
 
 ## Dashboard (port 7879)
@@ -339,6 +349,7 @@ No build step — uses React 18 + Babel from CDN.
 - `log` — send conversation messages to the brain for storage
 - `overview` — brain stats: entities x tiers, conversations, unprocessed messages
 - `share` — push a fact to a connected shared brain (requires federation)
+- `compact` — run compaction (dedup + tier recalc). Saves last run to documents.
 
 ### MCP Resource
 

@@ -1,5 +1,16 @@
 # @dtoolkit/dproxy
 
+## 1.4.2
+
+### Patch Changes
+
+- Updated dependencies [31c13d1]
+  - @dtoolkit/core@0.5.0
+  - @dtoolkit/adapter-claude@1.3.2
+  - @dtoolkit/adapter-codex@1.3.2
+  - @dtoolkit/adapter-gemini@1.3.2
+  - @dtoolkit/adapter-opencode@1.3.2
+
 ## 1.4.1
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/droute",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Model router (Haiku/Sonnet/Opus) with cost tracking and per-project policies",
   "type": "module",
   "license": "MIT",

@@ -1,5 +1,12 @@
 # @dtoolkit/adapter-opencode
 
+## 1.3.2
+
+### Patch Changes
+
+- Updated dependencies [31c13d1]
+  - @dtoolkit/core@0.5.0
+
 ## 1.3.1
 
 ### Patch Changes

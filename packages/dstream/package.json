@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/dstream",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Daily digest — what each agent learned, decided, or blocked today",
   "type": "module",
   "license": "MIT",

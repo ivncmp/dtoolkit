@@ -26,12 +26,16 @@ const EXAMPLES_DIR = resolve(__dirname, "..");
 const ROOT = resolve(EXAMPLES_DIR, "..");
 const DBRAIN_BIN = resolve(ROOT, "packages/dbrain/dist/cli/index.js");
 const DPROXY_BIN = resolve(ROOT, "packages/dproxy/dist/index.js");
+const DWORK_BIN = resolve(ROOT, "packages/dwork/dist/cli/index.js");
 
 const DBRAIN_PORT = 7878;
 const DPROXY_PORT = 7880;
+const DWORK_PORT = 7881;
 const DBRAIN_TOKEN = "test-token";
+const DWORK_TOKEN = "test-token";
 const DBRAIN_URL = `http://localhost:${DBRAIN_PORT}`;
 const DPROXY_URL = `http://localhost:${DPROXY_PORT}`;
+const DWORK_URL = `http://localhost:${DWORK_PORT}`;
 
 const children: ChildProcess[] = [];
 let tempDir: string | undefined;
@@ -58,7 +62,11 @@ process.on("SIGTERM", () => {
 });
 
 function ensureBuilt(): void {
-  if (!existsSync(DBRAIN_BIN) || !existsSync(DPROXY_BIN)) {
+  if (
+    !existsSync(DBRAIN_BIN) ||
+    !existsSync(DPROXY_BIN) ||
+    !existsSync(DWORK_BIN)
+  ) {
     console.log("Building packages...\n");
     execSync("pnpm build", { cwd: ROOT, stdio: "inherit" });
     console.log();
@@ -144,6 +152,8 @@ async function runExample(script: string): Promise<void> {
         DBRAIN_TOKEN,
         DPROXY_URL,
         DPROXY_TOKEN: "",
+        DWORK_URL,
+        DWORK_TOKEN,
       },
     });
     child.on("close", (code) => {
@@ -176,6 +186,25 @@ async function main(): Promise<void> {
   });
   await waitForHealth("dproxy", `${DPROXY_URL}/v1`);
   console.log("  dproxy ready\n");
+
+  console.log("Initializing dwork...");
+  const dworkDir = mkdtempSync(join(tmpdir(), "dtoolkit-dwork-"));
+  execSync(`node ${DWORK_BIN} init --non-interactive ${dworkDir}`, {
+    cwd: ROOT,
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      DWORK_PORT: String(DWORK_PORT),
+      DWORK_HOST: "127.0.0.1",
+      DWORK_TOKEN,
+    },
+  });
+  console.log(`  dwork data at ${dworkDir}\n`);
+
+  console.log("Starting dwork...");
+  startProcess("dwork", DWORK_BIN, ["start", dworkDir]);
+  await waitForHealth("dwork", DWORK_URL);
+  console.log("  dwork ready\n");
 
   console.log(`--- Running ${script} ---\n`);
 

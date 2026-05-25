@@ -1,5 +1,11 @@
 # @dtoolkit/dwork
 
+## 0.2.1
+
+### Patch Changes
+
+- 3a2de8a: fix: dashboard task detail modal now correctly resolves linked docs when detail_path lacks the docs/ prefix
+
 ## 0.2.0
 
 ### Minor Changes

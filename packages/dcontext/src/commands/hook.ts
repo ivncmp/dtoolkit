@@ -83,16 +83,13 @@ async function runHook(event: string, explicitTarget?: string) {
   }
 }
 
-function formatOutput(target: Target, event: string, context: string): string {
-  if (target.name === 'codex') {
-    return JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: event,
-        additionalContext: context,
-      },
-    });
-  }
-  return JSON.stringify({ additionalContext: context });
+function formatOutput(_target: Target, event: string, context: string): string {
+  return JSON.stringify({
+    hookSpecificOutput: {
+      hookEventName: event,
+      additionalContext: context,
+    },
+  });
 }
 
 async function handleSessionStart(target: Target, cwd: string, config: DcontextConfig) {

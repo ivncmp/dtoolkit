@@ -23,7 +23,7 @@ Each product has **one job**, works standalone, and composes with the rest via a
 | Package | Version | Description |
 | --- | --- | --- |
 | [`@dtoolkit/core`](packages/core/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/core.svg)](https://www.npmjs.com/package/@dtoolkit/core) | Shared types and Zod schemas (`Adapter`, `ContextBlock`, `Fact`, `Entity`, `Tier`) |
-| [`@dtoolkit/sdk`](packages/sdk/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/sdk.svg)](https://www.npmjs.com/package/@dtoolkit/sdk) | Typed HTTP clients for dtoolkit services (dbrain + dproxy) |
+| [`@dtoolkit/sdk`](packages/sdk/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/sdk.svg)](https://www.npmjs.com/package/@dtoolkit/sdk) | Typed HTTP clients for dtoolkit services (dbrain + dproxy + dwork) |
 | [`@dtoolkit/adapter-claude`](packages/adapter-claude/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-claude.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-claude) | Adapter for Claude Code CLI |
 | [`@dtoolkit/adapter-codex`](packages/adapter-codex/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-codex.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-codex) | Adapter for Codex CLI |
 | [`@dtoolkit/adapter-gemini`](packages/adapter-gemini/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-gemini.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-gemini) | Adapter for Gemini CLI |
@@ -35,6 +35,12 @@ Each product has **one job**, works standalone, and composes with the rest via a
 | --- | --- | --- |
 | [`@dtoolkit/dbrain`](packages/dbrain/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dbrain.svg)](https://www.npmjs.com/package/@dtoolkit/dbrain) | Persistent memory server — SQLite + FTS5, MCP, REST API, federation, dashboard |
 | [`@dtoolkit/dcontext`](packages/dcontext/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dcontext.svg)](https://www.npmjs.com/package/@dtoolkit/dcontext) | Hooks for AI coding CLIs — injects dbrain context at session start, saves transcripts pre-compaction |
+
+### Project Management
+
+| Package | Version | Description |
+| --- | --- | --- |
+| [`@dtoolkit/dwork`](packages/dwork/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dwork.svg)](https://www.npmjs.com/package/@dtoolkit/dwork) | AI-native project manager — Markdown as source of truth, kanban dashboard, MCP, REST API |
 
 ### Multi-provider Transport
 
@@ -77,6 +83,7 @@ graph TB
     CC -- "ContextBlock[]" --> dcontext
     CC -- "ContextBlock[]" --> dproxy
     CC -- "MCP / REST" --> personal
+    CC -- "MCP / REST" --> dwork
 
     subgraph Harness["dtoolkit harness"]
         dcontext["dcontext<br/><small>hooks + briefing</small>"]
@@ -86,6 +93,10 @@ graph TB
     subgraph Memory["Memory layer"]
         personal["dbrain <small>(personal)</small><br/><small>identity + memory + knowledge</small>"]
         shared["dbrain <small>(shared / team)</small><br/><small>team knowledge + API keys</small>"]
+    end
+
+    subgraph Projects["Project management"]
+        dwork["dwork<br/><small>tasks + docs + kanban</small>"]
     end
 
     dcontext -- "search / save" --> personal
@@ -103,9 +114,11 @@ graph TB
     style Agent fill:#1a1a2e,color:#fff,stroke:#16213e
     style Harness fill:#0f3460,color:#fff,stroke:#16213e
     style Memory fill:#533483,color:#fff,stroke:#16213e
+    style Projects fill:#0f3460,color:#fff,stroke:#16213e
     style Adapters fill:#1a1a2e,color:#fff,stroke:#16213e
     style personal fill:#e94560,color:#fff,stroke:#533483
     style shared fill:#7c3aed,color:#fff,stroke:#533483
+    style dwork fill:#e94560,color:#fff,stroke:#533483
 ```
 
 **Design principle:** one layer, one responsibility. If two products need to sync to function, it's wrong.
@@ -118,7 +131,8 @@ The [`examples/`](examples/) directory contains ready-to-run TypeScript examples
 | --- | --- | --- |
 | [`dbrain.ts`](examples/src/dbrain.ts) | `DBrainClient` | Health, entity CRUD, facts, search, memory summary, conversations, federation |
 | [`dproxy.ts`](examples/src/dproxy.ts) | `DProxyClient` | Batch ask, streaming, system prompts, file attachments, history, memory |
-| [`demo.ts`](examples/src/demo.ts) | Both | Combined smoke test |
+| [`dwork.ts`](examples/src/dwork.ts) | `DWorkClient` | Projects, tasks, docs, search, overview |
+| [`demo.ts`](examples/src/demo.ts) | All | Combined smoke test |
 
 ```bash
 cd examples
@@ -148,6 +162,7 @@ Per-package:
 
 ```bash
 pnpm --filter @dtoolkit/dbrain dev      # watch mode
+pnpm --filter @dtoolkit/dwork dev       # watch mode
 pnpm --filter @dtoolkit/dproxy build    # single build
 ```
 

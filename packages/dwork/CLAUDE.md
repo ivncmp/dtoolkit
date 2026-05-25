@@ -75,10 +75,28 @@ src/
 │   ├── sync.ts         CLI sync command
 │   └── keys.ts         CLI key management (create/list/revoke)
 ├── dashboard/
-│   ├── server.ts       Fastify static server on port+1
-│   └── index.html      Single-file React 18 app (kanban, search, overview)
+│   ├── server.ts       Fastify static server on port+1 (serves index.html + logos)
+│   └── index.html      Single-file React 18 app (CDN deps, Babel, no build step)
 └── fastify.d.ts        Type augmentation (db, config, dworkUser)
 ```
+
+### Dashboard (port 7882)
+
+Single-file React 18 app served via Fastify static on API port + 1. CDN deps (React, ReactDOM, Babel), no build step. Hash-based routing (`#/overview`, `#/projects`, `#/project/:slug`, `#/search`).
+
+**Views:**
+- **Overview** (default) — stats cards + project grid + global kanban showing all tasks from all projects with drag & drop
+- **Projects** — project list with task status badges, click to open detail
+- **Project detail** — tabs: Kanban (drag & drop), Tasks (table), Docs (file tree with inline MD editor)
+- **Search** — full-text search across tasks and docs
+
+**Features:**
+- Task detail modal — click a kanban card to open. Shows metadata, inline MD editor if detail doc exists, "Add Detail" button to create and link one
+- Modal dialogs for New Project and Add Task
+- Touch drag & drop on kanban (onTouchStart/Move/End + getBoundingClientRect hit-testing)
+- Light/Dark themes (Cloud/Ocean, oklch color system)
+- Mobile responsive: hamburger menu, sidebar overlay, card-style task tables, tasks tab hidden on mobile
+- Auth: bearer token validated against `/overview` (not `/health` which is unauthenticated)
 
 ## Data model
 

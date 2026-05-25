@@ -148,7 +148,16 @@ All endpoints require `Authorization: Bearer <token>` except `/health`.
 
 ## Dashboard
 
-Web dashboard on port `7879`. Shows brain stats, entities with PARA categories, fact tiers, conversations, and full-text search.
+Web dashboard on port `7879` (API port + 1). Single-file React 18 app — CDN deps, no build step.
+
+- Brain status with live pulse indicator and stats (entities, facts by tier, conversations).
+- Entity grid with PARA category coloring and hot/warm/cold tier badges.
+- Entity detail view with all facts.
+- Conversation list with source, date, and click-to-view messages.
+- Full-text search over all memories.
+- Light / Dark themes (Cloud / Ocean).
+- Mobile responsive with hamburger menu.
+- Token-based auth (validated against `/memory/summary`).
 
 ## Stack
 

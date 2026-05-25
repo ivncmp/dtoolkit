@@ -85,7 +85,7 @@ tools/
 - `src/server/routes/permissions.ts` — write permission enforcement
 - `src/mcp/` — MCP server on same port as REST (recall, remember, get/list/create entity, bump, log, overview, share, compact)
 - `src/core/` — db.ts (SQLite schema + FTS5 + migrations), models.ts (Zod), config.ts (brainType, connections), connections.ts (cached client pool), memory.ts (tier logic), compact.ts (dedup + tier recalc)
-- `src/dashboard/` — Single-file React app served via Fastify static (CDN deps, no build step)
+- `src/dashboard/` — Single-file React app served via Fastify static (CDN deps, no build step). Entity grid, conversations, search, Light/Dark themes, mobile responsive
 - init = server-side (creates brain), connect = client-side (configures Claude Code files)
 - Federation: recall auto-federates across connections, share pushes facts, search supports `federated: true`
 
@@ -106,7 +106,7 @@ tools/
 - `src/service/` — projects.ts (CRUD + scaffold), tasks.ts (CRUD via BACKLOG.md), docs.ts (numbered docs), search.ts (FTS5 OR), overview.ts (stats), sync.ts (via dproxy), utils.ts (genId)
 - `src/server/` — Fastify app with routes: projects, tasks, docs, search, overview, sync, keys, health, permissions
 - `src/mcp/` — 13 MCP tools + 1 resource (dwork://projects), all delegating to service layer
-- `src/dashboard/` — Single-file React 18 app (kanban, search, overview), served on port+1
+- `src/dashboard/` — Single-file React 18 app (CDN, no build step), served on port+1. Overview (default, global kanban), project detail (kanban/tasks/docs tabs), task detail modal with MD editor, file tree docs view, mobile responsive, Light/Dark themes
 - `src/cli/` — init wizard, start (server + dashboard), status, sync, configure, keys
 - Data stored in `~/.dwork/` (config.json, dwork.db, projects/)
 - Markdown files are source of truth; SQLite + FTS5 is just an index

@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">@dtoolkit/sdk</h1>
-<p align="center">Typed HTTP clients for dtoolkit services (dbrain + dproxy)</p>
+<p align="center">Typed HTTP clients for dtoolkit services (dbrain + dproxy + dwork)</p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@dtoolkit/sdk"><img src="https://img.shields.io/npm/v/@dtoolkit/sdk.svg" alt="npm"></a>
@@ -103,14 +103,56 @@ const history = await proxy.listHistory(10);
 const matches = await proxy.searchHistory("monads");
 ```
 
+### DWorkClient
+
+Connect to a [dwork](../dwork/) project manager:
+
+```ts
+import { DWorkClient } from "@dtoolkit/sdk";
+
+const work = new DWorkClient("http://localhost:7881", "sk-dwk_...");
+
+// Projects
+const projects = await work.listProjects();
+const project = await work.getProject("my-project");
+await work.createProject({ slug: "new-project", name: "New Project" });
+
+// Tasks
+const tasks = await work.listTasks("my-project", { status: "doing" });
+await work.addTask("my-project", {
+  title: "Implement auth",
+  priority: "P0",
+  status: "todo",
+});
+await work.updateTask("task_abc", { status: "done" });
+
+// Docs
+const docs = await work.listDocs("my-project");
+const doc = await work.getDoc("doc_xyz");
+await work.addDoc("my-project", {
+  title: "Auth Design",
+  body: "# Auth Design\n\n...",
+  type: "detail",
+});
+
+// Search & overview
+const results = await work.search("authentication");
+const overview = await work.overview();
+const next = await work.whatToDoNext("my-project");
+
+// Sync docs from source via dproxy
+await work.sync("my-project");
+```
+
 ## Authentication
 
 All dtoolkit services use unified `Authorization: Bearer <token>` authentication. Pass the token as the second constructor argument:
 
 ```ts
-// Both clients use the same auth mechanism
+// All clients use the same auth mechanism
 const brain = new DBrainClient("http://localhost:7878", "my-token");
 const proxy = new DProxyClient("http://localhost:7880", "my-token");
+const work = new DWorkClient("http://localhost:7881", "my-token");
 
 // Or use the options object
 const brain = new DBrainClient({
@@ -195,6 +237,33 @@ try {
 | `getConfig()` | Get full server config |
 | `getConfigValue(key)` | Get a config value by key |
 | `setConfigValue(key, value)` | Set a config value |
+
+### DWorkClient
+
+| Method | Description |
+| --- | --- |
+| `health()` | Server health check |
+| `listProjects(status?)` | List projects (filter by status) |
+| `getProject(slug)` | Get project details |
+| `createProject(project)` | Create a new project |
+| `updateProject(slug, changes)` | Update a project |
+| `deleteProject(slug)` | Delete a project |
+| `listTasks(project, filters?)` | List tasks (filter by status/priority) |
+| `addTask(project, task)` | Add a task to a project |
+| `updateTask(id, changes)` | Update a task |
+| `deleteTask(id)` | Delete a task |
+| `listDocs(project, type?)` | List documents (filter by type) |
+| `getDoc(id)` | Get document with content |
+| `addDoc(project, doc)` | Create a numbered document |
+| `updateDoc(id, changes)` | Update document content |
+| `deleteDoc(id)` | Delete a document |
+| `search(query, options?)` | Full-text search across tasks + docs |
+| `overview()` | Global stats + per-project summaries |
+| `whatToDoNext(project?)` | Suggested next tasks by priority/deadline |
+| `sync(project)` | Sync docs from source via dproxy |
+| `createApiKey(params)` | Create a per-user API key |
+| `listApiKeys()` | List API keys |
+| `revokeApiKey(id)` | Revoke an API key |
 
 ## License
 

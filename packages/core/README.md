@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../../logo.png" alt="dtoolkit" />
+  <img src="../../logo.png" alt="dtoolkit" width="420"/>
 </p>
 
 <h1 align="center">@dtoolkit/core</h1>

@@ -1,5 +1,11 @@
 # @dtoolkit/dcontext
 
+## 0.1.4
+
+### Patch Changes
+
+- cb27bfa: Fix hookSpecificOutput format for Claude Code session injection
+
 ## 0.1.3
 
 ### Patch Changes

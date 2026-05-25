@@ -1,0 +1,31 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import Hero from '../components/Hero.astro';
+import Features from '../components/Features.astro';
+import ProductTabs from '../components/ProductTabs';
+import Ecosystem from '../components/Ecosystem.astro';
+import Architecture from '../components/Architecture.astro';
+import QuickStart from '../components/QuickStart.astro';
+import CTA from '../components/CTA.astro';
+import Footer from '../components/Footer.astro';
+
+import '../styles/global.css';
+---
+
+<Layout
+  title="dtoolkit — Engineering toolkit for AI coding agents"
+  description="Open-source harness engineering toolkit. Memory, context, routing, observability and project management for your AI coding agents."
+>
+  <Navbar />
+  <main>
+    <Hero />
+    <Features />
+    <ProductTabs client:visible />
+    <Ecosystem />
+    <Architecture />
+    <QuickStart />
+    <CTA />
+  </main>
+  <Footer />
+</Layout>

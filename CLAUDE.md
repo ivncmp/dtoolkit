@@ -70,6 +70,9 @@ packages/
                        Commander-based CLI with context injection pipeline
                        Uses adapter packages for multi-provider support (--provider flag)
                        Build: tsup (single ESM bundle)
+landing/               Public website — Astro 6 + React 19 + Tailwind CSS 3
+                       Static site deployed to Vercel. Not a published package.
+                       Dev: cd landing && pnpm dev
 tools/
 └── tsconfig/          Shared base tsconfig (ES2022, NodeNext, strict)
 ```
@@ -159,7 +162,7 @@ All package READMEs follow this header format:
 
 ```html
 <p align="center">
-  <img src="../../logo.png" alt="dtoolkit" />
+  <img src="../../logo.png" alt="dtoolkit" width="420"/>
 </p>
 
 <h1 align="center">@dtoolkit/package-name</h1>

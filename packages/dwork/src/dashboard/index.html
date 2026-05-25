@@ -416,7 +416,7 @@ function LoginScreen({ onAuth }) {
 }
 
 /* ── SIDEBAR ──────────────────────────────────────────── */
-function Sidebar({ view, nav, onLogout, sidebarOpen }) {
+function Sidebar({ view, nav, onLogout, sidebarOpen, version }) {
   const [palette, setPalette] = useState(localStorage.getItem(THEME_KEY) || 'cloud');
   useEffect(() => { applyPalette(palette); }, [palette]);
   const togglePalette = (name) => { setPalette(name); localStorage.setItem(THEME_KEY, name); };
@@ -427,7 +427,7 @@ function Sidebar({ view, nav, onLogout, sidebarOpen }) {
         <img src="/logo-dwork.png" alt="dwork" />
         <div className="sb-logo-info">
           <span className="sb-logo-text">dwork</span>
-          <span className="sb-version">v0.1.0</span>
+          <span className="sb-version">v{version}</span>
         </div>
       </div>
       <div className="sb-nav">
@@ -1086,7 +1086,12 @@ function OverviewView({ nav }) {
 function App() {
   const [authed, setAuthed] = useState(!!localStorage.getItem(TOKEN_KEY));
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [version, setVersion] = useState('');
   const { route, segs, nav } = useRouter();
+
+  useEffect(() => {
+    fetch(`${API_BASE}/health`).then(r => r.json()).then(d => setVersion(d.version || '')).catch(() => {});
+  }, []);
 
   const handleLogout = () => { localStorage.removeItem(TOKEN_KEY); setAuthed(false); };
   const mobileNav = (path) => { nav(path); setSidebarOpen(false); };
@@ -1102,7 +1107,7 @@ function App() {
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
       </button>
       <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
-      <Sidebar view={view === 'project-detail' ? 'projects' : view} nav={mobileNav} onLogout={handleLogout} sidebarOpen={sidebarOpen} />
+      <Sidebar view={view === 'project-detail' ? 'projects' : view} nav={mobileNav} onLogout={handleLogout} sidebarOpen={sidebarOpen} version={version} />
       <div className="main">
         <div className="topbar">
           <span className="topbar-title">

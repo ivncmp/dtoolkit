@@ -59,7 +59,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .sb-link.active{background:var(--accent-light);color:var(--accent);font-weight:600}
 .sb-divider{height:1px;background:var(--border-subtle);margin:8px 12px}
 .sb-footer{padding:16px;font-size:11px;color:var(--text-3)}
-.main{margin-left:var(--sb);flex:1;padding:28px 32px;max-width:1400px}
+.main{margin-left:var(--sb);flex:1;padding:28px 32px}
 .page-title{font-size:24px;font-weight:700;letter-spacing:-.02em;margin-bottom:20px}
 .page-subtitle{font-size:13px;color:var(--text-2);margin-bottom:24px}
 
@@ -83,7 +83,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 
 /* Kanban */
 .kanban{display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;min-height:400px}
-.kanban-col{flex:0 0 240px;background:var(--surface-2);border-radius:var(--r);padding:12px;display:flex;flex-direction:column}
+.kanban-col{background:var(--surface-2);border-radius:var(--r);padding:12px;display:flex;flex-direction:column}
 .kanban-col-header{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
 .kanban-col-count{font-size:11px;font-weight:500;color:var(--text-3);font-family:var(--mono)}
 .kanban-cards{flex:1;display:flex;flex-direction:column;gap:8px;min-height:60px}
@@ -158,6 +158,17 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .back-btn:hover{color:var(--accent)}
 
 .empty{text-align:center;padding:40px;color:var(--text-3);font-size:14px}
+
+/* Delete button */
+.del-btn{
+  background:none;border:none;cursor:pointer;color:var(--text-3);
+  font-size:16px;line-height:1;padding:2px 4px;border-radius:3px;
+  transition:color .12s,background .12s;flex-shrink:0;
+}
+.del-btn:hover{color:var(--red);background:var(--red-bg)}
+
+/* Kanban full-width columns */
+.kanban-col{flex:1 1 0;min-width:180px}
 </style>
 </head>
 <body>
@@ -331,6 +342,15 @@ function KanbanView({ slug, tasks, onUpdate }) {
     setDragging(null);
   };
 
+  const handleDelete = async (e, taskId) => {
+    e.stopPropagation();
+    if (!confirm('Delete this task?')) return;
+    try {
+      await api(`/tasks/${taskId}`, { method: 'DELETE' });
+      onUpdate();
+    } catch {}
+  };
+
   return (
     <div className="kanban">
       {COLUMNS.map(col => (
@@ -346,7 +366,10 @@ function KanbanView({ slug, tasks, onUpdate }) {
             {grouped[col.key].map(task => (
               <div key={task.id} className={`kanban-card ${dragging === task.id ? 'dragging' : ''}`}
                 draggable onDragStart={e => handleDragStart(e, task)} onDragEnd={() => setDragging(null)}>
-                <div className="kanban-card-title">{task.title}</div>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+                  <div className="kanban-card-title">{task.title}</div>
+                  <button className="del-btn" onClick={e => handleDelete(e, task.id)} title="Delete task">×</button>
+                </div>
                 <div className="kanban-card-meta">
                   <span className={task.priority.toLowerCase()}>{task.priority}</span>
                   {task.type !== 'task' && <span className="s-todo">{task.type}</span>}
@@ -363,11 +386,15 @@ function KanbanView({ slug, tasks, onUpdate }) {
 }
 
 // ── Task Table ──
-function TaskTableView({ tasks }) {
+function TaskTableView({ tasks, onDelete }) {
   if (tasks.length === 0) return <div className="empty">No tasks</div>;
+  const handleDelete = async (taskId) => {
+    if (!confirm('Delete this task?')) return;
+    try { await api(`/tasks/${taskId}`, { method: 'DELETE' }); onDelete(); } catch {}
+  };
   return (
     <table className="task-table">
-      <thead><tr><th>Title</th><th>Status</th><th>Priority</th><th>Type</th><th>Estimate</th><th>Deadline</th></tr></thead>
+      <thead><tr><th>Title</th><th>Status</th><th>Priority</th><th>Type</th><th>Estimate</th><th>Deadline</th><th></th></tr></thead>
       <tbody>
         {tasks.map(t => (
           <tr key={t.id}>
@@ -377,6 +404,7 @@ function TaskTableView({ tasks }) {
             <td>{t.type}</td>
             <td style={{fontFamily:'var(--mono)',fontSize:12}}>{t.estimate || '—'}</td>
             <td style={{fontFamily:'var(--mono)',fontSize:12}}>{t.deadline || '—'}</td>
+            <td><button className="del-btn" onClick={() => handleDelete(t.id)} title="Delete task">×</button></td>
           </tr>
         ))}
       </tbody>
@@ -461,7 +489,7 @@ function ProjectDetail({ slug, onBack }) {
         ))}
       </div>
       {tab === 'kanban' && <KanbanView slug={slug} tasks={tasks} onUpdate={load} />}
-      {tab === 'tasks' && <TaskTableView tasks={tasks} />}
+      {tab === 'tasks' && <TaskTableView tasks={tasks} onDelete={load} />}
       {tab === 'roadmap' && (
         <div className="md-content">
           {roadmap ? <pre style={{whiteSpace:'pre-wrap',fontFamily:'var(--font)'}}>{roadmap}</pre> : <div className="empty">No roadmap content</div>}
@@ -570,31 +598,50 @@ function OverviewView({ onSelectProject }) {
   );
 }
 
+// ── Hash routing ──
+function parseHash() {
+  const h = window.location.hash.slice(1) || '/projects';
+  const parts = h.split('/').filter(Boolean);
+  if (parts[0] === 'project' && parts[1]) return { view: 'project-detail', slug: parts[1] };
+  return { view: parts[0] || 'projects', slug: null };
+}
+
+function setHash(view, slug) {
+  if (view === 'project-detail' && slug) window.location.hash = `#/project/${slug}`;
+  else window.location.hash = `#/${view}`;
+}
+
 // ── App ──
 function App() {
   const [authed, setAuthed] = useState(!!localStorage.getItem('dwork_token'));
-  const [view, setView] = useState('projects');
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [route, setRoute] = useState(parseHash);
+
+  useEffect(() => {
+    const onHash = () => setRoute(parseHash());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  const view = route.view;
+  const selectedProject = route.slug;
 
   const handleLogout = () => {
     localStorage.removeItem('dwork_token');
     setAuthed(false);
   };
 
-  const handleSelectProject = (slug) => {
-    setSelectedProject(slug);
-    setView('project-detail');
-  };
+  const handleSelectProject = (slug) => setHash('project-detail', slug);
+  const navigate = (v) => setHash(v, null);
 
   if (!authed) return <AuthScreen onAuth={() => setAuthed(true)} />;
 
   return (
     <div className="shell">
-      <Sidebar view={view === 'project-detail' ? 'projects' : view} setView={(v) => { setView(v); setSelectedProject(null); }} onLogout={handleLogout} />
+      <Sidebar view={view === 'project-detail' ? 'projects' : view} setView={navigate} onLogout={handleLogout} />
       <div className="main">
         {view === 'projects' && <ProjectsView onSelect={handleSelectProject} />}
         {view === 'project-detail' && selectedProject && (
-          <ProjectDetail slug={selectedProject} onBack={() => { setView('projects'); setSelectedProject(null); }} />
+          <ProjectDetail slug={selectedProject} onBack={() => navigate('projects')} />
         )}
         {view === 'overview' && <OverviewView onSelectProject={handleSelectProject} />}
         {view === 'search' && <SearchView />}

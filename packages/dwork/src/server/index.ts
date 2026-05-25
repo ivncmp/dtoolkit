@@ -4,7 +4,14 @@ import Fastify from 'fastify';
 import type { Config } from '../core/config.js';
 import { mountMcp } from '../mcp/server.js';
 
+import { docRoutes } from './routes/docs.js';
 import { healthRoutes } from './routes/health.js';
+import { keyRoutes } from './routes/keys.js';
+import { overviewRoutes } from './routes/overview.js';
+import { projectRoutes } from './routes/projects.js';
+import { searchRoutes } from './routes/search.js';
+import { syncRoutes } from './routes/sync.js';
+import { taskRoutes } from './routes/tasks.js';
 
 export function createServer(config: Config, db: Database.Database) {
   const app = Fastify({ logger: true });
@@ -62,6 +69,13 @@ export function createServer(config: Config, db: Database.Database) {
   });
 
   app.register(healthRoutes);
+  app.register(projectRoutes);
+  app.register(taskRoutes);
+  app.register(docRoutes);
+  app.register(searchRoutes);
+  app.register(overviewRoutes);
+  app.register(syncRoutes);
+  app.register(keyRoutes);
   mountMcp(app);
 
   return app;

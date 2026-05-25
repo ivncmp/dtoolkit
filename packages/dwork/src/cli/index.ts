@@ -54,4 +54,50 @@ program
     await status(path);
   });
 
+program
+  .command('sync')
+  .description('Sync project docs from source code via dproxy')
+  .argument('<project>', 'Project slug')
+  .option('--path <path>', 'Data path')
+  .action(async (project: string, opts: { path?: string }) => {
+    const { sync } = await import('./sync.js');
+    await sync(project, opts);
+  });
+
+program
+  .command('configure')
+  .description('Reconfigure dwork (interactive)')
+  .argument('[path]', 'Data path')
+  .action(async (path: string | undefined) => {
+    const { configure } = await import('./configure.js');
+    await configure(path);
+  });
+
+program
+  .command('keys')
+  .description('Manage API keys')
+  .argument('<action>', 'create | list | revoke')
+  .option('--url <url>', 'dwork URL (or DWORK_URL env)')
+  .option('--token <token>', 'Admin token (or DWORK_TOKEN env)')
+  .option('--user-id <userId>', 'User ID (create)')
+  .option('--user-name <userName>', 'User display name (create)')
+  .option('--permissions <perms>', 'read | write | read+write (create, default: read+write)')
+  .option('--key-id <keyId>', 'Key ID (revoke)')
+  .action(
+    async (
+      action: string,
+      opts: {
+        url?: string;
+        token?: string;
+        userId?: string;
+        userName?: string;
+        permissions?: string;
+        keyId?: string;
+      },
+    ) => {
+      const { keys } = await import('./keys.js');
+      await keys(action, opts);
+    },
+  );
+
 program.parse();

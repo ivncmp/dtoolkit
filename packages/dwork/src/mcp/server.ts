@@ -258,7 +258,7 @@ export function createMcpServer(app: FastifyInstance) {
       },
     },
     async ({ project }) => {
-      return json(syncService.syncProject(db, config, project));
+      return json(await syncService.syncProject(db, config, project));
     },
   );
 

@@ -85,10 +85,23 @@ export function indexProject(
   return result;
 }
 
+function deleteFtsTask(db: Database.Database, taskId: string): void {
+  const row = db.prepare('SELECT rowid FROM tasks WHERE id = ?').get(taskId) as
+    | { rowid: number }
+    | undefined;
+  if (!row) return;
+  db.prepare('DELETE FROM tasks_fts WHERE rowid = ?').run(row.rowid);
+}
+
 function indexBacklogTasks(db: Database.Database, projectSlug: string, content: string): number {
   const parsed = parseBacklog(content, projectSlug);
 
-  db.prepare('DELETE FROM tasks_fts WHERE project_slug = ?').run(projectSlug);
+  const existingTasks = db
+    .prepare('SELECT id FROM tasks WHERE project_slug = ?')
+    .all(projectSlug) as { id: string }[];
+  for (const t of existingTasks) {
+    deleteFtsTask(db, t.id);
+  }
   db.prepare('DELETE FROM tasks WHERE project_slug = ?').run(projectSlug);
 
   const insertTask = db.prepare(
@@ -143,32 +156,11 @@ function insertFtsDoc(
 }
 
 function deleteFtsDoc(db: Database.Database, docId: string): void {
-  const row = db
-    .prepare('SELECT rowid, title, type, project_slug FROM docs WHERE id = ?')
-    .get(docId) as { rowid: number; title: string; type: string; project_slug: string } | undefined;
-  if (!row) return;
-
-  const doc = db.prepare('SELECT file_path FROM docs WHERE id = ?').get(docId) as
-    | { file_path: string }
+  const row = db.prepare('SELECT rowid FROM docs WHERE id = ?').get(docId) as
+    | { rowid: number }
     | undefined;
-  if (!doc) return;
-
-  const projectPath = db
-    .prepare('SELECT path FROM projects WHERE slug = ?')
-    .get(row.project_slug) as { path: string } | undefined;
-  let body = '';
-  if (projectPath) {
-    try {
-      body = readFileSync(join(projectPath.path, doc.file_path), 'utf-8');
-      body = parseFrontmatter(body).body;
-    } catch {
-      // file may have been removed
-    }
-  }
-
-  db.prepare(
-    "INSERT INTO docs_fts(docs_fts, rowid, title, body, project_slug, type) VALUES('delete', ?, ?, ?, ?, ?)",
-  ).run(row.rowid, row.title, body, row.project_slug, row.type);
+  if (!row) return;
+  db.prepare('DELETE FROM docs_fts WHERE rowid = ?').run(row.rowid);
 }
 
 function insertFtsTask(

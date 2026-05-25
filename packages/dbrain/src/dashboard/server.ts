@@ -16,20 +16,20 @@ const MIME: Record<string, string> = {
 
 export function startDashboard(port: number) {
   const app = Fastify();
-  const logoC = readFileSync(join(__dirname, 'logo-complete.png'));
-  const logoI = readFileSync(join(__dirname, 'logo-image.png'));
+  const logoSquare = readFileSync(join(__dirname, 'logo-dbrain.png'));
+  const logoComplete = readFileSync(join(__dirname, 'logo-dbrain-complete.png'));
 
   app.get('/', (_, reply) => {
     const html = readFileSync(join(__dirname, 'index.html'), 'utf-8');
     reply.type('text/html').send(html);
   });
 
-  app.get('/logo-image.png', (_, reply) => {
-    reply.type('image/png').send(logoI);
+  app.get('/logo-dbrain.png', (_, reply) => {
+    reply.type('image/png').send(logoSquare);
   });
 
-  app.get('/logo-complete.png', (_, reply) => {
-    reply.type('image/png').send(logoC);
+  app.get('/logo-dbrain-complete.png', (_, reply) => {
+    reply.type('image/png').send(logoComplete);
   });
 
   app.get('/:file', (req, reply) => {

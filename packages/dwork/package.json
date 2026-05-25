@@ -37,7 +37,7 @@
   "scripts": {
     "dev": "tsx watch src/cli/index.ts start",
     "cli": "tsx src/cli/index.ts",
-    "build": "tsc && mkdir -p dist/dashboard && cp src/dashboard/index.html dist/dashboard/ && chmod +x dist/cli/index.js",
+    "build": "tsc && mkdir -p dist/dashboard && cp src/dashboard/index.html src/dashboard/logo*.png dist/dashboard/ && chmod +x dist/cli/index.js",
     "start": "node dist/cli/index.js start",
     "test": "vitest run --passWithNoTests"
   },

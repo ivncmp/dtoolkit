@@ -8,10 +8,20 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export function startDashboard(port: number) {
   const app = Fastify();
+  const logoSquare = readFileSync(join(__dirname, 'logo-dwork.png'));
+  const logoComplete = readFileSync(join(__dirname, 'logo-dwork-complete.png'));
 
   app.get('/', (_, reply) => {
     const html = readFileSync(join(__dirname, 'index.html'), 'utf-8');
     reply.type('text/html').send(html);
+  });
+
+  app.get('/logo-dwork.png', (_, reply) => {
+    reply.type('image/png').send(logoSquare);
+  });
+
+  app.get('/logo-dwork-complete.png', (_, reply) => {
+    reply.type('image/png').send(logoComplete);
   });
 
   app.listen({ port, host: '0.0.0.0' }, (err) => {

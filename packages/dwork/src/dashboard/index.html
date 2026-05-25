@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>dwork — Project Manager</title>
+<link rel="icon" type="image/png" href="/logo-dwork.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -38,16 +39,25 @@
   --r:8px;
 }
 html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ── LAYOUT ─────────────────────────────── */
 .shell{display:flex;min-height:100vh}
 .sidebar{
   width:var(--sb);flex-shrink:0;position:fixed;top:0;left:0;bottom:0;
   background:var(--sidebar-bg);border-right:1px solid var(--border-subtle);
   display:flex;flex-direction:column;overflow:hidden;z-index:50;
 }
-.sb-header{padding:24px 20px 16px}
-.sb-title{font-size:22px;font-weight:700;letter-spacing:-.03em;color:var(--accent)}
-.sb-subtitle{font-size:11px;color:var(--text-3);margin-top:2px}
-.sb-nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:2px}
+.sb-logo{padding:24px 20px 8px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.sb-logo img{width:100px;height:auto;display:block}
+.sb-logo-info{display:flex;flex-direction:column;align-items:center;gap:4px}
+.sb-logo-text{font-size:18px;font-weight:700;letter-spacing:-.03em;color:var(--text)}
+.sb-version{
+  font-size:10px;font-family:var(--mono);font-weight:500;
+  color:var(--text-3);background:var(--surface-2);
+  border:1px solid var(--border-subtle);
+  border-radius:4px;padding:2px 7px;display:inline-block;
+}
+.sb-nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:2px}
 .sb-link{
   display:flex;align-items:center;gap:10px;padding:9px 12px;
   border-radius:var(--r);cursor:pointer;border:none;background:none;
@@ -57,44 +67,125 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 }
 .sb-link:hover{background:var(--surface-2);color:var(--text)}
 .sb-link.active{background:var(--accent-light);color:var(--accent);font-weight:600}
-.sb-divider{height:1px;background:var(--border-subtle);margin:8px 12px}
-.sb-footer{padding:16px;font-size:11px;color:var(--text-3)}
-.main{margin-left:var(--sb);flex:1;padding:28px 32px}
-.page-title{font-size:24px;font-weight:700;letter-spacing:-.02em;margin-bottom:20px}
+.sb-link svg{flex-shrink:0;opacity:.7}
+.sb-link.active svg{opacity:1}
+.sb-divider{height:1px;background:var(--border-subtle);margin:10px 12px}
+.sb-footer{padding:16px;display:flex;flex-direction:column;gap:10px}
+.palette-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface-2);border:1px solid var(--border-subtle);
+  border-radius:var(--r);padding:8px 12px;
+}
+.palette-toggle-label{font-size:12px;font-weight:500;color:var(--text-2)}
+.palette-toggle-switch{
+  display:flex;gap:2px;background:var(--bg);
+  border:1px solid var(--border-subtle);border-radius:6px;padding:2px;
+}
+.palette-toggle-opt{
+  padding:3px 9px;border-radius:4px;font-size:11px;font-weight:600;
+  border:none;background:none;font-family:var(--font);cursor:pointer;
+  color:var(--text-3);transition:all .12s;
+}
+.palette-toggle-opt.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px oklch(0 0 0/.1)}
+.sb-user{display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:8px}
+.sb-user-info{flex:1;min-width:0}
+.sb-user-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.sb-user-role{font-size:10px;color:var(--text-3);font-family:var(--mono)}
+.sb-logout{padding:3px 8px;border:1px solid var(--border);border-radius:5px;background:none;color:var(--text-3);font-size:10px;cursor:pointer;flex-shrink:0;transition:all .15s}
+.sb-logout:hover{border-color:#ef4444;color:#ef4444;background:oklch(0.95 0.05 25)}
+
+.main{margin-left:var(--sb);flex:1;min-width:0}
+.topbar{
+  position:sticky;top:0;z-index:40;
+  background:oklch(from var(--bg) l c h / .92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border-subtle);
+  display:flex;align-items:center;gap:12px;padding:0 32px;height:52px;
+}
+.topbar-title{font-size:14px;font-weight:600;color:var(--text);flex:none}
+.page{padding:28px 32px 80px}
+.page-title{font-size:24px;font-weight:700;letter-spacing:-.03em;margin-bottom:20px}
 .page-subtitle{font-size:13px;color:var(--text-2);margin-bottom:24px}
 
-/* Auth */
-.auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)}
-.auth-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;width:380px;text-align:center}
-.auth-box h1{font-size:22px;font-weight:700;margin-bottom:6px;color:var(--accent)}
-.auth-box p{font-size:13px;color:var(--text-2);margin-bottom:20px}
-.auth-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:13px;outline:none;margin-bottom:12px}
-.auth-input:focus{border-color:var(--accent)}
-.auth-btn{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer}
+/* ── LOGIN ──────────────────────────────── */
+.login-bg{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 90% 70% at 50% -10%,oklch(.42 .15 252/.18) 0%,var(--bg) 60%);
+  position:relative;
+}
+.login-bg::before{
+  content:'';position:absolute;inset:0;
+  background-image:linear-gradient(var(--border-subtle) 1px,transparent 1px),linear-gradient(90deg,var(--border-subtle) 1px,transparent 1px);
+  background-size:36px 36px;opacity:.5;
+}
+.login-card{
+  position:relative;z-index:1;background:var(--surface);
+  border:1px solid var(--border);border-radius:16px;
+  padding:40px 44px;width:400px;text-align:center;
+  box-shadow:0 20px 60px oklch(0 0 0/.12),0 0 0 1px oklch(from var(--accent) l c h /.08);
+}
+.login-logo{width:200px;height:auto;margin:0 auto 24px;display:block}
+.login-token-label{font-size:13px;color:var(--text-2);margin-bottom:10px;text-align:left}
+.login-input{
+  width:100%;padding:11px 14px;background:var(--surface-2);
+  border:1.5px solid var(--border);border-radius:var(--r);
+  font-family:var(--mono);font-size:13.5px;color:var(--text);outline:none;
+  transition:border-color .15s;margin-bottom:10px;
+}
+.login-input:focus{border-color:var(--accent)}
+.login-input.err{border-color:#e53e3e}
+.login-hint{font-size:12px;color:var(--text-3);margin-bottom:14px}
+.login-err{font-size:12px;color:#e53e3e;margin-bottom:14px}
+.login-btn{
+  width:100%;padding:11px;background:var(--accent);color:#fff;border:none;
+  border-radius:var(--r);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;
+  transition:opacity .12s;
+}
+.login-btn:hover{opacity:.9}
 
-/* Cards grid */
-.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:box-shadow .15s,border-color .15s}
-.card:hover{border-color:var(--accent);box-shadow:0 2px 12px oklch(0 0 0/.06)}
-.card-name{font-size:16px;font-weight:600;margin-bottom:4px}
-.card-desc{font-size:12px;color:var(--text-2);margin-bottom:12px}
-.card-stats{display:flex;gap:8px;flex-wrap:wrap}
-.stat-badge{font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;font-family:var(--mono)}
+/* ── STATS ──────────────────────────────── */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border-subtle);
+  border-radius:var(--r);padding:18px 16px 14px;
+  transition:border-color .15s,box-shadow .15s;
+}
+.stat-card:hover{border-color:var(--border);box-shadow:0 2px 12px oklch(0 0 0/.06)}
+.stat-num{font-size:28px;font-weight:700;letter-spacing:-.04em;line-height:1;margin-bottom:5px;color:var(--accent);font-family:var(--mono)}
+.stat-lbl{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3)}
 
-/* Kanban */
+/* ── CARDS ──────────────────────────────── */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.card{
+  background:var(--surface);border:1px solid var(--border-subtle);
+  border-radius:var(--r);padding:18px;cursor:pointer;
+  transition:transform .12s,box-shadow .15s,border-color .15s;
+  position:relative;overflow:hidden;
+}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px oklch(0 0 0/.08);border-color:var(--border)}
+.card-name{font-size:15px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px}
+.card-desc{font-size:12px;color:var(--text-2);margin-bottom:10px}
+.card-stats{display:flex;gap:6px;flex-wrap:wrap}
+.stat-badge{
+  display:inline-flex;align-items:center;
+  font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:4px;
+  letter-spacing:.04em;text-transform:uppercase;font-family:var(--mono);
+}
+
+/* ── KANBAN ─────────────────────────────── */
 .kanban{display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;min-height:400px}
-.kanban-col{background:var(--surface-2);border-radius:var(--r);padding:12px;display:flex;flex-direction:column}
+.kanban-col{flex:1 1 0;min-width:180px;background:var(--surface-2);border-radius:var(--r);padding:12px;display:flex;flex-direction:column}
 .kanban-col-header{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
 .kanban-col-count{font-size:11px;font-weight:500;color:var(--text-3);font-family:var(--mono)}
 .kanban-cards{flex:1;display:flex;flex-direction:column;gap:8px;min-height:60px}
 .kanban-cards.drag-over{background:var(--accent-light);border-radius:6px}
 .kanban-card{
   background:var(--surface);border:1px solid var(--border-subtle);border-radius:6px;padding:10px 12px;
-  cursor:grab;transition:box-shadow .12s,opacity .12s;font-size:13px;
+  cursor:grab;transition:box-shadow .12s,opacity .12s,transform .12s;font-size:13px;
 }
 .kanban-card:active{cursor:grabbing}
 .kanban-card.dragging{opacity:.4}
-.kanban-card:hover{box-shadow:0 2px 8px oklch(0 0 0/.06)}
+.kanban-card:hover{box-shadow:0 2px 8px oklch(0 0 0/.06);transform:translateY(-1px)}
 .kanban-card-title{font-weight:500;margin-bottom:6px;line-height:1.3}
 .kanban-card-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .kanban-card-meta span{font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;font-family:var(--mono)}
@@ -112,54 +203,50 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .s-blocked{background:var(--red-bg);color:var(--red)}
 .s-done{background:var(--green-bg);color:var(--green)}
 
-/* Tabs */
+/* ── TABS ──────────────────────────────── */
 .tabs{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid var(--border)}
 .tab{padding:10px 16px;font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;border:none;background:none;font-family:var(--font);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .12s}
 .tab:hover{color:var(--text)}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
 
-/* Table */
+/* ── TABLE ─────────────────────────────── */
 .task-table{width:100%;border-collapse:collapse;font-size:13px}
 .task-table th{text-align:left;padding:10px 12px;color:var(--text-3);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border)}
 .task-table td{padding:10px 12px;border-bottom:1px solid var(--border-subtle)}
 .task-table tr:hover td{background:var(--surface-2)}
 
-/* Markdown content */
-.md-content{font-size:14px;line-height:1.7;color:var(--text)}
-.md-content h1,.md-content h2,.md-content h3{font-weight:600;margin:16px 0 8px}
-.md-content ul,.md-content ol{padding-left:24px;margin:8px 0}
-.md-content code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:2px 6px;border-radius:3px}
-
-/* Search */
+/* ── SEARCH ────────────────────────────── */
 .search-bar{display:flex;gap:8px;margin-bottom:20px}
-.search-input{flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r);font-family:var(--font);font-size:14px;outline:none}
+.search-input{
+  flex:1;padding:10px 14px;background:var(--surface);
+  border:1px solid var(--border-subtle);border-radius:20px;
+  font-family:var(--font);font-size:14px;outline:none;
+  transition:border-color .15s;
+}
 .search-input:focus{border-color:var(--accent)}
-.search-btn{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer}
-.search-result{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r);padding:14px 16px;margin-bottom:8px}
+.search-btn{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:20px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer}
+.search-result{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r);padding:14px 16px;margin-bottom:8px;transition:border-color .12s}
+.search-result:hover{border-color:var(--border)}
 .search-result-type{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
 .search-result-title{font-size:14px;font-weight:500}
 .search-result-meta{font-size:11px;color:var(--text-3);margin-top:4px;font-family:var(--mono)}
 
-/* Overview stats */
-.stats-row{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;min-width:140px;flex:1}
-.stat-card-value{font-size:28px;font-weight:700;color:var(--accent);font-family:var(--mono)}
-.stat-card-label{font-size:12px;color:var(--text-2);margin-top:4px}
-
-/* New project form */
-.form-row{display:flex;gap:12px;margin-bottom:12px}
-.form-input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r);font-family:var(--font);font-size:13px;outline:none}
+/* ── FORMS ─────────────────────────────── */
+.form-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
+.form-input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);font-family:var(--font);font-size:13px;color:var(--text);outline:none}
 .form-input:focus{border-color:var(--accent)}
-.form-btn{padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer}
-.form-btn:hover{opacity:.9}
-.form-btn-secondary{padding:8px 16px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);border-radius:var(--r);font-family:var(--font);font-size:13px;cursor:pointer}
+.form-btn{padding:8px 16px;border:none;border-radius:6px;background:var(--accent);color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer}
+.form-btn:hover{opacity:.85}
 
-.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);cursor:pointer;border:none;background:none;font-family:var(--font);margin-bottom:16px;padding:4px 0}
-.back-btn:hover{color:var(--accent)}
+/* ── MISC ──────────────────────────────── */
+.back-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:none;border:none;color:var(--text-2);
+  font-family:var(--font);font-size:13px;font-weight:500;padding:4px 0;
+  cursor:pointer;transition:color .12s;margin-bottom:16px;
+}
+.back-btn:hover{color:var(--text)}
 
-.empty{text-align:center;padding:40px;color:var(--text-3);font-size:14px}
-
-/* Delete button */
 .del-btn{
   background:none;border:none;cursor:pointer;color:var(--text-3);
   font-size:16px;line-height:1;padding:2px 4px;border-radius:3px;
@@ -167,88 +254,178 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 }
 .del-btn:hover{color:var(--red);background:var(--red-bg)}
 
-/* Kanban full-width columns */
-.kanban-col{flex:1 1 0;min-width:180px}
+.md-content{font-size:14px;line-height:1.7;color:var(--text)}
+.md-content h1,.md-content h2,.md-content h3{font-weight:600;margin:16px 0 8px}
+.md-content code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:2px 6px;border-radius:3px}
+
+.loading{display:flex;align-items:center;justify-content:center;height:60vh;color:var(--text-3);font-size:13px}
+.empty{color:var(--text-3);font-size:13px;padding:32px;text-align:center;background:var(--surface);border-radius:var(--r);border:1px solid var(--border-subtle)}
+
+.sec-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.sec-title{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3)}
+.sec-badge{font-size:11px;font-family:var(--mono);color:var(--text-3);background:var(--surface-2);border:1px solid var(--border-subtle);padding:1px 8px;border-radius:20px}
+
+/* ── MOBILE HAMBURGER ──────────────────── */
+.mobile-toggle{
+  display:none;position:fixed;top:10px;left:10px;z-index:60;
+  width:36px;height:36px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface);cursor:pointer;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px oklch(0 0 0/.08);
+}
+.mobile-toggle svg{color:var(--text)}
+.sidebar-overlay{display:none;position:fixed;inset:0;z-index:45;background:oklch(0 0 0/.3)}
+
+/* ── RESPONSIVE ────────────────────────── */
+@media(max-width:768px){
+  .mobile-toggle{display:flex}
+  .sidebar{transform:translateX(-100%);transition:transform .2s}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay.open{display:block}
+  .main{margin-left:0}
+  .topbar{padding:0 16px;padding-left:52px}
+  .page{padding:20px 16px 60px}
+  .page-title{font-size:20px}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .card-grid{grid-template-columns:1fr}
+  .kanban{flex-direction:column}
+  .kanban-col{min-width:0}
+  .task-table{font-size:12px}
+  .task-table th,.task-table td{padding:8px 6px}
+  .search-bar{flex-direction:column}
+  .search-btn{width:100%}
+  .form-row{flex-direction:column}
+  .form-input{width:100%}
+  .login-card{width:calc(100vw - 32px);padding:28px 20px}
+  .login-logo{width:160px}
+}
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useEffect, useCallback, useRef } = React;
+const { useState, useEffect, useCallback } = React;
 
-const API_PORT = window.location.port ? parseInt(window.location.port) - 1 : 7881;
-const API_BASE = `${window.location.protocol}//${window.location.hostname}:${API_PORT}`;
+const TOKEN_KEY = 'dwork_token';
+const THEME_KEY = 'dwork_theme';
+const API_BASE = `http://${window.location.hostname}:${Number(window.location.port) - 1}`;
 
+/* ── PALETTES ─────────────────────────────────────────── */
+const PALETTES = {
+  cloud: {'--bg':'oklch(0.965 0.008 248)','--sidebar-bg':'oklch(0.99 0.003 250)','--surface':'oklch(1 0 0)','--surface-2':'oklch(0.95 0.010 248)','--border':'oklch(0.87 0.018 248)','--border-subtle':'oklch(0.92 0.010 248)','--text':'oklch(0.20 0.06 252)','--text-2':'oklch(0.42 0.05 250)','--text-3':'oklch(0.60 0.04 248)','--accent':'oklch(0.50 0.22 252)','--accent-light':'oklch(0.94 0.06 252)'},
+  ocean: {'--bg':'oklch(0.11 0.04 254)','--sidebar-bg':'oklch(0.13 0.046 254)','--surface':'oklch(0.16 0.04 252)','--surface-2':'oklch(0.20 0.04 250)','--border':'oklch(0.26 0.05 250)','--border-subtle':'oklch(0.19 0.04 252)','--text':'oklch(0.93 0.015 245)','--text-2':'oklch(0.65 0.06 245)','--text-3':'oklch(0.47 0.05 248)','--accent':'oklch(0.68 0.20 245)','--accent-light':'oklch(0.68 0.20 245 /.15)'},
+};
+
+function applyPalette(name) {
+  const p = PALETTES[name] || PALETTES.cloud;
+  Object.entries(p).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
+}
+
+/* ── API HELPER ───────────────────────────────────────── */
 function api(path, opts = {}) {
-  const token = localStorage.getItem('dwork_token');
-  const headers = {};
+  const token = localStorage.getItem(TOKEN_KEY) || '';
+  const headers = { 'Authorization': `Bearer ${token}` };
   if (opts.body) headers['Content-Type'] = 'application/json';
-  if (token) headers['Authorization'] = `Bearer ${token}`;
   return fetch(`${API_BASE}${path}`, { ...opts, headers }).then(r => {
     if (!r.ok) throw new Error(`${r.status}`);
     return r.json();
   });
 }
 
-// ── Auth ──
-function AuthScreen({ onAuth }) {
+/* ── ROUTER ───────────────────────────────────────────── */
+function useRouter() {
+  const [hash, setHash] = useState(window.location.hash || '#/');
+  useEffect(() => {
+    const h = () => setHash(window.location.hash || '#/');
+    window.addEventListener('hashchange', h);
+    return () => window.removeEventListener('hashchange', h);
+  }, []);
+  const nav = (p) => { window.location.hash = p; };
+  const route = hash.replace('#', '') || '/';
+  const segs = route.split('/').filter(Boolean);
+  return { route, segs, nav };
+}
+
+/* ── SVG ICONS ────────────────────────────────────────── */
+const Icon = {
+  projects: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  overview: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>,
+  search: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
+};
+
+/* ── LOGIN ────────────────────────────────────────────── */
+function LoginScreen({ onAuth }) {
   const [token, setToken] = useState('');
   const [error, setError] = useState('');
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      localStorage.setItem('dwork_token', token);
-      await api('/health');
+      localStorage.setItem(TOKEN_KEY, token);
+      await api('/overview');
       onAuth();
     } catch {
       setError('Invalid token or server not running');
-      localStorage.removeItem('dwork_token');
+      localStorage.removeItem(TOKEN_KEY);
     }
   };
   return (
-    <div className="auth-screen">
-      <form className="auth-box" onSubmit={handleSubmit}>
-        <h1>dwork</h1>
-        <p>Enter your access token to connect</p>
-        <input className="auth-input" type="password" placeholder="sk-dwk_..." value={token}
-          onChange={e => { setToken(e.target.value); setError(''); }} autoFocus />
-        {error && <p style={{color:'var(--red)',fontSize:12,marginBottom:12}}>{error}</p>}
-        <button className="auth-btn" type="submit">Connect</button>
+    <div className="login-bg">
+      <form className="login-card" onSubmit={handleSubmit}>
+        <img className="login-logo" src="/logo-dwork-complete.png" alt="dwork" />
+        <div className="login-token-label">Access token</div>
+        <input className={`login-input ${error ? 'err' : ''}`} type="password" placeholder="sk-dwk_..."
+          value={token} onChange={e => { setToken(e.target.value); setError(''); }} autoFocus />
+        {error ? <div className="login-err">{error}</div> : <div className="login-hint">Find your token in ~/.dwork/config.json</div>}
+        <button className="login-btn" type="submit">Connect</button>
       </form>
     </div>
   );
 }
 
-// ── Sidebar ──
-function Sidebar({ view, setView, onLogout }) {
+/* ── SIDEBAR ──────────────────────────────────────────── */
+function Sidebar({ view, nav, onLogout, sidebarOpen }) {
+  const [palette, setPalette] = useState(localStorage.getItem(THEME_KEY) || 'cloud');
+  useEffect(() => { applyPalette(palette); }, [palette]);
+  const togglePalette = (name) => { setPalette(name); localStorage.setItem(THEME_KEY, name); };
+
   return (
-    <div className="sidebar">
-      <div className="sb-header">
-        <div className="sb-title">dwork</div>
-        <div className="sb-subtitle">Project Manager</div>
+    <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <div className="sb-logo">
+        <img src="/logo-dwork.png" alt="dwork" />
+        <div className="sb-logo-info">
+          <span className="sb-logo-text">dwork</span>
+          <span className="sb-version">v0.1.0</span>
+        </div>
       </div>
       <div className="sb-nav">
-        <button className={`sb-link ${view === 'projects' ? 'active' : ''}`} onClick={() => setView('projects')}>
-          Projects
+        <button className={`sb-link ${view === 'projects' ? 'active' : ''}`} onClick={() => nav('#/projects')}>
+          <Icon.projects /> Projects
         </button>
-        <button className={`sb-link ${view === 'overview' ? 'active' : ''}`} onClick={() => setView('overview')}>
-          Overview
+        <button className={`sb-link ${view === 'overview' ? 'active' : ''}`} onClick={() => nav('#/overview')}>
+          <Icon.overview /> Overview
         </button>
-        <button className={`sb-link ${view === 'search' ? 'active' : ''}`} onClick={() => setView('search')}>
-          Search
-        </button>
-        <div className="sb-divider" />
-        <button className="sb-link" onClick={onLogout} style={{color:'var(--red)'}}>
-          Logout
+        <button className={`sb-link ${view === 'search' ? 'active' : ''}`} onClick={() => nav('#/search')}>
+          <Icon.search /> Search
         </button>
       </div>
-      <div className="sb-footer">Part of the dtoolkit suite</div>
+      <div className="sb-footer">
+        <div className="palette-toggle">
+          <span className="palette-toggle-label">Theme</span>
+          <div className="palette-toggle-switch">
+            <button className={`palette-toggle-opt ${palette === 'cloud' ? 'active' : ''}`} onClick={() => togglePalette('cloud')}>Cloud</button>
+            <button className={`palette-toggle-opt ${palette === 'ocean' ? 'active' : ''}`} onClick={() => togglePalette('ocean')}>Ocean</button>
+          </div>
+        </div>
+        <div className="sb-user">
+          <div className="sb-user-info"><span className="sb-user-name">Admin</span><span className="sb-user-role">read+write</span></div>
+          <button className="sb-logout" onClick={onLogout}>Logout</button>
+        </div>
+      </div>
     </div>
   );
 }
 
-// ── Project Cards ──
-function ProjectsView({ onSelect }) {
+/* ── PROJECTS VIEW ────────────────────────────────────── */
+function ProjectsView({ nav }) {
   const [projects, setProjects] = useState([]);
   const [showNew, setShowNew] = useState(false);
   const [slug, setSlug] = useState('');
@@ -265,7 +442,7 @@ function ProjectsView({ onSelect }) {
   };
 
   return (
-    <div>
+    <div className="page">
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
         <h1 className="page-title" style={{margin:0}}>Projects</h1>
         <button className="form-btn" onClick={() => setShowNew(!showNew)}>
@@ -286,7 +463,7 @@ function ProjectsView({ onSelect }) {
       ) : (
         <div className="card-grid">
           {projects.map(p => (
-            <div key={p.slug} className="card" onClick={() => onSelect(p.slug)}>
+            <div key={p.slug} className="card" onClick={() => nav(`#/project/${p.slug}`)}>
               <div className="card-name">{p.name}</div>
               <div className="card-desc">{p.description || p.slug}</div>
               <div className="card-stats">
@@ -303,7 +480,7 @@ function ProjectsView({ onSelect }) {
   );
 }
 
-// ── Kanban ──
+/* ── KANBAN ────────────────────────────────────────────── */
 const COLUMNS = [
   { key: 'todo', label: 'To Do', color: 'var(--text-3)' },
   { key: 'refinement', label: 'Refinement', color: 'var(--yellow)' },
@@ -320,48 +497,28 @@ function KanbanView({ slug, tasks, onUpdate }) {
   COLUMNS.forEach(c => grouped[c.key] = []);
   tasks.forEach(t => { if (grouped[t.status]) grouped[t.status].push(t); });
 
-  const handleDragStart = (e, task) => {
-    setDragging(task.id);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e, colKey) => {
-    e.preventDefault();
-    setDragOver(colKey);
-  };
-
+  const handleDragStart = (e, task) => { setDragging(task.id); e.dataTransfer.effectAllowed = 'move'; };
+  const handleDragOver = (e, colKey) => { e.preventDefault(); setDragOver(colKey); };
   const handleDrop = async (e, newStatus) => {
-    e.preventDefault();
-    setDragOver(null);
+    e.preventDefault(); setDragOver(null);
     if (!dragging) return;
     const task = tasks.find(t => t.id === dragging);
     if (!task || task.status === newStatus) { setDragging(null); return; }
-    try {
-      await api(`/tasks/${task.id}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) });
-      onUpdate();
-    } catch {}
+    try { await api(`/tasks/${task.id}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) }); onUpdate(); } catch {}
     setDragging(null);
   };
-
   const handleDelete = async (e, taskId) => {
     e.stopPropagation();
     if (!confirm('Delete this task?')) return;
-    try {
-      await api(`/tasks/${taskId}`, { method: 'DELETE' });
-      onUpdate();
-    } catch {}
+    try { await api(`/tasks/${taskId}`, { method: 'DELETE' }); onUpdate(); } catch {}
   };
 
   return (
     <div className="kanban">
       {COLUMNS.map(col => (
-        <div key={col.key} className="kanban-col"
-          onDragOver={e => handleDragOver(e, col.key)}
-          onDragLeave={() => setDragOver(null)}
-          onDrop={e => handleDrop(e, col.key)}>
+        <div key={col.key} className="kanban-col" onDragOver={e => handleDragOver(e, col.key)} onDragLeave={() => setDragOver(null)} onDrop={e => handleDrop(e, col.key)}>
           <div className="kanban-col-header" style={{color: col.color}}>
-            {col.label}
-            <span className="kanban-col-count">{grouped[col.key].length}</span>
+            {col.label} <span className="kanban-col-count">{grouped[col.key].length}</span>
           </div>
           <div className={`kanban-cards ${dragOver === col.key ? 'drag-over' : ''}`}>
             {grouped[col.key].map(task => (
@@ -369,7 +526,7 @@ function KanbanView({ slug, tasks, onUpdate }) {
                 draggable onDragStart={e => handleDragStart(e, task)} onDragEnd={() => setDragging(null)}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
                   <div className="kanban-card-title">{task.title}</div>
-                  <button className="del-btn" onClick={e => handleDelete(e, task.id)} title="Delete task">×</button>
+                  <button className="del-btn" onClick={e => handleDelete(e, task.id)} title="Delete">×</button>
                 </div>
                 <div className="kanban-card-meta">
                   <span className={task.priority.toLowerCase()}>{task.priority}</span>
@@ -386,7 +543,7 @@ function KanbanView({ slug, tasks, onUpdate }) {
   );
 }
 
-// ── Task Table ──
+/* ── TASK TABLE ───────────────────────────────────────── */
 function TaskTableView({ tasks, onDelete }) {
   if (tasks.length === 0) return <div className="empty">No tasks</div>;
   const handleDelete = async (taskId) => {
@@ -405,7 +562,7 @@ function TaskTableView({ tasks, onDelete }) {
             <td>{t.type}</td>
             <td style={{fontFamily:'var(--mono)',fontSize:12}}>{t.estimate || '—'}</td>
             <td style={{fontFamily:'var(--mono)',fontSize:12}}>{t.deadline || '—'}</td>
-            <td><button className="del-btn" onClick={() => handleDelete(t.id)} title="Delete task">×</button></td>
+            <td><button className="del-btn" onClick={() => handleDelete(t.id)} title="Delete">×</button></td>
           </tr>
         ))}
       </tbody>
@@ -413,8 +570,8 @@ function TaskTableView({ tasks, onDelete }) {
   );
 }
 
-// ── Project Detail ──
-function ProjectDetail({ slug, onBack }) {
+/* ── PROJECT DETAIL ───────────────────────────────────── */
+function ProjectDetail({ slug, nav }) {
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [docs, setDocs] = useState([]);
@@ -434,33 +591,24 @@ function ProjectDetail({ slug, onBack }) {
 
   useEffect(() => {
     if (tab === 'roadmap' && !roadmap) {
-      api(`/projects/${slug}`).then(p => {
-        if (p.readme) {/* loaded */}
-      }).catch(() => {});
-      // roadmap comes from MCP/project context — try fetching docs
       const rdoc = docs.find(d => d.type === 'roadmap');
-      if (rdoc) {
-        api(`/docs/${rdoc.id}`).then(d => setRoadmap(d.content || '')).catch(() => {});
-      }
+      if (rdoc) api(`/docs/${rdoc.id}`).then(d => setRoadmap(d.content || '')).catch(() => {});
     }
   }, [tab, slug, docs, roadmap]);
 
   const addTask = async (e) => {
     e.preventDefault();
     if (!newTitle) return;
-    await api(`/projects/${slug}/tasks`, {
-      method: 'POST',
-      body: JSON.stringify({ title: newTitle, priority: newPriority })
-    });
+    await api(`/projects/${slug}/tasks`, { method: 'POST', body: JSON.stringify({ title: newTitle, priority: newPriority }) });
     setNewTitle(''); setShowAddTask(false);
     load();
   };
 
-  if (!project) return <div className="empty">Loading...</div>;
+  if (!project) return <div className="loading">Loading...</div>;
 
   return (
-    <div>
-      <button className="back-btn" onClick={onBack}>← All Projects</button>
+    <div className="page">
+      <button className="back-btn" onClick={() => nav('#/projects')}>← All Projects</button>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
         <div>
           <h1 className="page-title" style={{margin:0}}>{project.name}</h1>
@@ -497,28 +645,26 @@ function ProjectDetail({ slug, onBack }) {
         </div>
       )}
       {tab === 'docs' && (
-        <div>
-          {docs.length === 0 ? <div className="empty">No documents</div> : (
-            <table className="task-table">
-              <thead><tr><th>Title</th><th>Type</th><th>Path</th></tr></thead>
-              <tbody>
-                {docs.map(d => (
-                  <tr key={d.id}>
-                    <td style={{fontWeight:500}}>{d.title}</td>
-                    <td><span className={`stat-badge s-todo`}>{d.type}</span></td>
-                    <td style={{fontFamily:'var(--mono)',fontSize:12,color:'var(--text-3)'}}>{d.file_path}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        docs.length === 0 ? <div className="empty">No documents</div> : (
+          <table className="task-table">
+            <thead><tr><th>Title</th><th>Type</th><th>Path</th></tr></thead>
+            <tbody>
+              {docs.map(d => (
+                <tr key={d.id}>
+                  <td style={{fontWeight:500}}>{d.title}</td>
+                  <td><span className="stat-badge s-todo">{d.type}</span></td>
+                  <td style={{fontFamily:'var(--mono)',fontSize:12,color:'var(--text-3)'}}>{d.file_path}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
       )}
     </div>
   );
 }
 
-// ── Search ──
+/* ── SEARCH VIEW ──────────────────────────────────────── */
 function SearchView() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -527,15 +673,12 @@ function SearchView() {
   const doSearch = async (e) => {
     e.preventDefault();
     if (!query.trim()) return;
-    try {
-      const r = await api('/search', { method: 'POST', body: JSON.stringify({ query }) });
-      setResults(r);
-    } catch { setResults([]); }
+    try { const r = await api('/search', { method: 'POST', body: JSON.stringify({ query }) }); setResults(r); } catch { setResults([]); }
     setSearched(true);
   };
 
   return (
-    <div>
+    <div className="page">
       <h1 className="page-title">Search</h1>
       <form onSubmit={doSearch}>
         <div className="search-bar">
@@ -546,9 +689,7 @@ function SearchView() {
       {searched && results.length === 0 && <div className="empty">No results found</div>}
       {results.map((r, i) => (
         <div key={i} className="search-result">
-          <div className="search-result-type" style={{color: r.type === 'task' ? 'var(--blue)' : 'var(--green)'}}>
-            {r.type}
-          </div>
+          <div className="search-result-type" style={{color: r.type === 'task' ? 'var(--blue)' : 'var(--green)'}}>{r.type}</div>
           <div className="search-result-title">{r.title}</div>
           <div className="search-result-meta">
             {r.projectSlug}
@@ -562,32 +703,32 @@ function SearchView() {
   );
 }
 
-// ── Overview ──
-function OverviewView({ onSelectProject }) {
+/* ── OVERVIEW VIEW ────────────────────────────────────── */
+function OverviewView({ nav }) {
   const [data, setData] = useState(null);
   useEffect(() => { api('/overview').then(setData).catch(() => {}); }, []);
 
-  if (!data) return <div className="empty">Loading...</div>;
+  if (!data) return <div className="loading">Loading...</div>;
 
   return (
-    <div>
+    <div className="page">
       <h1 className="page-title">Overview</h1>
       <div className="stats-row">
-        <div className="stat-card"><div className="stat-card-value">{data.totalProjects}</div><div className="stat-card-label">Projects</div></div>
-        <div className="stat-card"><div className="stat-card-value">{data.totalTasks}</div><div className="stat-card-label">Tasks</div></div>
-        <div className="stat-card"><div className="stat-card-value">{data.totalDocs}</div><div className="stat-card-label">Documents</div></div>
+        <div className="stat-card"><div className="stat-num">{data.totalProjects}</div><div className="stat-lbl">Projects</div></div>
+        <div className="stat-card"><div className="stat-num">{data.totalTasks}</div><div className="stat-lbl">Tasks</div></div>
+        <div className="stat-card"><div className="stat-num">{data.totalDocs}</div><div className="stat-lbl">Documents</div></div>
       </div>
-      <h2 style={{fontSize:18,fontWeight:600,marginBottom:16}}>Projects</h2>
+      <div className="sec-head"><span className="sec-title">Projects</span><span className="sec-badge">{data.projects.length}</span></div>
       <div className="card-grid">
         {data.projects.map(p => (
-          <div key={p.slug} className="card" onClick={() => onSelectProject(p.slug)}>
+          <div key={p.slug} className="card" onClick={() => nav(`#/project/${p.slug}`)}>
             <div className="card-name">{p.name}</div>
-            <div style={{display:'flex',gap:8,marginTop:8,flexWrap:'wrap'}}>
+            <div style={{display:'flex',gap:6,marginTop:8,flexWrap:'wrap'}}>
               {Object.entries(p.tasksByStatus || {}).map(([s, c]) => (
                 <span key={s} className={`stat-badge s-${s}`}>{s}: {c}</span>
               ))}
             </div>
-            <div style={{display:'flex',gap:8,marginTop:6,flexWrap:'wrap'}}>
+            <div style={{display:'flex',gap:6,marginTop:6,flexWrap:'wrap'}}>
               {Object.entries(p.tasksByPriority || {}).map(([pr, c]) => (
                 <span key={pr} className={`stat-badge ${pr.toLowerCase()}`}>{pr}: {c}</span>
               ))}
@@ -599,52 +740,39 @@ function OverviewView({ onSelectProject }) {
   );
 }
 
-// ── Hash routing ──
-function parseHash() {
-  const h = window.location.hash.slice(1) || '/projects';
-  const parts = h.split('/').filter(Boolean);
-  if (parts[0] === 'project' && parts[1]) return { view: 'project-detail', slug: parts[1] };
-  return { view: parts[0] || 'projects', slug: null };
-}
-
-function setHash(view, slug) {
-  if (view === 'project-detail' && slug) window.location.hash = `#/project/${slug}`;
-  else window.location.hash = `#/${view}`;
-}
-
-// ── App ──
+/* ── APP ──────────────────────────────────────────────── */
 function App() {
-  const [authed, setAuthed] = useState(!!localStorage.getItem('dwork_token'));
-  const [route, setRoute] = useState(parseHash);
+  const [authed, setAuthed] = useState(!!localStorage.getItem(TOKEN_KEY));
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { route, segs, nav } = useRouter();
 
-  useEffect(() => {
-    const onHash = () => setRoute(parseHash());
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
-  }, []);
+  const handleLogout = () => { localStorage.removeItem(TOKEN_KEY); setAuthed(false); };
+  const mobileNav = (path) => { nav(path); setSidebarOpen(false); };
 
-  const view = route.view;
-  const selectedProject = route.slug;
+  if (!authed) return <LoginScreen onAuth={() => setAuthed(true)} />;
 
-  const handleLogout = () => {
-    localStorage.removeItem('dwork_token');
-    setAuthed(false);
-  };
-
-  const handleSelectProject = (slug) => setHash('project-detail', slug);
-  const navigate = (v) => setHash(v, null);
-
-  if (!authed) return <AuthScreen onAuth={() => setAuthed(true)} />;
+  const view = segs[0] === 'project' && segs[1] ? 'project-detail' : (segs[0] || 'projects');
+  const projectSlug = segs[0] === 'project' ? segs[1] : null;
 
   return (
     <div className="shell">
-      <Sidebar view={view === 'project-detail' ? 'projects' : view} setView={navigate} onLogout={handleLogout} />
+      <button className="mobile-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
+      <Sidebar view={view === 'project-detail' ? 'projects' : view} nav={mobileNav} onLogout={handleLogout} sidebarOpen={sidebarOpen} />
       <div className="main">
-        {view === 'projects' && <ProjectsView onSelect={handleSelectProject} />}
-        {view === 'project-detail' && selectedProject && (
-          <ProjectDetail slug={selectedProject} onBack={() => navigate('projects')} />
-        )}
-        {view === 'overview' && <OverviewView onSelectProject={handleSelectProject} />}
+        <div className="topbar">
+          <span className="topbar-title">
+            {view === 'projects' && 'Projects'}
+            {view === 'project-detail' && projectSlug}
+            {view === 'overview' && 'Overview'}
+            {view === 'search' && 'Search'}
+          </span>
+        </div>
+        {view === 'projects' && <ProjectsView nav={nav} />}
+        {view === 'project-detail' && projectSlug && <ProjectDetail slug={projectSlug} nav={nav} />}
+        {view === 'overview' && <OverviewView nav={nav} />}
         {view === 'search' && <SearchView />}
       </div>
     </div>

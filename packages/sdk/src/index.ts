@@ -1,6 +1,7 @@
 // --- Clients ---
 export { DBrainClient, type DBrainClientOptions } from './dbrain/index.js';
 export { DProxyClient, type DProxyClientOptions } from './dproxy/index.js';
+export { DWorkClient, type DWorkClientOptions } from './dwork/index.js';
 
 // --- Shared ---
 export { SdkError } from './http.js';
@@ -38,6 +39,20 @@ export type {
   ProviderName,
   TemplateRunOptions,
 } from './dproxy/index.js';
+
+// --- DWork types ---
+export type {
+  DWorkApiKeyCreateResponse,
+  DWorkApiKeyListItem,
+  DWorkDoc,
+  DWorkHealthResponse,
+  DWorkOverview,
+  DWorkProject,
+  DWorkProjectSummary,
+  DWorkSearchResult,
+  DWorkSyncResult,
+  DWorkTask,
+} from './dwork/index.js';
 
 // --- Re-exported core types ---
 export type { AdapterResult, AdapterStreamEvent, AdapterUsage, InputFile } from '@dtoolkit/core';

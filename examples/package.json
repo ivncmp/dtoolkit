@@ -8,8 +8,10 @@
     "start": "tsx src/setup.ts",
     "start:dbrain": "tsx src/setup.ts dbrain",
     "start:dproxy": "tsx src/setup.ts dproxy",
+    "start:dwork": "tsx src/setup.ts dwork",
     "dbrain": "tsx --env-file=.env src/dbrain.ts",
     "dproxy": "tsx --env-file=.env src/dproxy.ts",
+    "dwork": "tsx --env-file=.env src/dwork.ts",
     "demo": "tsx --env-file=.env src/demo.ts"
   },
   "dependencies": {

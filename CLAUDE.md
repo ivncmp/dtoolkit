@@ -25,6 +25,8 @@ pnpm --filter @dtoolkit/dbrain build
 pnpm --filter @dtoolkit/dbrain test
 pnpm --filter @dtoolkit/dproxy dev       # tsup --watch
 pnpm --filter @dtoolkit/dbrain dev       # tsx watch
+pnpm --filter @dtoolkit/dwork build
+pnpm --filter @dtoolkit/dwork dev        # tsx watch
 ```
 
 ## Architecture
@@ -51,8 +53,13 @@ packages/
 │                      SQLite + FTS5 via better-sqlite3. Federation: personal→shared brain connections.
 │                      CLI: dbrain init/start/connect/status/compact/configure/link/unlink/connections/keys
 │                      Build: tsc + copy dashboard assets + chmod bin
-├── sdk/               Typed HTTP clients for dtoolkit services (dbrain + dproxy)
-│                      DBrainClient + DProxyClient, shared HttpClient base
+├── dwork/             AI-native, MD-driven project manager
+│                      Fastify REST API + MCP HTTP on :7881, React dashboard on :7882
+│                      SQLite + FTS5 via better-sqlite3. Markdown files as source of truth.
+│                      CLI: dwork init/start/status/sync/configure/keys
+│                      Build: tsc + copy dashboard assets + chmod bin
+├── sdk/               Typed HTTP clients for dtoolkit services (dbrain + dproxy + dwork)
+│                      DBrainClient + DProxyClient + DWorkClient, shared HttpClient base
 │                      Build: tsc. Auth: unified Bearer token.
 ├── dcontext/          dbrain hooks for AI coding CLIs
 │                      Injects identity + project facts at session start, saves exchanges pre-compaction
@@ -67,7 +74,7 @@ tools/
 └── tsconfig/          Shared base tsconfig (ES2022, NodeNext, strict)
 ```
 
-**Dependency graph**: `core` ← `adapter-*` ← `dproxy`/`dcontext`. `core` ← `sdk` ← (consumers). `core` ← `dbrain`. Turbo handles build ordering via `^build`.
+**Dependency graph**: `core` ← `adapter-*` ← `dproxy`/`dcontext`. `core` ← `sdk` ← (consumers). `core` ← `dbrain`. `core` ← `sdk` ← `dwork`. Turbo handles build ordering via `^build`.
 
 ### dbrain internals
 
@@ -78,7 +85,7 @@ tools/
 - `src/server/routes/permissions.ts` — write permission enforcement
 - `src/mcp/` — MCP server on same port as REST (recall, remember, get/list/create entity, bump, log, overview, share, compact)
 - `src/core/` — db.ts (SQLite schema + FTS5 + migrations), models.ts (Zod), config.ts (brainType, connections), connections.ts (cached client pool), memory.ts (tier logic), compact.ts (dedup + tier recalc)
-- `src/dashboard/` — Single-file React app served via Fastify static (CDN deps, no build step)
+- `src/dashboard/` — Single-file React app served via Fastify static (CDN deps, no build step). Entity grid, conversations, search, Light/Dark themes, mobile responsive
 - init = server-side (creates brain), connect = client-side (configures Claude Code files)
 - Federation: recall auto-federates across connections, share pushes facts, search supports `federated: true`
 
@@ -92,6 +99,18 @@ tools/
 - `src/commands/serve.ts` — Fastify REST API on configurable port (default :7880), full CLI parity with Bearer token auth, SSE streaming via `stream: true`
 - Data stored in `~/.dproxy/` (config.json, history.jsonl, memory/, templates/)
 - Supports 4 providers via `--provider` flag: claude (default), codex, gemini, opencode
+
+### dwork internals
+
+- `src/core/` — config.ts (Zod schema + env overrides), db.ts (SQLite + FTS5 contentless), models.ts (Zod enums), parser.ts (BACKLOG.md parse/serialize), indexer.ts (MD→SQLite sync), templates.ts (scaffold)
+- `src/service/` — projects.ts (CRUD + scaffold), tasks.ts (CRUD via BACKLOG.md), docs.ts (numbered docs), search.ts (FTS5 OR), overview.ts (stats), sync.ts (via dproxy), utils.ts (genId)
+- `src/server/` — Fastify app with routes: projects, tasks, docs, search, overview, sync, keys, health, permissions
+- `src/mcp/` — 13 MCP tools + 1 resource (dwork://projects), all delegating to service layer
+- `src/dashboard/` — Single-file React 18 app (CDN, no build step), served on port+1. Overview (default, global kanban), project detail (kanban/tasks/docs tabs), task detail modal with MD editor, file tree docs view, mobile responsive, Light/Dark themes
+- `src/cli/` — init wizard, start (server + dashboard), status, sync, configure, keys
+- Data stored in `~/.dwork/` (config.json, dwork.db, projects/)
+- Markdown files are source of truth; SQLite + FTS5 is just an index
+- dwork and dbrain are independent; dcontext bridges them
 
 ## CLI conventions
 

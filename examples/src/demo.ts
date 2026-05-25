@@ -15,7 +15,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { InputFile } from "@dtoolkit/sdk";
-import { DBrainClient, DProxyClient, SdkError } from "@dtoolkit/sdk";
+import { DBrainClient, DProxyClient, DWorkClient, SdkError } from "@dtoolkit/sdk";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SAMPLES_DIR = resolve(__dirname, "../samples");
@@ -27,6 +27,10 @@ const dbrain = new DBrainClient(
 const dproxy = new DProxyClient(
   process.env.DPROXY_URL ?? "http://localhost:7880",
   process.env.DPROXY_TOKEN || undefined,
+);
+const dwork = new DWorkClient(
+  process.env.DWORK_URL ?? "http://localhost:7881",
+  process.env.DWORK_TOKEN ?? "changeme",
 );
 
 const passed: string[] = [];
@@ -187,6 +191,48 @@ try {
     console.log(`        Prompt:   "${prompt}"`);
     const a = await dproxy.ask(prompt, { files });
     console.log(`        Answer:   "${a.text.trim()}"`);
+  });
+
+  // ── dwork ──────────────────────────────────────────────────────
+
+  section("dwork");
+
+  await test("Health check", async () => {
+    const h = await dwork.health();
+    console.log(`        v${h.version} — ${h.projects} projects, ${h.tasks} tasks`);
+  });
+
+  let dworkSlug = "";
+
+  await test("Create project", async () => {
+    dworkSlug = `demo-${Date.now()}`;
+    const p = await dwork.createProject({ slug: dworkSlug, name: "Demo Project" });
+    console.log(`        Created: ${p.name} (${p.slug})`);
+  });
+
+  await test("Add + update tasks", async () => {
+    const t = await dwork.addTask(dworkSlug, { title: "Demo task", priority: "P1" });
+    console.log(`        Added: ${t.title} (${t.id})`);
+    await dwork.updateTask(t.id, { status: "doing" });
+    const tasks = await dwork.listTasks(dworkSlug, { status: "doing" });
+    console.log(`        Doing: ${tasks.length} task(s)`);
+  });
+
+  await test("Search", async () => {
+    const results = await dwork.search("Demo", { project: dworkSlug });
+    console.log(`        "Demo" returned ${results.length} results`);
+  });
+
+  await test("Overview + next", async () => {
+    const o = await dwork.overview();
+    console.log(`        ${o.totalProjects} projects, ${o.totalTasks} tasks`);
+    const next = await dwork.whatToDoNext(dworkSlug);
+    console.log(`        Next up: ${next.length} task(s)`);
+  });
+
+  await test("Cleanup project", async () => {
+    await dwork.deleteProject(dworkSlug);
+    console.log(`        Deleted: ${dworkSlug}`);
   });
 
   // ── summary ────────────────────────────────────────────────────

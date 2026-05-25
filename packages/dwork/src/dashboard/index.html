@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>dwork — Project Manager</title>
+<link rel="icon" type="image/png" href="/logo-dwork.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:oklch(0.965 0.008 248);
+  --sidebar-bg:oklch(0.99 0.003 250);
+  --surface:oklch(1 0 0);
+  --surface-2:oklch(0.95 0.01 248);
+  --border:oklch(0.87 0.018 248);
+  --border-subtle:oklch(0.92 0.01 248);
+  --text:oklch(0.20 0.06 252);
+  --text-2:oklch(0.42 0.05 250);
+  --text-3:oklch(0.60 0.04 248);
+  --accent:oklch(0.50 0.22 252);
+  --accent-light:oklch(0.94 0.06 252);
+  --green:oklch(0.55 0.18 148);
+  --green-bg:oklch(0.92 0.06 148);
+  --yellow:oklch(0.60 0.18 80);
+  --yellow-bg:oklch(0.93 0.06 80);
+  --red:oklch(0.55 0.18 25);
+  --red-bg:oklch(0.93 0.06 25);
+  --blue:oklch(0.50 0.18 252);
+  --blue-bg:oklch(0.92 0.06 252);
+  --orange:oklch(0.58 0.16 55);
+  --orange-bg:oklch(0.93 0.06 55);
+  --font:'DM Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --sb:220px;
+  --r:8px;
+}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ── LAYOUT ─────────────────────────────── */
+.shell{display:flex;min-height:100vh}
+.sidebar{
+  width:var(--sb);flex-shrink:0;position:fixed;top:0;left:0;bottom:0;
+  background:var(--sidebar-bg);border-right:1px solid var(--border-subtle);
+  display:flex;flex-direction:column;overflow:hidden;z-index:50;
+}
+.sb-logo{padding:24px 20px 8px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.sb-logo img{width:100px;height:auto;display:block}
+.sb-logo-info{display:flex;flex-direction:column;align-items:center;gap:4px}
+.sb-logo-text{font-size:18px;font-weight:700;letter-spacing:-.03em;color:var(--text)}
+.sb-version{
+  font-size:10px;font-family:var(--mono);font-weight:500;
+  color:var(--text-3);background:var(--surface-2);
+  border:1px solid var(--border-subtle);
+  border-radius:4px;padding:2px 7px;display:inline-block;
+}
+.sb-nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:2px}
+.sb-link{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border-radius:var(--r);cursor:pointer;border:none;background:none;
+  font-family:var(--font);font-size:13.5px;font-weight:500;
+  color:var(--text-2);width:100%;text-align:left;
+  transition:background .12s,color .12s;
+}
+.sb-link:hover{background:var(--surface-2);color:var(--text)}
+.sb-link.active{background:var(--accent-light);color:var(--accent);font-weight:600}
+.sb-link svg{flex-shrink:0;opacity:.7}
+.sb-link.active svg{opacity:1}
+.sb-divider{height:1px;background:var(--border-subtle);margin:10px 12px}
+.sb-footer{padding:16px;display:flex;flex-direction:column;gap:10px}
+.palette-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface-2);border:1px solid var(--border-subtle);
+  border-radius:var(--r);padding:8px 12px;
+}
+.palette-toggle-label{font-size:12px;font-weight:500;color:var(--text-2)}
+.palette-toggle-switch{
+  display:flex;gap:2px;background:var(--bg);
+  border:1px solid var(--border-subtle);border-radius:6px;padding:2px;
+}
+.palette-toggle-opt{
+  padding:3px 9px;border-radius:4px;font-size:11px;font-weight:600;
+  border:none;background:none;font-family:var(--font);cursor:pointer;
+  color:var(--text-3);transition:all .12s;
+}
+.palette-toggle-opt.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px oklch(0 0 0/.1)}
+.sb-user{display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:8px}
+.sb-user-info{flex:1;min-width:0}
+.sb-user-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.sb-user-role{font-size:10px;color:var(--text-3);font-family:var(--mono)}
+.sb-logout{padding:3px 8px;border:1px solid var(--border);border-radius:5px;background:none;color:var(--text-3);font-size:10px;cursor:pointer;flex-shrink:0;transition:all .15s}
+.sb-logout:hover{border-color:#ef4444;color:#ef4444;background:oklch(0.95 0.05 25)}
+
+.main{margin-left:var(--sb);flex:1;min-width:0}
+.topbar{
+  position:sticky;top:0;z-index:40;
+  background:oklch(from var(--bg) l c h / .92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border-subtle);
+  display:flex;align-items:center;gap:12px;padding:0 32px;height:52px;
+}
+.topbar-title{font-size:14px;font-weight:600;color:var(--text);flex:none}
+.page{padding:28px 32px 80px}
+.page-title{font-size:24px;font-weight:700;letter-spacing:-.03em;margin-bottom:20px}
+.page-subtitle{font-size:13px;color:var(--text-2);margin-bottom:24px}
+
+/* ── LOGIN ──────────────────────────────── */
+.login-bg{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 90% 70% at 50% -10%,oklch(.42 .15 252/.18) 0%,var(--bg) 60%);
+  position:relative;
+}
+.login-bg::before{
+  content:'';position:absolute;inset:0;
+  background-image:linear-gradient(var(--border-subtle) 1px,transparent 1px),linear-gradient(90deg,var(--border-subtle) 1px,transparent 1px);
+  background-size:36px 36px;opacity:.5;
+}
+.login-card{
+  position:relative;z-index:1;background:var(--surface);
+  border:1px solid var(--border);border-radius:16px;
+  padding:40px 44px;width:400px;max-width:calc(100vw - 32px);text-align:center;
+  box-shadow:0 20px 60px oklch(0 0 0/.12),0 0 0 1px oklch(from var(--accent) l c h /.08);
+}
+.login-logo{width:280px;max-width:100%;height:auto;margin:0 auto 28px;display:block}
+.login-token-label{font-size:13px;color:var(--text-2);margin-bottom:10px;text-align:left}
+.login-input{
+  width:100%;padding:11px 14px;background:var(--surface-2);
+  border:1.5px solid var(--border);border-radius:var(--r);
+  font-family:var(--mono);font-size:13.5px;color:var(--text);outline:none;
+  transition:border-color .15s;margin-bottom:10px;
+}
+.login-input:focus{border-color:var(--accent)}
+.login-input.err{border-color:#e53e3e}
+.login-hint{font-size:12px;color:var(--text-3);margin-bottom:14px}
+.login-err{font-size:12px;color:#e53e3e;margin-bottom:14px}
+.login-btn{
+  width:100%;padding:11px;background:var(--accent);color:#fff;border:none;
+  border-radius:var(--r);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;
+  transition:opacity .12s;
+}
+.login-btn:hover{opacity:.9}
+
+/* ── STATS ──────────────────────────────── */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border-subtle);
+  border-radius:var(--r);padding:18px 16px 14px;
+  transition:border-color .15s,box-shadow .15s;
+}
+.stat-card:hover{border-color:var(--border);box-shadow:0 2px 12px oklch(0 0 0/.06)}
+.stat-num{font-size:28px;font-weight:700;letter-spacing:-.04em;line-height:1;margin-bottom:5px;color:var(--accent);font-family:var(--mono)}
+.stat-lbl{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3)}
+
+/* ── CARDS ──────────────────────────────── */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.card{
+  background:var(--surface);border:1px solid var(--border-subtle);
+  border-radius:var(--r);padding:18px;cursor:pointer;
+  transition:transform .12s,box-shadow .15s,border-color .15s;
+  position:relative;overflow:hidden;
+}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px oklch(0 0 0/.08);border-color:var(--border)}
+.card-name{font-size:15px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px}
+.card-desc{font-size:12px;color:var(--text-2);margin-bottom:10px}
+.card-stats{display:flex;gap:6px;flex-wrap:wrap}
+.stat-badge{
+  display:inline-flex;align-items:center;
+  font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:4px;
+  letter-spacing:.04em;text-transform:uppercase;font-family:var(--mono);
+}
+
+/* ── KANBAN ─────────────────────────────── */
+.kanban{display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;min-height:400px}
+.kanban-col{flex:1 1 0;min-width:180px;background:var(--surface-2);border-radius:var(--r);padding:12px;display:flex;flex-direction:column}
+.kanban-col-header{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.kanban-col-count{font-size:11px;font-weight:500;color:var(--text-3);font-family:var(--mono)}
+.kanban-cards{flex:1;display:flex;flex-direction:column;gap:8px;min-height:60px}
+.kanban-cards.drag-over{background:var(--accent-light);border-radius:6px}
+.kanban-card{
+  background:var(--surface);border:1px solid var(--border-subtle);border-radius:6px;padding:10px 12px;
+  cursor:grab;transition:box-shadow .12s,opacity .12s,transform .12s;font-size:13px;
+  touch-action:none;
+}
+.kanban-card:active{cursor:grabbing}
+.kanban-card.dragging{opacity:.4}
+.kanban-card:hover{box-shadow:0 2px 8px oklch(0 0 0/.06);transform:translateY(-1px)}
+.kanban-card-title{font-weight:500;margin-bottom:6px;line-height:1.3}
+.kanban-card-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.kanban-card-meta span{font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;font-family:var(--mono)}
+
+/* Priority badges */
+.p0{background:var(--red-bg);color:var(--red)}
+.p1{background:var(--orange-bg);color:var(--orange)}
+.p2{background:var(--blue-bg);color:var(--blue)}
+.p3{background:var(--surface-2);color:var(--text-3)}
+
+/* Status badges */
+.s-todo{background:var(--surface-2);color:var(--text-3)}
+.s-refinement{background:var(--yellow-bg);color:var(--yellow)}
+.s-doing{background:var(--blue-bg);color:var(--blue)}
+.s-blocked{background:var(--red-bg);color:var(--red)}
+.s-done{background:var(--green-bg);color:var(--green)}
+
+/* ── TABS ──────────────────────────────── */
+.tabs{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid var(--border)}
+.tab{padding:10px 16px;font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;border:none;background:none;font-family:var(--font);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .12s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+
+/* ── TABLE ─────────────────────────────── */
+.task-table{width:100%;border-collapse:collapse;font-size:13px}
+.task-table th{text-align:left;padding:10px 12px;color:var(--text-3);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border)}
+.task-table td{padding:10px 12px;border-bottom:1px solid var(--border-subtle)}
+.task-table tr:hover td{background:var(--surface-2)}
+
+/* ── SEARCH ────────────────────────────── */
+.search-bar{display:flex;gap:8px;margin-bottom:20px}
+.search-input{
+  flex:1;padding:10px 14px;background:var(--surface);
+  border:1px solid var(--border-subtle);border-radius:20px;
+  font-family:var(--font);font-size:14px;outline:none;
+  transition:border-color .15s;
+}
+.search-input:focus{border-color:var(--accent)}
+.search-btn{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:20px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer}
+.search-result{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r);padding:14px 16px;margin-bottom:8px;transition:border-color .12s}
+.search-result:hover{border-color:var(--border)}
+.search-result-type{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.search-result-title{font-size:14px;font-weight:500}
+.search-result-meta{font-size:11px;color:var(--text-3);margin-top:4px;font-family:var(--mono)}
+
+/* ── FORMS ─────────────────────────────── */
+.form-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
+.form-input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);font-family:var(--font);font-size:13px;color:var(--text);outline:none}
+.form-input:focus{border-color:var(--accent)}
+.form-btn{padding:8px 16px;border:none;border-radius:6px;background:var(--accent);color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer}
+.form-btn:hover{opacity:.85}
+
+/* ── MODAL ─────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;z-index:100;background:oklch(0 0 0/.4);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px 32px;width:420px;max-width:100%;box-shadow:0 20px 60px oklch(0 0 0/.15)}
+.modal-title{font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:20px}
+.modal-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.modal-field label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.3px}
+.modal-field input,.modal-field select{padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surface-2);font-family:var(--font);font-size:13px;color:var(--text);outline:none;transition:border-color .15s}
+.modal-field input:focus,.modal-field select:focus{border-color:var(--accent)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+.modal-actions .btn-cancel{padding:9px 18px;border:1px solid var(--border);border-radius:var(--r);background:none;font-family:var(--font);font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;transition:all .12s}
+.modal-actions .btn-cancel:hover{border-color:var(--text-3);color:var(--text)}
+.modal-actions .btn-primary{padding:9px 18px;border:none;border-radius:var(--r);background:var(--accent);color:#fff;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:opacity .12s}
+.modal-actions .btn-primary:hover{opacity:.9}
+.modal-wide{width:640px}
+.task-detail-header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.task-detail-header .badge{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:600;font-family:var(--mono)}
+.task-detail-header .badge-status{background:var(--accent-light);color:var(--accent)}
+.task-detail-header .badge-priority{background:var(--surface-2);color:var(--text-2)}
+.task-detail-header .badge-project{background:var(--accent-light);color:var(--accent)}
+.task-detail-editor{width:100%;min-height:260px;padding:12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surface-2);font-family:var(--mono);font-size:13px;line-height:1.6;color:var(--text);resize:vertical;outline:none;transition:border-color .15s}
+.task-detail-editor:focus{border-color:var(--accent)}
+.task-detail-empty{text-align:center;padding:40px 0;color:var(--text-3);font-size:13px}
+.task-detail-saved{color:var(--accent);font-size:12px;font-weight:500;opacity:0;transition:opacity .2s}
+.task-detail-saved.show{opacity:1}
+
+/* ── MISC ──────────────────────────────── */
+.back-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:none;border:none;color:var(--text-2);
+  font-family:var(--font);font-size:13px;font-weight:500;padding:4px 0;
+  cursor:pointer;transition:color .12s;margin-bottom:16px;
+}
+.back-btn:hover{color:var(--text)}
+
+.del-btn{
+  background:none;border:none;cursor:pointer;color:var(--text-3);
+  font-size:16px;line-height:1;padding:2px 4px;border-radius:3px;
+  transition:color .12s,background .12s;flex-shrink:0;
+}
+.del-btn:hover{color:var(--red);background:var(--red-bg)}
+
+.md-content{font-size:14px;line-height:1.7;color:var(--text)}
+.md-content h1,.md-content h2,.md-content h3{font-weight:600;margin:16px 0 8px}
+.md-content code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:2px 6px;border-radius:3px}
+
+.loading{display:flex;align-items:center;justify-content:center;height:60vh;color:var(--text-3);font-size:13px}
+.empty{color:var(--text-3);font-size:13px;padding:32px;text-align:center;background:var(--surface);border-radius:var(--r);border:1px solid var(--border-subtle)}
+
+.sec-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.sec-title{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3)}
+.sec-badge{font-size:11px;font-family:var(--mono);color:var(--text-3);background:var(--surface-2);border:1px solid var(--border-subtle);padding:1px 8px;border-radius:20px}
+
+/* ── MOBILE HAMBURGER ──────────────────── */
+.mobile-toggle{
+  display:none;position:fixed;top:12px;left:12px;z-index:60;
+  width:32px;height:32px;border-radius:6px;border:none;
+  background:none;cursor:pointer;align-items:center;justify-content:center;
+  padding:0;
+}
+.mobile-toggle svg{color:var(--text-2)}
+.sidebar-overlay{display:none;position:fixed;inset:0;z-index:45;background:oklch(0 0 0/.3)}
+
+/* ── RESPONSIVE ────────────────────────── */
+@media(max-width:768px){
+  .mobile-toggle{display:flex}
+  .sidebar{transform:translateX(-100%);transition:transform .2s}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay.open{display:block}
+  .main{margin-left:0}
+  .topbar{padding:0 16px;padding-left:52px}
+  .page{padding:20px 16px 60px}
+  .page-title{font-size:20px}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .card-grid{grid-template-columns:1fr}
+  .kanban{flex-direction:column}
+  .kanban-col{min-width:0}
+  .tab-tasks{display:none}
+  .task-table thead{display:none}
+  .task-table,.task-table tbody,.task-table tr,.task-table td{display:block;width:100%}
+  .task-table tr{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r);padding:12px;margin-bottom:8px;position:relative}
+  .task-table td{border:none;padding:2px 0;font-size:12px}
+  .task-table td:first-child{font-size:14px;font-weight:600;margin-bottom:6px}
+  .task-table td:last-child{position:absolute;top:12px;right:12px}
+  .doc-table td{display:inline-block;width:auto;padding:2px 4px}
+  .doc-table td:first-child{display:block;width:100%;margin-bottom:4px}
+  .doc-table td:last-child{position:static;display:block;width:100%;margin-top:4px;word-break:break-all}
+  .search-bar{flex-direction:column}
+  .search-btn{width:100%}
+  .form-row{flex-direction:column}
+  .form-input{width:100%}
+  .login-card{padding:28px 20px}
+  .login-logo{width:100%}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+const TOKEN_KEY = 'dwork_token';
+const THEME_KEY = 'dwork_theme';
+const API_BASE = `http://${window.location.hostname}:${Number(window.location.port) - 1}`;
+
+/* ── PALETTES ─────────────────────────────────────────── */
+const PALETTES = {
+  cloud: {'--bg':'oklch(0.965 0.008 248)','--sidebar-bg':'oklch(0.99 0.003 250)','--surface':'oklch(1 0 0)','--surface-2':'oklch(0.95 0.010 248)','--border':'oklch(0.87 0.018 248)','--border-subtle':'oklch(0.92 0.010 248)','--text':'oklch(0.20 0.06 252)','--text-2':'oklch(0.42 0.05 250)','--text-3':'oklch(0.60 0.04 248)','--accent':'oklch(0.50 0.22 252)','--accent-light':'oklch(0.94 0.06 252)'},
+  ocean: {'--bg':'oklch(0.11 0.04 254)','--sidebar-bg':'oklch(0.13 0.046 254)','--surface':'oklch(0.16 0.04 252)','--surface-2':'oklch(0.20 0.04 250)','--border':'oklch(0.26 0.05 250)','--border-subtle':'oklch(0.19 0.04 252)','--text':'oklch(0.93 0.015 245)','--text-2':'oklch(0.65 0.06 245)','--text-3':'oklch(0.47 0.05 248)','--accent':'oklch(0.68 0.20 245)','--accent-light':'oklch(0.68 0.20 245 /.15)'},
+};
+
+function applyPalette(name) {
+  const p = PALETTES[name] || PALETTES.cloud;
+  Object.entries(p).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
+}
+
+/* ── API HELPER ───────────────────────────────────────── */
+function api(path, opts = {}) {
+  const token = localStorage.getItem(TOKEN_KEY) || '';
+  const headers = { 'Authorization': `Bearer ${token}` };
+  if (opts.body) headers['Content-Type'] = 'application/json';
+  return fetch(`${API_BASE}${path}`, { ...opts, headers }).then(r => {
+    if (!r.ok) throw new Error(`${r.status}`);
+    return r.json();
+  });
+}
+
+/* ── ROUTER ───────────────────────────────────────────── */
+function useRouter() {
+  const [hash, setHash] = useState(window.location.hash || '#/');
+  useEffect(() => {
+    const h = () => setHash(window.location.hash || '#/');
+    window.addEventListener('hashchange', h);
+    return () => window.removeEventListener('hashchange', h);
+  }, []);
+  const nav = (p) => { window.location.hash = p; };
+  const route = hash.replace('#', '') || '/';
+  const segs = route.split('/').filter(Boolean);
+  return { route, segs, nav };
+}
+
+/* ── SVG ICONS ────────────────────────────────────────── */
+const Icon = {
+  projects: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  overview: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>,
+  search: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
+};
+
+/* ── LOGIN ────────────────────────────────────────────── */
+function LoginScreen({ onAuth }) {
+  const [token, setToken] = useState('');
+  const [error, setError] = useState('');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      localStorage.setItem(TOKEN_KEY, token);
+      await api('/overview');
+      onAuth();
+    } catch {
+      setError('Invalid token or server not running');
+      localStorage.removeItem(TOKEN_KEY);
+    }
+  };
+  return (
+    <div className="login-bg">
+      <form className="login-card" onSubmit={handleSubmit}>
+        <img className="login-logo" src="/logo-dwork-complete.png" alt="dwork" />
+        <div className="login-token-label">Access token</div>
+        <input className={`login-input ${error ? 'err' : ''}`} type="password" placeholder="sk-dwk_..."
+          value={token} onChange={e => { setToken(e.target.value); setError(''); }} autoFocus />
+        {error ? <div className="login-err">{error}</div> : <div className="login-hint">Find your token in ~/.dwork/config.json</div>}
+        <button className="login-btn" type="submit">Connect</button>
+      </form>
+    </div>
+  );
+}
+
+/* ── SIDEBAR ──────────────────────────────────────────── */
+function Sidebar({ view, nav, onLogout, sidebarOpen }) {
+  const [palette, setPalette] = useState(localStorage.getItem(THEME_KEY) || 'cloud');
+  useEffect(() => { applyPalette(palette); }, [palette]);
+  const togglePalette = (name) => { setPalette(name); localStorage.setItem(THEME_KEY, name); };
+
+  return (
+    <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <div className="sb-logo">
+        <img src="/logo-dwork.png" alt="dwork" />
+        <div className="sb-logo-info">
+          <span className="sb-logo-text">dwork</span>
+          <span className="sb-version">v0.1.0</span>
+        </div>
+      </div>
+      <div className="sb-nav">
+        <button className={`sb-link ${view === 'overview' ? 'active' : ''}`} onClick={() => nav('#/overview')}>
+          <Icon.overview /> Overview
+        </button>
+        <button className={`sb-link ${view === 'projects' ? 'active' : ''}`} onClick={() => nav('#/projects')}>
+          <Icon.projects /> Projects
+        </button>
+        <button className={`sb-link ${view === 'search' ? 'active' : ''}`} onClick={() => nav('#/search')}>
+          <Icon.search /> Search
+        </button>
+      </div>
+      <div className="sb-footer">
+        <div className="palette-toggle">
+          <span className="palette-toggle-label">Theme</span>
+          <div className="palette-toggle-switch">
+            <button className={`palette-toggle-opt ${palette === 'cloud' ? 'active' : ''}`} onClick={() => togglePalette('cloud')}>&#9788; Light</button>
+            <button className={`palette-toggle-opt ${palette === 'ocean' ? 'active' : ''}`} onClick={() => togglePalette('ocean')}>&#9679; Dark</button>
+          </div>
+        </div>
+        <div className="sb-user">
+          <div className="sb-user-info"><span className="sb-user-name">Admin</span><span className="sb-user-role">read+write</span></div>
+          <button className="sb-logout" onClick={onLogout}>Logout</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── PROJECTS VIEW ────────────────────────────────────── */
+function ProjectsView({ nav }) {
+  const [projects, setProjects] = useState([]);
+  const [showNew, setShowNew] = useState(false);
+  const [slug, setSlug] = useState('');
+  const [name, setName] = useState('');
+
+  useEffect(() => { api('/projects').then(setProjects).catch(() => {}); }, []);
+
+  const createProject = async (e) => {
+    e.preventDefault();
+    if (!slug || !name) return;
+    await api('/projects', { method: 'POST', body: JSON.stringify({ slug, name }) });
+    setSlug(''); setName(''); setShowNew(false);
+    api('/projects').then(setProjects);
+  };
+
+  return (
+    <div className="page">
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+        <h1 className="page-title" style={{margin:0}}>Projects</h1>
+        <button className="form-btn" onClick={() => setShowNew(true)}>+ New Project</button>
+      </div>
+      {showNew && (
+        <div className="modal-overlay" onClick={() => setShowNew(false)}>
+          <form className="modal" onClick={e => e.stopPropagation()} onSubmit={createProject}>
+            <div className="modal-title">New Project</div>
+            <div className="modal-field">
+              <label>Slug</label>
+              <input placeholder="my-project" value={slug} onChange={e => setSlug(e.target.value)} autoFocus />
+            </div>
+            <div className="modal-field">
+              <label>Name</label>
+              <input placeholder="My Project" value={name} onChange={e => setName(e.target.value)} />
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="btn-cancel" onClick={() => setShowNew(false)}>Cancel</button>
+              <button type="submit" className="btn-primary">Create</button>
+            </div>
+          </form>
+        </div>
+      )}
+      {projects.length === 0 ? (
+        <div className="empty">No projects yet. Create one to get started.</div>
+      ) : (
+        <div className="card-grid">
+          {projects.map(p => (
+            <div key={p.slug} className="card" onClick={() => nav(`#/project/${p.slug}`)}>
+              <div className="card-name">{p.name}</div>
+              <div className="card-desc">{p.description || p.slug}</div>
+              <div className="card-stats">
+                {Object.entries(p.taskCounts || {}).map(([s, c]) => (
+                  <span key={s} className={`stat-badge s-${s}`}>{s}: {c}</span>
+                ))}
+                {Object.keys(p.taskCounts || {}).length === 0 && <span className="stat-badge s-todo">No tasks</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── KANBAN ────────────────────────────────────────────── */
+const COLUMNS = [
+  { key: 'todo', label: 'To Do', color: 'var(--text-3)' },
+  { key: 'refinement', label: 'Refinement', color: 'var(--yellow)' },
+  { key: 'doing', label: 'Doing', color: 'var(--blue)' },
+  { key: 'blocked', label: 'Blocked', color: 'var(--red)' },
+  { key: 'done', label: 'Done', color: 'var(--green)' },
+];
+
+function KanbanView({ slug, tasks, onUpdate }) {
+  const [dragging, setDragging] = useState(null);
+  const [dragOver, setDragOver] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const colRefs = React.useRef({});
+
+  const grouped = {};
+  COLUMNS.forEach(c => grouped[c.key] = []);
+  tasks.forEach(t => { if (grouped[t.status]) grouped[t.status].push(t); });
+
+  const handleDragStart = (e, task) => { setDragging(task.id); e.dataTransfer.effectAllowed = 'move'; };
+  const handleDragOver = (e, colKey) => { e.preventDefault(); setDragOver(colKey); };
+  const moveTo = async (taskId, newStatus) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || task.status === newStatus) return;
+    try { await api(`/tasks/${task.id}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) }); onUpdate(); } catch {}
+  };
+  const handleDrop = async (e, newStatus) => {
+    e.preventDefault(); setDragOver(null);
+    if (!dragging) return;
+    await moveTo(dragging, newStatus);
+    setDragging(null);
+  };
+  const handleDelete = async (e, taskId) => {
+    e.stopPropagation();
+    if (!confirm('Delete this task?')) return;
+    try { await api(`/tasks/${taskId}`, { method: 'DELETE' }); onUpdate(); } catch {}
+  };
+
+  const colAtPoint = (x, y) => {
+    for (const [key, el] of Object.entries(colRefs.current)) {
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return key;
+    }
+    return null;
+  };
+  const onTouchStart = (task) => { setDragging(task.id); };
+  const onTouchMove = (e) => {
+    const touch = e.touches[0];
+    const col = colAtPoint(touch.clientX, touch.clientY);
+    setDragOver(col);
+  };
+  const onTouchEnd = async (e) => {
+    if (!dragging) return;
+    const touch = e.changedTouches[0];
+    const col = colAtPoint(touch.clientX, touch.clientY);
+    setDragOver(null);
+    if (col) await moveTo(dragging, col);
+    setDragging(null);
+  };
+
+  return (
+    <div className="kanban">
+      {COLUMNS.map(col => (
+        <div key={col.key} className="kanban-col" ref={el => colRefs.current[col.key] = el}
+          onDragOver={e => handleDragOver(e, col.key)} onDragLeave={() => setDragOver(null)} onDrop={e => handleDrop(e, col.key)}>
+          <div className="kanban-col-header" style={{color: col.color}}>
+            {col.label} <span className="kanban-col-count">{grouped[col.key].length}</span>
+          </div>
+          <div className={`kanban-cards ${dragOver === col.key ? 'drag-over' : ''}`}>
+            {grouped[col.key].map(task => (
+              <div key={task.id} className={`kanban-card ${dragging === task.id ? 'dragging' : ''}`}
+                draggable onDragStart={e => handleDragStart(e, task)} onDragEnd={() => setDragging(null)}
+                onTouchStart={() => onTouchStart(task)} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+                onClick={() => { if (!dragging) setSelectedTask(task); }} style={{cursor:'pointer'}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+                  <div className="kanban-card-title">{task.title}</div>
+                  <button className="del-btn" onClick={e => handleDelete(e, task.id)} title="Delete">×</button>
+                </div>
+                <div className="kanban-card-meta">
+                  <span className={task.priority.toLowerCase()}>{task.priority}</span>
+                  {task.type !== 'task' && <span className="s-todo">{task.type}</span>}
+                  {task.estimate && <span style={{background:'var(--surface-2)',color:'var(--text-3)'}}>{task.estimate}</span>}
+                  {task.deadline && <span style={{background:'var(--surface-2)',color:'var(--text-3)'}}>{task.deadline}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+      {selectedTask && <TaskDetailModal task={selectedTask} onClose={() => setSelectedTask(null)} onUpdate={onUpdate} />}
+    </div>
+  );
+}
+
+/* ── TASK TABLE ───────────────────────────────────────── */
+function TaskTableView({ tasks, onDelete }) {
+  if (tasks.length === 0) return <div className="empty">No tasks</div>;
+  const handleDelete = async (taskId) => {
+    if (!confirm('Delete this task?')) return;
+    try { await api(`/tasks/${taskId}`, { method: 'DELETE' }); onDelete(); } catch {}
+  };
+  return (
+    <table className="task-table">
+      <thead><tr><th>Title</th><th>Status</th><th>Priority</th><th>Type</th><th>Estimate</th><th>Deadline</th><th></th></tr></thead>
+      <tbody>
+        {tasks.map(t => (
+          <tr key={t.id}>
+            <td style={{fontWeight:500}}>{t.title}</td>
+            <td><span className={`stat-badge s-${t.status}`}>{t.status}</span></td>
+            <td><span className={`stat-badge ${t.priority.toLowerCase()}`}>{t.priority}</span></td>
+            <td>{t.type}</td>
+            <td style={{fontFamily:'var(--mono)',fontSize:12}}>{t.estimate || '—'}</td>
+            <td style={{fontFamily:'var(--mono)',fontSize:12}}>{t.deadline || '—'}</td>
+            <td><button className="del-btn" onClick={() => handleDelete(t.id)} title="Delete">×</button></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+/* ── PROJECT DETAIL ───────────────────────────────────── */
+function DocsView({ docs, onSave }) {
+  const [activeDoc, setActiveDoc] = useState(null);
+  const [content, setContent] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+
+  const openDoc = async (doc) => {
+    try {
+      const full = await api(`/docs/${doc.id}`);
+      setContent(full.content || '');
+      setActiveDoc(full);
+      setDirty(false);
+    } catch {}
+  };
+  const saveDoc = async () => {
+    if (!activeDoc) return;
+    setSaving(true);
+    try { await api(`/docs/${activeDoc.id}`, { method: 'PATCH', body: JSON.stringify({ body: content }) }); setDirty(false); if (onSave) onSave(); } catch {}
+    setSaving(false);
+  };
+  const close = () => { setActiveDoc(null); setContent(''); setDirty(false); };
+
+  const tree = React.useMemo(() => {
+    const root = { _files: [] };
+    docs.forEach(d => {
+      const parts = d.file_path.split('/');
+      const fileName = parts.pop();
+      let node = root;
+      parts.forEach(dir => {
+        if (!node[dir]) node[dir] = { _files: [] };
+        node = node[dir];
+      });
+      node._files.push({ ...d, fileName });
+    });
+    return root;
+  }, [docs]);
+
+  const FileIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{flexShrink:0,opacity:.5}}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>;
+  const FolderIcon = ({ open }) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{flexShrink:0,color:'var(--accent)'}}>{open
+    ? <path d="M5 19a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v1M5 19h14a2 2 0 0 0 2-2l-3-7H4l-1 7a2 2 0 0 0 2 2Z"/>
+    : <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
+  }</svg>;
+
+  const TreeFolder = ({ name, node, depth }) => {
+    const [open, setOpen] = useState(true);
+    const dirs = Object.keys(node).filter(k => k !== '_files').sort();
+    return (
+      <div>
+        <div onClick={() => setOpen(!open)} style={{
+          display:'flex',alignItems:'center',gap:8,padding:'6px 10px',paddingLeft:depth*20+10,
+          cursor:'pointer',borderRadius:6,fontSize:13,fontWeight:500,color:'var(--text)',
+          transition:'background .1s'
+        }} onMouseEnter={e => e.currentTarget.style.background='var(--surface-2)'}
+           onMouseLeave={e => e.currentTarget.style.background='none'}>
+          <FolderIcon open={open} />
+          <span>{name}</span>
+          <span style={{fontSize:10,color:'var(--text-3)',fontFamily:'var(--mono)',marginLeft:'auto'}}>{node._files.length + dirs.length}</span>
+        </div>
+        {open && (
+          <div>
+            {dirs.map(d => <TreeFolder key={d} name={d} node={node[d]} depth={depth+1} />)}
+            {node._files.map(f => (
+              <div key={f.id} onClick={() => openDoc(f)} style={{
+                display:'flex',alignItems:'center',gap:8,padding:'5px 10px',paddingLeft:(depth+1)*20+10,
+                cursor:'pointer',borderRadius:6,fontSize:13,color:'var(--text-2)',
+                transition:'background .1s,color .1s'
+              }} onMouseEnter={e => { e.currentTarget.style.background='var(--surface-2)'; e.currentTarget.style.color='var(--text)'; }}
+                 onMouseLeave={e => { e.currentTarget.style.background='none'; e.currentTarget.style.color='var(--text-2)'; }}>
+                <FileIcon />
+                <span>{f.fileName}</span>
+                <span className="stat-badge s-todo" style={{marginLeft:'auto',fontSize:9}}>{f.type}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (activeDoc) return (
+    <div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+        <button className="back-btn" onClick={close}>← Back to docs</button>
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          {dirty && <span style={{fontSize:11,color:'var(--text-3)'}}>Unsaved changes</span>}
+          <button className="form-btn" onClick={saveDoc} disabled={!dirty || saving}>{saving ? 'Saving...' : 'Save'}</button>
+        </div>
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+        <span style={{fontSize:16,fontWeight:600}}>{activeDoc.title}</span>
+        <span className="stat-badge s-todo">{activeDoc.type}</span>
+      </div>
+      <textarea style={{
+        width:'100%',minHeight:'60vh',padding:16,border:'1.5px solid var(--border)',borderRadius:'var(--r)',
+        background:'var(--surface)',fontFamily:'var(--mono)',fontSize:13,lineHeight:1.7,color:'var(--text)',
+        resize:'vertical',outline:'none',transition:'border-color .15s'
+      }} value={content} onChange={e => { setContent(e.target.value); setDirty(true); }}
+        onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+        onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+    </div>
+  );
+
+  if (docs.length === 0) return <div className="empty">No documents</div>;
+  const dirs = Object.keys(tree).filter(k => k !== '_files').sort();
+  return (
+    <div style={{background:'var(--surface)',border:'1px solid var(--border-subtle)',borderRadius:'var(--r)',padding:'8px 4px'}}>
+      {dirs.map(d => <TreeFolder key={d} name={d} node={tree[d]} depth={0} />)}
+      {tree._files.map(f => (
+        <div key={f.id} onClick={() => openDoc(f)} style={{
+          display:'flex',alignItems:'center',gap:8,padding:'5px 10px',paddingLeft:10,
+          cursor:'pointer',borderRadius:6,fontSize:13,color:'var(--text-2)',
+          transition:'background .1s,color .1s'
+        }} onMouseEnter={e => { e.currentTarget.style.background='var(--surface-2)'; e.currentTarget.style.color='var(--text)'; }}
+           onMouseLeave={e => { e.currentTarget.style.background='none'; e.currentTarget.style.color='var(--text-2)'; }}>
+          <FileIcon />
+          <span>{f.fileName}</span>
+          <span className="stat-badge s-todo" style={{marginLeft:'auto',fontSize:9}}>{f.type}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProjectDetail({ slug, nav }) {
+  const [project, setProject] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [docs, setDocs] = useState([]);
+  const [tab, setTab] = useState('kanban');
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newPriority, setNewPriority] = useState('P2');
+
+  const load = useCallback(() => {
+    api(`/projects/${slug}`).then(setProject).catch(() => {});
+    api(`/projects/${slug}/tasks`).then(setTasks).catch(() => {});
+    api(`/projects/${slug}/docs`).then(setDocs).catch(() => {});
+  }, [slug]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const addTask = async (e) => {
+    e.preventDefault();
+    if (!newTitle) return;
+    await api(`/projects/${slug}/tasks`, { method: 'POST', body: JSON.stringify({ title: newTitle, priority: newPriority }) });
+    setNewTitle(''); setShowAddTask(false);
+    load();
+  };
+
+  if (!project) return <div className="loading">Loading...</div>;
+
+  return (
+    <div className="page">
+      <button className="back-btn" onClick={() => nav('#/projects')}>← All Projects</button>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+        <div>
+          <h1 className="page-title" style={{margin:0}}>{project.name}</h1>
+          <div className="page-subtitle" style={{margin:'4px 0 0'}}>{project.description || project.slug}</div>
+        </div>
+        <button className="form-btn" onClick={() => setShowAddTask(true)}>+ Add Task</button>
+      </div>
+      {showAddTask && (
+        <div className="modal-overlay" onClick={() => setShowAddTask(false)}>
+          <form className="modal" onClick={e => e.stopPropagation()} onSubmit={addTask}>
+            <div className="modal-title">Add Task</div>
+            <div className="modal-field">
+              <label>Title</label>
+              <input placeholder="Task title" value={newTitle} onChange={e => setNewTitle(e.target.value)} autoFocus />
+            </div>
+            <div className="modal-field">
+              <label>Priority</label>
+              <select value={newPriority} onChange={e => setNewPriority(e.target.value)}>
+                <option value="P0">P0 — Critical</option><option value="P1">P1 — High</option>
+                <option value="P2">P2 — Medium</option><option value="P3">P3 — Low</option>
+              </select>
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="btn-cancel" onClick={() => setShowAddTask(false)}>Cancel</button>
+              <button type="submit" className="btn-primary">Add Task</button>
+            </div>
+          </form>
+        </div>
+      )}
+      <div className="tabs">
+        {['kanban','tasks','docs'].map(t => (
+          <button key={t} className={`tab ${tab === t ? 'active' : ''}${t === 'tasks' ? ' tab-tasks' : ''}`} onClick={() => setTab(t)}>
+            {t.charAt(0).toUpperCase() + t.slice(1)}
+          </button>
+        ))}
+      </div>
+      {tab === 'kanban' && <KanbanView slug={slug} tasks={tasks} onUpdate={load} />}
+      {tab === 'tasks' && <TaskTableView tasks={tasks} onDelete={load} />}
+      {tab === 'docs' && <DocsView docs={docs} onSave={load} />}
+    </div>
+  );
+}
+
+/* ── SEARCH VIEW ──────────────────────────────────────── */
+function SearchView() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [searched, setSearched] = useState(false);
+
+  const doSearch = async (e) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+    try { const r = await api('/search', { method: 'POST', body: JSON.stringify({ query }) }); setResults(r); } catch { setResults([]); }
+    setSearched(true);
+  };
+
+  return (
+    <div className="page">
+      <h1 className="page-title">Search</h1>
+      <form onSubmit={doSearch}>
+        <div className="search-bar">
+          <input className="search-input" placeholder="Search tasks and docs..." value={query} onChange={e => setQuery(e.target.value)} autoFocus />
+          <button className="search-btn" type="submit">Search</button>
+        </div>
+      </form>
+      {searched && results.length === 0 && <div className="empty">No results found</div>}
+      {results.map((r, i) => (
+        <div key={i} className="search-result">
+          <div className="search-result-type" style={{color: r.type === 'task' ? 'var(--blue)' : 'var(--green)'}}>{r.type}</div>
+          <div className="search-result-title">{r.title}</div>
+          <div className="search-result-meta">
+            {r.projectSlug}
+            {r.taskStatus && <> · <span className={`stat-badge s-${r.taskStatus}`}>{r.taskStatus}</span></>}
+            {r.taskPriority && <> · <span className={`stat-badge ${r.taskPriority.toLowerCase()}`}>{r.taskPriority}</span></>}
+            {r.docType && <> · {r.docType}</>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── TASK DETAIL MODAL ────────────────────────────────── */
+function TaskDetailModal({ task, onClose, onUpdate }) {
+  const [content, setContent] = useState('');
+  const [docId, setDocId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [creating, setCreating] = useState(false);
+
+  const projectSlug = task._project || task.project_slug;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      if (task.detail_path) {
+        const docs = await api(`/projects/${projectSlug}/docs`).catch(() => []);
+        const doc = docs.find(d => d.file_path === task.detail_path);
+        if (doc && !cancelled) {
+          const full = await api(`/docs/${doc.id}`).catch(() => null);
+          if (full && !cancelled) {
+            setDocId(doc.id);
+            const body = full.content.replace(/^---[\s\S]*?---\n*/, '');
+            setContent(body);
+          }
+        }
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [task]);
+
+  const handleSave = async () => {
+    if (!docId) return;
+    setSaving(true);
+    await api(`/docs/${docId}`, { method: 'PATCH', body: JSON.stringify({ body: content }) }).catch(() => {});
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+    if (onUpdate) onUpdate();
+  };
+
+  const handleCreate = async () => {
+    setCreating(true);
+    const slug = task.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 40);
+    const body = `# ${task.title}\n\n`;
+    const result = await api(`/projects/${projectSlug}/docs`, {
+      method: 'POST',
+      body: JSON.stringify({ title: task.title, body, type: 'detail' })
+    }).catch(() => null);
+    if (result) {
+      await api(`/tasks/${task.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ detail: result.file_path })
+      }).catch(() => {});
+      setDocId(result.id);
+      setContent(body);
+      if (onUpdate) onUpdate();
+    }
+    setCreating(false);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal modal-wide" onClick={e => e.stopPropagation()}>
+        <div className="modal-title">{task.title}</div>
+        <div className="task-detail-header">
+          <span className="badge badge-status">{task.status}</span>
+          <span className="badge badge-priority">{task.priority}</span>
+          {(task._projectName || projectSlug) && <span className="badge badge-project">{task._projectName || projectSlug}</span>}
+          {task.type !== 'task' && <span className="badge badge-status">{task.type}</span>}
+          {task.estimate && <span className="badge badge-priority">{task.estimate}</span>}
+          {task.deadline && <span className="badge badge-priority">{task.deadline}</span>}
+        </div>
+        {loading ? (
+          <div className="task-detail-empty">Loading...</div>
+        ) : docId ? (
+          <div>
+            <textarea className="task-detail-editor" value={content} onChange={e => setContent(e.target.value)} />
+            <div className="modal-actions" style={{alignItems:'center'}}>
+              <span className={`task-detail-saved ${saved ? 'show' : ''}`}>Saved</span>
+              <button className="btn-cancel" onClick={onClose}>Close</button>
+              <button className="btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="task-detail-empty">No detail document linked to this task.</div>
+            <div className="modal-actions">
+              <button className="btn-cancel" onClick={onClose}>Close</button>
+              <button className="btn-primary" onClick={handleCreate} disabled={creating}>{creating ? 'Creating...' : 'Add Detail'}</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── OVERVIEW VIEW ────────────────────────────────────── */
+function OverviewView({ nav }) {
+  const [data, setData] = useState(null);
+  const [allTasks, setAllTasks] = useState([]);
+  const [dragOver, setDragOver] = useState(null);
+  const [dragging, setDragging] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const colRefs = React.useRef({});
+
+  const loadAll = useCallback(async () => {
+    const overview = await api('/overview').catch(() => null);
+    if (!overview) return;
+    setData(overview);
+    const taskArrays = await Promise.all(
+      overview.projects.map(p => api(`/projects/${p.slug}/tasks`).then(tasks => tasks.map(t => ({ ...t, _project: p.slug, _projectName: p.name }))).catch(() => []))
+    );
+    setAllTasks(taskArrays.flat());
+  }, []);
+  useEffect(() => { loadAll(); }, [loadAll]);
+
+  const grouped = {};
+  COLUMNS.forEach(c => grouped[c.key] = []);
+  allTasks.forEach(t => { if (grouped[t.status]) grouped[t.status].push(t); });
+
+  const moveTo = async (taskId, newStatus) => {
+    const task = allTasks.find(t => t.id === taskId);
+    if (!task || task.status === newStatus) return;
+    try { await api(`/tasks/${task.id}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) }); loadAll(); } catch {}
+  };
+  const handleDragStart = (e, task) => { setDragging(task.id); e.dataTransfer.effectAllowed = 'move'; };
+  const handleDrop = async (e, newStatus) => { e.preventDefault(); setDragOver(null); if (dragging) { await moveTo(dragging, newStatus); setDragging(null); } };
+  const colAtPoint = (x, y) => {
+    for (const [key, el] of Object.entries(colRefs.current)) {
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return key;
+    }
+    return null;
+  };
+  const onTouchStart = (task) => { setDragging(task.id); };
+  const onTouchMove = (e) => { const t = e.touches[0]; setDragOver(colAtPoint(t.clientX, t.clientY)); };
+  const onTouchEnd = async (e) => {
+    if (!dragging) return;
+    const t = e.changedTouches[0];
+    const col = colAtPoint(t.clientX, t.clientY);
+    setDragOver(null);
+    if (col) await moveTo(dragging, col);
+    setDragging(null);
+  };
+
+  if (!data) return <div className="loading">Loading...</div>;
+
+  return (
+    <div className="page">
+      <h1 className="page-title">Overview</h1>
+      <div className="stats-row">
+        <div className="stat-card"><div className="stat-num">{data.totalProjects}</div><div className="stat-lbl">Projects</div></div>
+        <div className="stat-card"><div className="stat-num">{data.totalTasks}</div><div className="stat-lbl">Tasks</div></div>
+        <div className="stat-card"><div className="stat-num">{data.totalDocs}</div><div className="stat-lbl">Documents</div></div>
+      </div>
+      <div className="sec-head"><span className="sec-title">Projects</span><span className="sec-badge">{data.projects.length}</span></div>
+      <div className="card-grid" style={{marginBottom:28}}>
+        {data.projects.map(p => (
+          <div key={p.slug} className="card" onClick={() => nav(`#/project/${p.slug}`)}>
+            <div className="card-name">{p.name}</div>
+            <div style={{display:'flex',gap:6,marginTop:8,flexWrap:'wrap'}}>
+              {Object.entries(p.tasksByStatus || {}).map(([s, c]) => (
+                <span key={s} className={`stat-badge s-${s}`}>{s}: {c}</span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="sec-head"><span className="sec-title">All Tasks</span><span className="sec-badge">{allTasks.length}</span></div>
+      <div className="kanban">
+        {COLUMNS.map(col => (
+          <div key={col.key} className="kanban-col" ref={el => colRefs.current[col.key] = el}
+            onDragOver={e => { e.preventDefault(); setDragOver(col.key); }} onDragLeave={() => setDragOver(null)} onDrop={e => handleDrop(e, col.key)}>
+            <div className="kanban-col-header" style={{color: col.color}}>
+              {col.label} <span className="kanban-col-count">{grouped[col.key].length}</span>
+            </div>
+            <div className={`kanban-cards ${dragOver === col.key ? 'drag-over' : ''}`}>
+              {grouped[col.key].map(task => (
+                <div key={task.id} className={`kanban-card ${dragging === task.id ? 'dragging' : ''}`}
+                  draggable onDragStart={e => handleDragStart(e, task)} onDragEnd={() => setDragging(null)}
+                  onTouchStart={() => onTouchStart(task)} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+                  onClick={() => { if (!dragging) setSelectedTask(task); }} style={{cursor:'pointer'}}>
+                  <div className="kanban-card-title">{task.title}</div>
+                  <div className="kanban-card-meta">
+                    <span className={task.priority.toLowerCase()}>{task.priority}</span>
+                    <span style={{background:'var(--accent-light)',color:'var(--accent)',fontSize:9,padding:'2px 6px',borderRadius:3,fontFamily:'var(--mono)',fontWeight:600}}>{task._projectName}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      {selectedTask && <TaskDetailModal task={selectedTask} onClose={() => setSelectedTask(null)} onUpdate={loadAll} />}
+    </div>
+  );
+}
+
+/* ── APP ──────────────────────────────────────────────── */
+function App() {
+  const [authed, setAuthed] = useState(!!localStorage.getItem(TOKEN_KEY));
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { route, segs, nav } = useRouter();
+
+  const handleLogout = () => { localStorage.removeItem(TOKEN_KEY); setAuthed(false); };
+  const mobileNav = (path) => { nav(path); setSidebarOpen(false); };
+
+  if (!authed) return <LoginScreen onAuth={() => setAuthed(true)} />;
+
+  const view = segs[0] === 'project' && segs[1] ? 'project-detail' : (segs[0] || 'overview');
+  const projectSlug = segs[0] === 'project' ? segs[1] : null;
+
+  return (
+    <div className="shell">
+      <button className="mobile-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
+      <Sidebar view={view === 'project-detail' ? 'projects' : view} nav={mobileNav} onLogout={handleLogout} sidebarOpen={sidebarOpen} />
+      <div className="main">
+        <div className="topbar">
+          <span className="topbar-title">
+            {view === 'projects' && 'Projects'}
+            {view === 'project-detail' && projectSlug}
+            {view === 'overview' && 'Overview'}
+            {view === 'search' && 'Search'}
+          </span>
+        </div>
+        {view === 'projects' && <ProjectsView nav={nav} />}
+        {view === 'project-detail' && projectSlug && <ProjectDetail slug={projectSlug} nav={nav} />}
+        {view === 'overview' && <OverviewView nav={nav} />}
+        {view === 'search' && <SearchView />}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

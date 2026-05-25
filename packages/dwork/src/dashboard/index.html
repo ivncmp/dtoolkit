@@ -120,10 +120,10 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .login-card{
   position:relative;z-index:1;background:var(--surface);
   border:1px solid var(--border);border-radius:16px;
-  padding:40px 44px;width:400px;text-align:center;
+  padding:40px 44px;width:400px;max-width:calc(100vw - 32px);text-align:center;
   box-shadow:0 20px 60px oklch(0 0 0/.12),0 0 0 1px oklch(from var(--accent) l c h /.08);
 }
-.login-logo{width:200px;height:auto;margin:0 auto 24px;display:block}
+.login-logo{width:280px;max-width:100%;height:auto;margin:0 auto 28px;display:block}
 .login-token-label{font-size:13px;color:var(--text-2);margin-bottom:10px;text-align:left}
 .login-input{
   width:100%;padding:11px 14px;background:var(--surface-2);
@@ -182,6 +182,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .kanban-card{
   background:var(--surface);border:1px solid var(--border-subtle);border-radius:6px;padding:10px 12px;
   cursor:grab;transition:box-shadow .12s,opacity .12s,transform .12s;font-size:13px;
+  touch-action:none;
 }
 .kanban-card:active{cursor:grabbing}
 .kanban-card.dragging{opacity:.4}
@@ -238,6 +239,31 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .form-btn{padding:8px 16px;border:none;border-radius:6px;background:var(--accent);color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer}
 .form-btn:hover{opacity:.85}
 
+/* ── MODAL ─────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;z-index:100;background:oklch(0 0 0/.4);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px 32px;width:420px;max-width:100%;box-shadow:0 20px 60px oklch(0 0 0/.15)}
+.modal-title{font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:20px}
+.modal-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.modal-field label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.3px}
+.modal-field input,.modal-field select{padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surface-2);font-family:var(--font);font-size:13px;color:var(--text);outline:none;transition:border-color .15s}
+.modal-field input:focus,.modal-field select:focus{border-color:var(--accent)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+.modal-actions .btn-cancel{padding:9px 18px;border:1px solid var(--border);border-radius:var(--r);background:none;font-family:var(--font);font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;transition:all .12s}
+.modal-actions .btn-cancel:hover{border-color:var(--text-3);color:var(--text)}
+.modal-actions .btn-primary{padding:9px 18px;border:none;border-radius:var(--r);background:var(--accent);color:#fff;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:opacity .12s}
+.modal-actions .btn-primary:hover{opacity:.9}
+.modal-wide{width:640px}
+.task-detail-header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.task-detail-header .badge{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:600;font-family:var(--mono)}
+.task-detail-header .badge-status{background:var(--accent-light);color:var(--accent)}
+.task-detail-header .badge-priority{background:var(--surface-2);color:var(--text-2)}
+.task-detail-header .badge-project{background:var(--accent-light);color:var(--accent)}
+.task-detail-editor{width:100%;min-height:260px;padding:12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surface-2);font-family:var(--mono);font-size:13px;line-height:1.6;color:var(--text);resize:vertical;outline:none;transition:border-color .15s}
+.task-detail-editor:focus{border-color:var(--accent)}
+.task-detail-empty{text-align:center;padding:40px 0;color:var(--text-3);font-size:13px}
+.task-detail-saved{color:var(--accent);font-size:12px;font-weight:500;opacity:0;transition:opacity .2s}
+.task-detail-saved.show{opacity:1}
+
 /* ── MISC ──────────────────────────────── */
 .back-btn{
   display:inline-flex;align-items:center;gap:6px;
@@ -267,12 +293,12 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 
 /* ── MOBILE HAMBURGER ──────────────────── */
 .mobile-toggle{
-  display:none;position:fixed;top:10px;left:10px;z-index:60;
-  width:36px;height:36px;border-radius:8px;border:1px solid var(--border);
-  background:var(--surface);cursor:pointer;align-items:center;justify-content:center;
-  box-shadow:0 2px 8px oklch(0 0 0/.08);
+  display:none;position:fixed;top:12px;left:12px;z-index:60;
+  width:32px;height:32px;border-radius:6px;border:none;
+  background:none;cursor:pointer;align-items:center;justify-content:center;
+  padding:0;
 }
-.mobile-toggle svg{color:var(--text)}
+.mobile-toggle svg{color:var(--text-2)}
 .sidebar-overlay{display:none;position:fixed;inset:0;z-index:45;background:oklch(0 0 0/.3)}
 
 /* ── RESPONSIVE ────────────────────────── */
@@ -289,14 +315,22 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   .card-grid{grid-template-columns:1fr}
   .kanban{flex-direction:column}
   .kanban-col{min-width:0}
-  .task-table{font-size:12px}
-  .task-table th,.task-table td{padding:8px 6px}
+  .tab-tasks{display:none}
+  .task-table thead{display:none}
+  .task-table,.task-table tbody,.task-table tr,.task-table td{display:block;width:100%}
+  .task-table tr{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r);padding:12px;margin-bottom:8px;position:relative}
+  .task-table td{border:none;padding:2px 0;font-size:12px}
+  .task-table td:first-child{font-size:14px;font-weight:600;margin-bottom:6px}
+  .task-table td:last-child{position:absolute;top:12px;right:12px}
+  .doc-table td{display:inline-block;width:auto;padding:2px 4px}
+  .doc-table td:first-child{display:block;width:100%;margin-bottom:4px}
+  .doc-table td:last-child{position:static;display:block;width:100%;margin-top:4px;word-break:break-all}
   .search-bar{flex-direction:column}
   .search-btn{width:100%}
   .form-row{flex-direction:column}
   .form-input{width:100%}
-  .login-card{width:calc(100vw - 32px);padding:28px 20px}
-  .login-logo{width:160px}
+  .login-card{padding:28px 20px}
+  .login-logo{width:100%}
 }
 </style>
 </head>
@@ -397,11 +431,11 @@ function Sidebar({ view, nav, onLogout, sidebarOpen }) {
         </div>
       </div>
       <div className="sb-nav">
-        <button className={`sb-link ${view === 'projects' ? 'active' : ''}`} onClick={() => nav('#/projects')}>
-          <Icon.projects /> Projects
-        </button>
         <button className={`sb-link ${view === 'overview' ? 'active' : ''}`} onClick={() => nav('#/overview')}>
           <Icon.overview /> Overview
+        </button>
+        <button className={`sb-link ${view === 'projects' ? 'active' : ''}`} onClick={() => nav('#/projects')}>
+          <Icon.projects /> Projects
         </button>
         <button className={`sb-link ${view === 'search' ? 'active' : ''}`} onClick={() => nav('#/search')}>
           <Icon.search /> Search
@@ -411,8 +445,8 @@ function Sidebar({ view, nav, onLogout, sidebarOpen }) {
         <div className="palette-toggle">
           <span className="palette-toggle-label">Theme</span>
           <div className="palette-toggle-switch">
-            <button className={`palette-toggle-opt ${palette === 'cloud' ? 'active' : ''}`} onClick={() => togglePalette('cloud')}>Cloud</button>
-            <button className={`palette-toggle-opt ${palette === 'ocean' ? 'active' : ''}`} onClick={() => togglePalette('ocean')}>Ocean</button>
+            <button className={`palette-toggle-opt ${palette === 'cloud' ? 'active' : ''}`} onClick={() => togglePalette('cloud')}>&#9788; Light</button>
+            <button className={`palette-toggle-opt ${palette === 'ocean' ? 'active' : ''}`} onClick={() => togglePalette('ocean')}>&#9679; Dark</button>
           </div>
         </div>
         <div className="sb-user">
@@ -445,18 +479,26 @@ function ProjectsView({ nav }) {
     <div className="page">
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
         <h1 className="page-title" style={{margin:0}}>Projects</h1>
-        <button className="form-btn" onClick={() => setShowNew(!showNew)}>
-          {showNew ? 'Cancel' : '+ New Project'}
-        </button>
+        <button className="form-btn" onClick={() => setShowNew(true)}>+ New Project</button>
       </div>
       {showNew && (
-        <form onSubmit={createProject} style={{marginBottom:20}}>
-          <div className="form-row">
-            <input className="form-input" placeholder="slug (e.g. my-project)" value={slug} onChange={e => setSlug(e.target.value)} />
-            <input className="form-input" placeholder="Display name" value={name} onChange={e => setName(e.target.value)} />
-            <button className="form-btn" type="submit">Create</button>
-          </div>
-        </form>
+        <div className="modal-overlay" onClick={() => setShowNew(false)}>
+          <form className="modal" onClick={e => e.stopPropagation()} onSubmit={createProject}>
+            <div className="modal-title">New Project</div>
+            <div className="modal-field">
+              <label>Slug</label>
+              <input placeholder="my-project" value={slug} onChange={e => setSlug(e.target.value)} autoFocus />
+            </div>
+            <div className="modal-field">
+              <label>Name</label>
+              <input placeholder="My Project" value={name} onChange={e => setName(e.target.value)} />
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="btn-cancel" onClick={() => setShowNew(false)}>Cancel</button>
+              <button type="submit" className="btn-primary">Create</button>
+            </div>
+          </form>
+        </div>
       )}
       {projects.length === 0 ? (
         <div className="empty">No projects yet. Create one to get started.</div>
@@ -492,6 +534,8 @@ const COLUMNS = [
 function KanbanView({ slug, tasks, onUpdate }) {
   const [dragging, setDragging] = useState(null);
   const [dragOver, setDragOver] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const colRefs = React.useRef({});
 
   const grouped = {};
   COLUMNS.forEach(c => grouped[c.key] = []);
@@ -499,12 +543,15 @@ function KanbanView({ slug, tasks, onUpdate }) {
 
   const handleDragStart = (e, task) => { setDragging(task.id); e.dataTransfer.effectAllowed = 'move'; };
   const handleDragOver = (e, colKey) => { e.preventDefault(); setDragOver(colKey); };
+  const moveTo = async (taskId, newStatus) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || task.status === newStatus) return;
+    try { await api(`/tasks/${task.id}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) }); onUpdate(); } catch {}
+  };
   const handleDrop = async (e, newStatus) => {
     e.preventDefault(); setDragOver(null);
     if (!dragging) return;
-    const task = tasks.find(t => t.id === dragging);
-    if (!task || task.status === newStatus) { setDragging(null); return; }
-    try { await api(`/tasks/${task.id}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) }); onUpdate(); } catch {}
+    await moveTo(dragging, newStatus);
     setDragging(null);
   };
   const handleDelete = async (e, taskId) => {
@@ -513,17 +560,43 @@ function KanbanView({ slug, tasks, onUpdate }) {
     try { await api(`/tasks/${taskId}`, { method: 'DELETE' }); onUpdate(); } catch {}
   };
 
+  const colAtPoint = (x, y) => {
+    for (const [key, el] of Object.entries(colRefs.current)) {
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return key;
+    }
+    return null;
+  };
+  const onTouchStart = (task) => { setDragging(task.id); };
+  const onTouchMove = (e) => {
+    const touch = e.touches[0];
+    const col = colAtPoint(touch.clientX, touch.clientY);
+    setDragOver(col);
+  };
+  const onTouchEnd = async (e) => {
+    if (!dragging) return;
+    const touch = e.changedTouches[0];
+    const col = colAtPoint(touch.clientX, touch.clientY);
+    setDragOver(null);
+    if (col) await moveTo(dragging, col);
+    setDragging(null);
+  };
+
   return (
     <div className="kanban">
       {COLUMNS.map(col => (
-        <div key={col.key} className="kanban-col" onDragOver={e => handleDragOver(e, col.key)} onDragLeave={() => setDragOver(null)} onDrop={e => handleDrop(e, col.key)}>
+        <div key={col.key} className="kanban-col" ref={el => colRefs.current[col.key] = el}
+          onDragOver={e => handleDragOver(e, col.key)} onDragLeave={() => setDragOver(null)} onDrop={e => handleDrop(e, col.key)}>
           <div className="kanban-col-header" style={{color: col.color}}>
             {col.label} <span className="kanban-col-count">{grouped[col.key].length}</span>
           </div>
           <div className={`kanban-cards ${dragOver === col.key ? 'drag-over' : ''}`}>
             {grouped[col.key].map(task => (
               <div key={task.id} className={`kanban-card ${dragging === task.id ? 'dragging' : ''}`}
-                draggable onDragStart={e => handleDragStart(e, task)} onDragEnd={() => setDragging(null)}>
+                draggable onDragStart={e => handleDragStart(e, task)} onDragEnd={() => setDragging(null)}
+                onTouchStart={() => onTouchStart(task)} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+                onClick={() => { if (!dragging) setSelectedTask(task); }} style={{cursor:'pointer'}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
                   <div className="kanban-card-title">{task.title}</div>
                   <button className="del-btn" onClick={e => handleDelete(e, task.id)} title="Delete">×</button>
@@ -539,6 +612,7 @@ function KanbanView({ slug, tasks, onUpdate }) {
           </div>
         </div>
       ))}
+      {selectedTask && <TaskDetailModal task={selectedTask} onClose={() => setSelectedTask(null)} onUpdate={onUpdate} />}
     </div>
   );
 }
@@ -571,11 +645,133 @@ function TaskTableView({ tasks, onDelete }) {
 }
 
 /* ── PROJECT DETAIL ───────────────────────────────────── */
+function DocsView({ docs, onSave }) {
+  const [activeDoc, setActiveDoc] = useState(null);
+  const [content, setContent] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+
+  const openDoc = async (doc) => {
+    try {
+      const full = await api(`/docs/${doc.id}`);
+      setContent(full.content || '');
+      setActiveDoc(full);
+      setDirty(false);
+    } catch {}
+  };
+  const saveDoc = async () => {
+    if (!activeDoc) return;
+    setSaving(true);
+    try { await api(`/docs/${activeDoc.id}`, { method: 'PATCH', body: JSON.stringify({ body: content }) }); setDirty(false); if (onSave) onSave(); } catch {}
+    setSaving(false);
+  };
+  const close = () => { setActiveDoc(null); setContent(''); setDirty(false); };
+
+  const tree = React.useMemo(() => {
+    const root = { _files: [] };
+    docs.forEach(d => {
+      const parts = d.file_path.split('/');
+      const fileName = parts.pop();
+      let node = root;
+      parts.forEach(dir => {
+        if (!node[dir]) node[dir] = { _files: [] };
+        node = node[dir];
+      });
+      node._files.push({ ...d, fileName });
+    });
+    return root;
+  }, [docs]);
+
+  const FileIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{flexShrink:0,opacity:.5}}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>;
+  const FolderIcon = ({ open }) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{flexShrink:0,color:'var(--accent)'}}>{open
+    ? <path d="M5 19a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v1M5 19h14a2 2 0 0 0 2-2l-3-7H4l-1 7a2 2 0 0 0 2 2Z"/>
+    : <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
+  }</svg>;
+
+  const TreeFolder = ({ name, node, depth }) => {
+    const [open, setOpen] = useState(true);
+    const dirs = Object.keys(node).filter(k => k !== '_files').sort();
+    return (
+      <div>
+        <div onClick={() => setOpen(!open)} style={{
+          display:'flex',alignItems:'center',gap:8,padding:'6px 10px',paddingLeft:depth*20+10,
+          cursor:'pointer',borderRadius:6,fontSize:13,fontWeight:500,color:'var(--text)',
+          transition:'background .1s'
+        }} onMouseEnter={e => e.currentTarget.style.background='var(--surface-2)'}
+           onMouseLeave={e => e.currentTarget.style.background='none'}>
+          <FolderIcon open={open} />
+          <span>{name}</span>
+          <span style={{fontSize:10,color:'var(--text-3)',fontFamily:'var(--mono)',marginLeft:'auto'}}>{node._files.length + dirs.length}</span>
+        </div>
+        {open && (
+          <div>
+            {dirs.map(d => <TreeFolder key={d} name={d} node={node[d]} depth={depth+1} />)}
+            {node._files.map(f => (
+              <div key={f.id} onClick={() => openDoc(f)} style={{
+                display:'flex',alignItems:'center',gap:8,padding:'5px 10px',paddingLeft:(depth+1)*20+10,
+                cursor:'pointer',borderRadius:6,fontSize:13,color:'var(--text-2)',
+                transition:'background .1s,color .1s'
+              }} onMouseEnter={e => { e.currentTarget.style.background='var(--surface-2)'; e.currentTarget.style.color='var(--text)'; }}
+                 onMouseLeave={e => { e.currentTarget.style.background='none'; e.currentTarget.style.color='var(--text-2)'; }}>
+                <FileIcon />
+                <span>{f.fileName}</span>
+                <span className="stat-badge s-todo" style={{marginLeft:'auto',fontSize:9}}>{f.type}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (activeDoc) return (
+    <div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+        <button className="back-btn" onClick={close}>← Back to docs</button>
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          {dirty && <span style={{fontSize:11,color:'var(--text-3)'}}>Unsaved changes</span>}
+          <button className="form-btn" onClick={saveDoc} disabled={!dirty || saving}>{saving ? 'Saving...' : 'Save'}</button>
+        </div>
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+        <span style={{fontSize:16,fontWeight:600}}>{activeDoc.title}</span>
+        <span className="stat-badge s-todo">{activeDoc.type}</span>
+      </div>
+      <textarea style={{
+        width:'100%',minHeight:'60vh',padding:16,border:'1.5px solid var(--border)',borderRadius:'var(--r)',
+        background:'var(--surface)',fontFamily:'var(--mono)',fontSize:13,lineHeight:1.7,color:'var(--text)',
+        resize:'vertical',outline:'none',transition:'border-color .15s'
+      }} value={content} onChange={e => { setContent(e.target.value); setDirty(true); }}
+        onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+        onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+    </div>
+  );
+
+  if (docs.length === 0) return <div className="empty">No documents</div>;
+  const dirs = Object.keys(tree).filter(k => k !== '_files').sort();
+  return (
+    <div style={{background:'var(--surface)',border:'1px solid var(--border-subtle)',borderRadius:'var(--r)',padding:'8px 4px'}}>
+      {dirs.map(d => <TreeFolder key={d} name={d} node={tree[d]} depth={0} />)}
+      {tree._files.map(f => (
+        <div key={f.id} onClick={() => openDoc(f)} style={{
+          display:'flex',alignItems:'center',gap:8,padding:'5px 10px',paddingLeft:10,
+          cursor:'pointer',borderRadius:6,fontSize:13,color:'var(--text-2)',
+          transition:'background .1s,color .1s'
+        }} onMouseEnter={e => { e.currentTarget.style.background='var(--surface-2)'; e.currentTarget.style.color='var(--text)'; }}
+           onMouseLeave={e => { e.currentTarget.style.background='none'; e.currentTarget.style.color='var(--text-2)'; }}>
+          <FileIcon />
+          <span>{f.fileName}</span>
+          <span className="stat-badge s-todo" style={{marginLeft:'auto',fontSize:9}}>{f.type}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ProjectDetail({ slug, nav }) {
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [docs, setDocs] = useState([]);
-  const [roadmap, setRoadmap] = useState('');
   const [tab, setTab] = useState('kanban');
   const [showAddTask, setShowAddTask] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -588,13 +784,6 @@ function ProjectDetail({ slug, nav }) {
   }, [slug]);
 
   useEffect(() => { load(); }, [load]);
-
-  useEffect(() => {
-    if (tab === 'roadmap' && !roadmap) {
-      const rdoc = docs.find(d => d.type === 'roadmap');
-      if (rdoc) api(`/docs/${rdoc.id}`).then(d => setRoadmap(d.content || '')).catch(() => {});
-    }
-  }, [tab, slug, docs, roadmap]);
 
   const addTask = async (e) => {
     e.preventDefault();
@@ -614,52 +803,40 @@ function ProjectDetail({ slug, nav }) {
           <h1 className="page-title" style={{margin:0}}>{project.name}</h1>
           <div className="page-subtitle" style={{margin:'4px 0 0'}}>{project.description || project.slug}</div>
         </div>
-        <button className="form-btn" onClick={() => setShowAddTask(!showAddTask)}>
-          {showAddTask ? 'Cancel' : '+ Add Task'}
-        </button>
+        <button className="form-btn" onClick={() => setShowAddTask(true)}>+ Add Task</button>
       </div>
       {showAddTask && (
-        <form onSubmit={addTask} style={{marginBottom:16}}>
-          <div className="form-row">
-            <input className="form-input" placeholder="Task title" value={newTitle} onChange={e => setNewTitle(e.target.value)} autoFocus />
-            <select className="form-input" style={{flex:'0 0 100px'}} value={newPriority} onChange={e => setNewPriority(e.target.value)}>
-              <option value="P0">P0</option><option value="P1">P1</option>
-              <option value="P2">P2</option><option value="P3">P3</option>
-            </select>
-            <button className="form-btn" type="submit">Add</button>
-          </div>
-        </form>
+        <div className="modal-overlay" onClick={() => setShowAddTask(false)}>
+          <form className="modal" onClick={e => e.stopPropagation()} onSubmit={addTask}>
+            <div className="modal-title">Add Task</div>
+            <div className="modal-field">
+              <label>Title</label>
+              <input placeholder="Task title" value={newTitle} onChange={e => setNewTitle(e.target.value)} autoFocus />
+            </div>
+            <div className="modal-field">
+              <label>Priority</label>
+              <select value={newPriority} onChange={e => setNewPriority(e.target.value)}>
+                <option value="P0">P0 — Critical</option><option value="P1">P1 — High</option>
+                <option value="P2">P2 — Medium</option><option value="P3">P3 — Low</option>
+              </select>
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="btn-cancel" onClick={() => setShowAddTask(false)}>Cancel</button>
+              <button type="submit" className="btn-primary">Add Task</button>
+            </div>
+          </form>
+        </div>
       )}
       <div className="tabs">
-        {['kanban','tasks','roadmap','docs'].map(t => (
-          <button key={t} className={`tab ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
+        {['kanban','tasks','docs'].map(t => (
+          <button key={t} className={`tab ${tab === t ? 'active' : ''}${t === 'tasks' ? ' tab-tasks' : ''}`} onClick={() => setTab(t)}>
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
         ))}
       </div>
       {tab === 'kanban' && <KanbanView slug={slug} tasks={tasks} onUpdate={load} />}
       {tab === 'tasks' && <TaskTableView tasks={tasks} onDelete={load} />}
-      {tab === 'roadmap' && (
-        <div className="md-content">
-          {roadmap ? <pre style={{whiteSpace:'pre-wrap',fontFamily:'var(--font)'}}>{roadmap}</pre> : <div className="empty">No roadmap content</div>}
-        </div>
-      )}
-      {tab === 'docs' && (
-        docs.length === 0 ? <div className="empty">No documents</div> : (
-          <table className="task-table">
-            <thead><tr><th>Title</th><th>Type</th><th>Path</th></tr></thead>
-            <tbody>
-              {docs.map(d => (
-                <tr key={d.id}>
-                  <td style={{fontWeight:500}}>{d.title}</td>
-                  <td><span className="stat-badge s-todo">{d.type}</span></td>
-                  <td style={{fontFamily:'var(--mono)',fontSize:12,color:'var(--text-3)'}}>{d.file_path}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )
-      )}
+      {tab === 'docs' && <DocsView docs={docs} onSave={load} />}
     </div>
   );
 }
@@ -703,10 +880,154 @@ function SearchView() {
   );
 }
 
+/* ── TASK DETAIL MODAL ────────────────────────────────── */
+function TaskDetailModal({ task, onClose, onUpdate }) {
+  const [content, setContent] = useState('');
+  const [docId, setDocId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [creating, setCreating] = useState(false);
+
+  const projectSlug = task._project || task.project_slug;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      if (task.detail_path) {
+        const docs = await api(`/projects/${projectSlug}/docs`).catch(() => []);
+        const doc = docs.find(d => d.file_path === task.detail_path);
+        if (doc && !cancelled) {
+          const full = await api(`/docs/${doc.id}`).catch(() => null);
+          if (full && !cancelled) {
+            setDocId(doc.id);
+            const body = full.content.replace(/^---[\s\S]*?---\n*/, '');
+            setContent(body);
+          }
+        }
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [task]);
+
+  const handleSave = async () => {
+    if (!docId) return;
+    setSaving(true);
+    await api(`/docs/${docId}`, { method: 'PATCH', body: JSON.stringify({ body: content }) }).catch(() => {});
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+    if (onUpdate) onUpdate();
+  };
+
+  const handleCreate = async () => {
+    setCreating(true);
+    const slug = task.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 40);
+    const body = `# ${task.title}\n\n`;
+    const result = await api(`/projects/${projectSlug}/docs`, {
+      method: 'POST',
+      body: JSON.stringify({ title: task.title, body, type: 'detail' })
+    }).catch(() => null);
+    if (result) {
+      await api(`/tasks/${task.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ detail: result.file_path })
+      }).catch(() => {});
+      setDocId(result.id);
+      setContent(body);
+      if (onUpdate) onUpdate();
+    }
+    setCreating(false);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal modal-wide" onClick={e => e.stopPropagation()}>
+        <div className="modal-title">{task.title}</div>
+        <div className="task-detail-header">
+          <span className="badge badge-status">{task.status}</span>
+          <span className="badge badge-priority">{task.priority}</span>
+          {(task._projectName || projectSlug) && <span className="badge badge-project">{task._projectName || projectSlug}</span>}
+          {task.type !== 'task' && <span className="badge badge-status">{task.type}</span>}
+          {task.estimate && <span className="badge badge-priority">{task.estimate}</span>}
+          {task.deadline && <span className="badge badge-priority">{task.deadline}</span>}
+        </div>
+        {loading ? (
+          <div className="task-detail-empty">Loading...</div>
+        ) : docId ? (
+          <div>
+            <textarea className="task-detail-editor" value={content} onChange={e => setContent(e.target.value)} />
+            <div className="modal-actions" style={{alignItems:'center'}}>
+              <span className={`task-detail-saved ${saved ? 'show' : ''}`}>Saved</span>
+              <button className="btn-cancel" onClick={onClose}>Close</button>
+              <button className="btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="task-detail-empty">No detail document linked to this task.</div>
+            <div className="modal-actions">
+              <button className="btn-cancel" onClick={onClose}>Close</button>
+              <button className="btn-primary" onClick={handleCreate} disabled={creating}>{creating ? 'Creating...' : 'Add Detail'}</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ── OVERVIEW VIEW ────────────────────────────────────── */
 function OverviewView({ nav }) {
   const [data, setData] = useState(null);
-  useEffect(() => { api('/overview').then(setData).catch(() => {}); }, []);
+  const [allTasks, setAllTasks] = useState([]);
+  const [dragOver, setDragOver] = useState(null);
+  const [dragging, setDragging] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const colRefs = React.useRef({});
+
+  const loadAll = useCallback(async () => {
+    const overview = await api('/overview').catch(() => null);
+    if (!overview) return;
+    setData(overview);
+    const taskArrays = await Promise.all(
+      overview.projects.map(p => api(`/projects/${p.slug}/tasks`).then(tasks => tasks.map(t => ({ ...t, _project: p.slug, _projectName: p.name }))).catch(() => []))
+    );
+    setAllTasks(taskArrays.flat());
+  }, []);
+  useEffect(() => { loadAll(); }, [loadAll]);
+
+  const grouped = {};
+  COLUMNS.forEach(c => grouped[c.key] = []);
+  allTasks.forEach(t => { if (grouped[t.status]) grouped[t.status].push(t); });
+
+  const moveTo = async (taskId, newStatus) => {
+    const task = allTasks.find(t => t.id === taskId);
+    if (!task || task.status === newStatus) return;
+    try { await api(`/tasks/${task.id}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) }); loadAll(); } catch {}
+  };
+  const handleDragStart = (e, task) => { setDragging(task.id); e.dataTransfer.effectAllowed = 'move'; };
+  const handleDrop = async (e, newStatus) => { e.preventDefault(); setDragOver(null); if (dragging) { await moveTo(dragging, newStatus); setDragging(null); } };
+  const colAtPoint = (x, y) => {
+    for (const [key, el] of Object.entries(colRefs.current)) {
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return key;
+    }
+    return null;
+  };
+  const onTouchStart = (task) => { setDragging(task.id); };
+  const onTouchMove = (e) => { const t = e.touches[0]; setDragOver(colAtPoint(t.clientX, t.clientY)); };
+  const onTouchEnd = async (e) => {
+    if (!dragging) return;
+    const t = e.changedTouches[0];
+    const col = colAtPoint(t.clientX, t.clientY);
+    setDragOver(null);
+    if (col) await moveTo(dragging, col);
+    setDragging(null);
+  };
 
   if (!data) return <div className="loading">Loading...</div>;
 
@@ -719,7 +1040,7 @@ function OverviewView({ nav }) {
         <div className="stat-card"><div className="stat-num">{data.totalDocs}</div><div className="stat-lbl">Documents</div></div>
       </div>
       <div className="sec-head"><span className="sec-title">Projects</span><span className="sec-badge">{data.projects.length}</span></div>
-      <div className="card-grid">
+      <div className="card-grid" style={{marginBottom:28}}>
         {data.projects.map(p => (
           <div key={p.slug} className="card" onClick={() => nav(`#/project/${p.slug}`)}>
             <div className="card-name">{p.name}</div>
@@ -728,14 +1049,35 @@ function OverviewView({ nav }) {
                 <span key={s} className={`stat-badge s-${s}`}>{s}: {c}</span>
               ))}
             </div>
-            <div style={{display:'flex',gap:6,marginTop:6,flexWrap:'wrap'}}>
-              {Object.entries(p.tasksByPriority || {}).map(([pr, c]) => (
-                <span key={pr} className={`stat-badge ${pr.toLowerCase()}`}>{pr}: {c}</span>
+          </div>
+        ))}
+      </div>
+      <div className="sec-head"><span className="sec-title">All Tasks</span><span className="sec-badge">{allTasks.length}</span></div>
+      <div className="kanban">
+        {COLUMNS.map(col => (
+          <div key={col.key} className="kanban-col" ref={el => colRefs.current[col.key] = el}
+            onDragOver={e => { e.preventDefault(); setDragOver(col.key); }} onDragLeave={() => setDragOver(null)} onDrop={e => handleDrop(e, col.key)}>
+            <div className="kanban-col-header" style={{color: col.color}}>
+              {col.label} <span className="kanban-col-count">{grouped[col.key].length}</span>
+            </div>
+            <div className={`kanban-cards ${dragOver === col.key ? 'drag-over' : ''}`}>
+              {grouped[col.key].map(task => (
+                <div key={task.id} className={`kanban-card ${dragging === task.id ? 'dragging' : ''}`}
+                  draggable onDragStart={e => handleDragStart(e, task)} onDragEnd={() => setDragging(null)}
+                  onTouchStart={() => onTouchStart(task)} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+                  onClick={() => { if (!dragging) setSelectedTask(task); }} style={{cursor:'pointer'}}>
+                  <div className="kanban-card-title">{task.title}</div>
+                  <div className="kanban-card-meta">
+                    <span className={task.priority.toLowerCase()}>{task.priority}</span>
+                    <span style={{background:'var(--accent-light)',color:'var(--accent)',fontSize:9,padding:'2px 6px',borderRadius:3,fontFamily:'var(--mono)',fontWeight:600}}>{task._projectName}</span>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         ))}
       </div>
+      {selectedTask && <TaskDetailModal task={selectedTask} onClose={() => setSelectedTask(null)} onUpdate={loadAll} />}
     </div>
   );
 }
@@ -751,7 +1093,7 @@ function App() {
 
   if (!authed) return <LoginScreen onAuth={() => setAuthed(true)} />;
 
-  const view = segs[0] === 'project' && segs[1] ? 'project-detail' : (segs[0] || 'projects');
+  const view = segs[0] === 'project' && segs[1] ? 'project-detail' : (segs[0] || 'overview');
   const projectSlug = segs[0] === 'project' ? segs[1] : null;
 
   return (

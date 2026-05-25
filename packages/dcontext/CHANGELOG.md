@@ -1,5 +1,12 @@
 # @dtoolkit/dcontext
 
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [d5cbd7b]
+  - @dtoolkit/sdk@0.5.0
+
 ## 0.1.4
 
 ### Patch Changes

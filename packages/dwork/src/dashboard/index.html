@@ -897,7 +897,7 @@ function TaskDetailModal({ task, onClose, onUpdate }) {
       setLoading(true);
       if (task.detail_path) {
         const docs = await api(`/projects/${projectSlug}/docs`).catch(() => []);
-        const doc = docs.find(d => d.file_path === task.detail_path);
+        const doc = docs.find(d => d.file_path === task.detail_path || d.file_path === `docs/${task.detail_path}`);
         if (doc && !cancelled) {
           const full = await api(`/docs/${doc.id}`).catch(() => null);
           if (full && !cancelled) {

@@ -1,5 +1,609 @@
 <!DOCTYPE html>
-<html>
-<head><title>dwork dashboard — coming soon</title></head>
-<body><h1>dwork dashboard</h1><p>Dashboard will be available in a future release.</p></body>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>dwork — Project Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:oklch(0.965 0.008 248);
+  --sidebar-bg:oklch(0.99 0.003 250);
+  --surface:oklch(1 0 0);
+  --surface-2:oklch(0.95 0.01 248);
+  --border:oklch(0.87 0.018 248);
+  --border-subtle:oklch(0.92 0.01 248);
+  --text:oklch(0.20 0.06 252);
+  --text-2:oklch(0.42 0.05 250);
+  --text-3:oklch(0.60 0.04 248);
+  --accent:oklch(0.50 0.22 252);
+  --accent-light:oklch(0.94 0.06 252);
+  --green:oklch(0.55 0.18 148);
+  --green-bg:oklch(0.92 0.06 148);
+  --yellow:oklch(0.60 0.18 80);
+  --yellow-bg:oklch(0.93 0.06 80);
+  --red:oklch(0.55 0.18 25);
+  --red-bg:oklch(0.93 0.06 25);
+  --blue:oklch(0.50 0.18 252);
+  --blue-bg:oklch(0.92 0.06 252);
+  --orange:oklch(0.58 0.16 55);
+  --orange-bg:oklch(0.93 0.06 55);
+  --font:'DM Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --sb:220px;
+  --r:8px;
+}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+.shell{display:flex;min-height:100vh}
+.sidebar{
+  width:var(--sb);flex-shrink:0;position:fixed;top:0;left:0;bottom:0;
+  background:var(--sidebar-bg);border-right:1px solid var(--border-subtle);
+  display:flex;flex-direction:column;overflow:hidden;z-index:50;
+}
+.sb-header{padding:24px 20px 16px}
+.sb-title{font-size:22px;font-weight:700;letter-spacing:-.03em;color:var(--accent)}
+.sb-subtitle{font-size:11px;color:var(--text-3);margin-top:2px}
+.sb-nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:2px}
+.sb-link{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border-radius:var(--r);cursor:pointer;border:none;background:none;
+  font-family:var(--font);font-size:13.5px;font-weight:500;
+  color:var(--text-2);width:100%;text-align:left;
+  transition:background .12s,color .12s;
+}
+.sb-link:hover{background:var(--surface-2);color:var(--text)}
+.sb-link.active{background:var(--accent-light);color:var(--accent);font-weight:600}
+.sb-divider{height:1px;background:var(--border-subtle);margin:8px 12px}
+.sb-footer{padding:16px;font-size:11px;color:var(--text-3)}
+.main{margin-left:var(--sb);flex:1;padding:28px 32px;max-width:1400px}
+.page-title{font-size:24px;font-weight:700;letter-spacing:-.02em;margin-bottom:20px}
+.page-subtitle{font-size:13px;color:var(--text-2);margin-bottom:24px}
+
+/* Auth */
+.auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)}
+.auth-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;width:380px;text-align:center}
+.auth-box h1{font-size:22px;font-weight:700;margin-bottom:6px;color:var(--accent)}
+.auth-box p{font-size:13px;color:var(--text-2);margin-bottom:20px}
+.auth-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:13px;outline:none;margin-bottom:12px}
+.auth-input:focus{border-color:var(--accent)}
+.auth-btn{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer}
+
+/* Cards grid */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:box-shadow .15s,border-color .15s}
+.card:hover{border-color:var(--accent);box-shadow:0 2px 12px oklch(0 0 0/.06)}
+.card-name{font-size:16px;font-weight:600;margin-bottom:4px}
+.card-desc{font-size:12px;color:var(--text-2);margin-bottom:12px}
+.card-stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat-badge{font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;font-family:var(--mono)}
+
+/* Kanban */
+.kanban{display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;min-height:400px}
+.kanban-col{flex:0 0 240px;background:var(--surface-2);border-radius:var(--r);padding:12px;display:flex;flex-direction:column}
+.kanban-col-header{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.kanban-col-count{font-size:11px;font-weight:500;color:var(--text-3);font-family:var(--mono)}
+.kanban-cards{flex:1;display:flex;flex-direction:column;gap:8px;min-height:60px}
+.kanban-cards.drag-over{background:var(--accent-light);border-radius:6px}
+.kanban-card{
+  background:var(--surface);border:1px solid var(--border-subtle);border-radius:6px;padding:10px 12px;
+  cursor:grab;transition:box-shadow .12s,opacity .12s;font-size:13px;
+}
+.kanban-card:active{cursor:grabbing}
+.kanban-card.dragging{opacity:.4}
+.kanban-card:hover{box-shadow:0 2px 8px oklch(0 0 0/.06)}
+.kanban-card-title{font-weight:500;margin-bottom:6px;line-height:1.3}
+.kanban-card-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.kanban-card-meta span{font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;font-family:var(--mono)}
+
+/* Priority badges */
+.p0{background:var(--red-bg);color:var(--red)}
+.p1{background:var(--orange-bg);color:var(--orange)}
+.p2{background:var(--blue-bg);color:var(--blue)}
+.p3{background:var(--surface-2);color:var(--text-3)}
+
+/* Status badges */
+.s-todo{background:var(--surface-2);color:var(--text-3)}
+.s-refinement{background:var(--yellow-bg);color:var(--yellow)}
+.s-doing{background:var(--blue-bg);color:var(--blue)}
+.s-blocked{background:var(--red-bg);color:var(--red)}
+.s-done{background:var(--green-bg);color:var(--green)}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid var(--border)}
+.tab{padding:10px 16px;font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;border:none;background:none;font-family:var(--font);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .12s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+
+/* Table */
+.task-table{width:100%;border-collapse:collapse;font-size:13px}
+.task-table th{text-align:left;padding:10px 12px;color:var(--text-3);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border)}
+.task-table td{padding:10px 12px;border-bottom:1px solid var(--border-subtle)}
+.task-table tr:hover td{background:var(--surface-2)}
+
+/* Markdown content */
+.md-content{font-size:14px;line-height:1.7;color:var(--text)}
+.md-content h1,.md-content h2,.md-content h3{font-weight:600;margin:16px 0 8px}
+.md-content ul,.md-content ol{padding-left:24px;margin:8px 0}
+.md-content code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:2px 6px;border-radius:3px}
+
+/* Search */
+.search-bar{display:flex;gap:8px;margin-bottom:20px}
+.search-input{flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r);font-family:var(--font);font-size:14px;outline:none}
+.search-input:focus{border-color:var(--accent)}
+.search-btn{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer}
+.search-result{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r);padding:14px 16px;margin-bottom:8px}
+.search-result-type{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.search-result-title{font-size:14px;font-weight:500}
+.search-result-meta{font-size:11px;color:var(--text-3);margin-top:4px;font-family:var(--mono)}
+
+/* Overview stats */
+.stats-row{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;min-width:140px;flex:1}
+.stat-card-value{font-size:28px;font-weight:700;color:var(--accent);font-family:var(--mono)}
+.stat-card-label{font-size:12px;color:var(--text-2);margin-top:4px}
+
+/* New project form */
+.form-row{display:flex;gap:12px;margin-bottom:12px}
+.form-input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r);font-family:var(--font);font-size:13px;outline:none}
+.form-input:focus{border-color:var(--accent)}
+.form-btn{padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer}
+.form-btn:hover{opacity:.9}
+.form-btn-secondary{padding:8px 16px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);border-radius:var(--r);font-family:var(--font);font-size:13px;cursor:pointer}
+
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);cursor:pointer;border:none;background:none;font-family:var(--font);margin-bottom:16px;padding:4px 0}
+.back-btn:hover{color:var(--accent)}
+
+.empty{text-align:center;padding:40px;color:var(--text-3);font-size:14px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef } = React;
+
+const API_PORT = window.location.port ? parseInt(window.location.port) - 1 : 7881;
+const API_BASE = `${window.location.protocol}//${window.location.hostname}:${API_PORT}`;
+
+function api(path, opts = {}) {
+  const token = localStorage.getItem('dwork_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return fetch(`${API_BASE}${path}`, { ...opts, headers }).then(r => {
+    if (!r.ok) throw new Error(`${r.status}`);
+    return r.json();
+  });
+}
+
+// ── Auth ──
+function AuthScreen({ onAuth }) {
+  const [token, setToken] = useState('');
+  const [error, setError] = useState('');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      localStorage.setItem('dwork_token', token);
+      await api('/health');
+      onAuth();
+    } catch {
+      setError('Invalid token or server not running');
+      localStorage.removeItem('dwork_token');
+    }
+  };
+  return (
+    <div className="auth-screen">
+      <form className="auth-box" onSubmit={handleSubmit}>
+        <h1>dwork</h1>
+        <p>Enter your access token to connect</p>
+        <input className="auth-input" type="password" placeholder="sk-dwk_..." value={token}
+          onChange={e => { setToken(e.target.value); setError(''); }} autoFocus />
+        {error && <p style={{color:'var(--red)',fontSize:12,marginBottom:12}}>{error}</p>}
+        <button className="auth-btn" type="submit">Connect</button>
+      </form>
+    </div>
+  );
+}
+
+// ── Sidebar ──
+function Sidebar({ view, setView, onLogout }) {
+  return (
+    <div className="sidebar">
+      <div className="sb-header">
+        <div className="sb-title">dwork</div>
+        <div className="sb-subtitle">Project Manager</div>
+      </div>
+      <div className="sb-nav">
+        <button className={`sb-link ${view === 'projects' ? 'active' : ''}`} onClick={() => setView('projects')}>
+          Projects
+        </button>
+        <button className={`sb-link ${view === 'overview' ? 'active' : ''}`} onClick={() => setView('overview')}>
+          Overview
+        </button>
+        <button className={`sb-link ${view === 'search' ? 'active' : ''}`} onClick={() => setView('search')}>
+          Search
+        </button>
+        <div className="sb-divider" />
+        <button className="sb-link" onClick={onLogout} style={{color:'var(--red)'}}>
+          Logout
+        </button>
+      </div>
+      <div className="sb-footer">Part of the dtoolkit suite</div>
+    </div>
+  );
+}
+
+// ── Project Cards ──
+function ProjectsView({ onSelect }) {
+  const [projects, setProjects] = useState([]);
+  const [showNew, setShowNew] = useState(false);
+  const [slug, setSlug] = useState('');
+  const [name, setName] = useState('');
+
+  useEffect(() => { api('/projects').then(setProjects).catch(() => {}); }, []);
+
+  const createProject = async (e) => {
+    e.preventDefault();
+    if (!slug || !name) return;
+    await api('/projects', { method: 'POST', body: JSON.stringify({ slug, name }) });
+    setSlug(''); setName(''); setShowNew(false);
+    api('/projects').then(setProjects);
+  };
+
+  return (
+    <div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+        <h1 className="page-title" style={{margin:0}}>Projects</h1>
+        <button className="form-btn" onClick={() => setShowNew(!showNew)}>
+          {showNew ? 'Cancel' : '+ New Project'}
+        </button>
+      </div>
+      {showNew && (
+        <form onSubmit={createProject} style={{marginBottom:20}}>
+          <div className="form-row">
+            <input className="form-input" placeholder="slug (e.g. my-project)" value={slug} onChange={e => setSlug(e.target.value)} />
+            <input className="form-input" placeholder="Display name" value={name} onChange={e => setName(e.target.value)} />
+            <button className="form-btn" type="submit">Create</button>
+          </div>
+        </form>
+      )}
+      {projects.length === 0 ? (
+        <div className="empty">No projects yet. Create one to get started.</div>
+      ) : (
+        <div className="card-grid">
+          {projects.map(p => (
+            <div key={p.slug} className="card" onClick={() => onSelect(p.slug)}>
+              <div className="card-name">{p.name}</div>
+              <div className="card-desc">{p.description || p.slug}</div>
+              <div className="card-stats">
+                {Object.entries(p.taskCounts || {}).map(([s, c]) => (
+                  <span key={s} className={`stat-badge s-${s}`}>{s}: {c}</span>
+                ))}
+                {Object.keys(p.taskCounts || {}).length === 0 && <span className="stat-badge s-todo">No tasks</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Kanban ──
+const COLUMNS = [
+  { key: 'todo', label: 'To Do', color: 'var(--text-3)' },
+  { key: 'refinement', label: 'Refinement', color: 'var(--yellow)' },
+  { key: 'doing', label: 'Doing', color: 'var(--blue)' },
+  { key: 'blocked', label: 'Blocked', color: 'var(--red)' },
+  { key: 'done', label: 'Done', color: 'var(--green)' },
+];
+
+function KanbanView({ slug, tasks, onUpdate }) {
+  const [dragging, setDragging] = useState(null);
+  const [dragOver, setDragOver] = useState(null);
+
+  const grouped = {};
+  COLUMNS.forEach(c => grouped[c.key] = []);
+  tasks.forEach(t => { if (grouped[t.status]) grouped[t.status].push(t); });
+
+  const handleDragStart = (e, task) => {
+    setDragging(task.id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e, colKey) => {
+    e.preventDefault();
+    setDragOver(colKey);
+  };
+
+  const handleDrop = async (e, newStatus) => {
+    e.preventDefault();
+    setDragOver(null);
+    if (!dragging) return;
+    const task = tasks.find(t => t.id === dragging);
+    if (!task || task.status === newStatus) { setDragging(null); return; }
+    try {
+      await api(`/tasks/${task.id}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) });
+      onUpdate();
+    } catch {}
+    setDragging(null);
+  };
+
+  return (
+    <div className="kanban">
+      {COLUMNS.map(col => (
+        <div key={col.key} className="kanban-col"
+          onDragOver={e => handleDragOver(e, col.key)}
+          onDragLeave={() => setDragOver(null)}
+          onDrop={e => handleDrop(e, col.key)}>
+          <div className="kanban-col-header" style={{color: col.color}}>
+            {col.label}
+            <span className="kanban-col-count">{grouped[col.key].length}</span>
+          </div>
+          <div className={`kanban-cards ${dragOver === col.key ? 'drag-over' : ''}`}>
+            {grouped[col.key].map(task => (
+              <div key={task.id} className={`kanban-card ${dragging === task.id ? 'dragging' : ''}`}
+                draggable onDragStart={e => handleDragStart(e, task)} onDragEnd={() => setDragging(null)}>
+                <div className="kanban-card-title">{task.title}</div>
+                <div className="kanban-card-meta">
+                  <span className={task.priority.toLowerCase()}>{task.priority}</span>
+                  {task.type !== 'task' && <span className="s-todo">{task.type}</span>}
+                  {task.estimate && <span style={{background:'var(--surface-2)',color:'var(--text-3)'}}>{task.estimate}</span>}
+                  {task.deadline && <span style={{background:'var(--surface-2)',color:'var(--text-3)'}}>{task.deadline}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Task Table ──
+function TaskTableView({ tasks }) {
+  if (tasks.length === 0) return <div className="empty">No tasks</div>;
+  return (
+    <table className="task-table">
+      <thead><tr><th>Title</th><th>Status</th><th>Priority</th><th>Type</th><th>Estimate</th><th>Deadline</th></tr></thead>
+      <tbody>
+        {tasks.map(t => (
+          <tr key={t.id}>
+            <td style={{fontWeight:500}}>{t.title}</td>
+            <td><span className={`stat-badge s-${t.status}`}>{t.status}</span></td>
+            <td><span className={`stat-badge ${t.priority.toLowerCase()}`}>{t.priority}</span></td>
+            <td>{t.type}</td>
+            <td style={{fontFamily:'var(--mono)',fontSize:12}}>{t.estimate || '—'}</td>
+            <td style={{fontFamily:'var(--mono)',fontSize:12}}>{t.deadline || '—'}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+// ── Project Detail ──
+function ProjectDetail({ slug, onBack }) {
+  const [project, setProject] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [docs, setDocs] = useState([]);
+  const [roadmap, setRoadmap] = useState('');
+  const [tab, setTab] = useState('kanban');
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newPriority, setNewPriority] = useState('P2');
+
+  const load = useCallback(() => {
+    api(`/projects/${slug}`).then(setProject).catch(() => {});
+    api(`/projects/${slug}/tasks`).then(setTasks).catch(() => {});
+    api(`/projects/${slug}/docs`).then(setDocs).catch(() => {});
+  }, [slug]);
+
+  useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (tab === 'roadmap' && !roadmap) {
+      api(`/projects/${slug}`).then(p => {
+        if (p.readme) {/* loaded */}
+      }).catch(() => {});
+      // roadmap comes from MCP/project context — try fetching docs
+      const rdoc = docs.find(d => d.type === 'roadmap');
+      if (rdoc) {
+        api(`/docs/${rdoc.id}`).then(d => setRoadmap(d.content || '')).catch(() => {});
+      }
+    }
+  }, [tab, slug, docs, roadmap]);
+
+  const addTask = async (e) => {
+    e.preventDefault();
+    if (!newTitle) return;
+    await api(`/projects/${slug}/tasks`, {
+      method: 'POST',
+      body: JSON.stringify({ title: newTitle, priority: newPriority })
+    });
+    setNewTitle(''); setShowAddTask(false);
+    load();
+  };
+
+  if (!project) return <div className="empty">Loading...</div>;
+
+  return (
+    <div>
+      <button className="back-btn" onClick={onBack}>← All Projects</button>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+        <div>
+          <h1 className="page-title" style={{margin:0}}>{project.name}</h1>
+          <div className="page-subtitle" style={{margin:'4px 0 0'}}>{project.description || project.slug}</div>
+        </div>
+        <button className="form-btn" onClick={() => setShowAddTask(!showAddTask)}>
+          {showAddTask ? 'Cancel' : '+ Add Task'}
+        </button>
+      </div>
+      {showAddTask && (
+        <form onSubmit={addTask} style={{marginBottom:16}}>
+          <div className="form-row">
+            <input className="form-input" placeholder="Task title" value={newTitle} onChange={e => setNewTitle(e.target.value)} autoFocus />
+            <select className="form-input" style={{flex:'0 0 100px'}} value={newPriority} onChange={e => setNewPriority(e.target.value)}>
+              <option value="P0">P0</option><option value="P1">P1</option>
+              <option value="P2">P2</option><option value="P3">P3</option>
+            </select>
+            <button className="form-btn" type="submit">Add</button>
+          </div>
+        </form>
+      )}
+      <div className="tabs">
+        {['kanban','tasks','roadmap','docs'].map(t => (
+          <button key={t} className={`tab ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
+            {t.charAt(0).toUpperCase() + t.slice(1)}
+          </button>
+        ))}
+      </div>
+      {tab === 'kanban' && <KanbanView slug={slug} tasks={tasks} onUpdate={load} />}
+      {tab === 'tasks' && <TaskTableView tasks={tasks} />}
+      {tab === 'roadmap' && (
+        <div className="md-content">
+          {roadmap ? <pre style={{whiteSpace:'pre-wrap',fontFamily:'var(--font)'}}>{roadmap}</pre> : <div className="empty">No roadmap content</div>}
+        </div>
+      )}
+      {tab === 'docs' && (
+        <div>
+          {docs.length === 0 ? <div className="empty">No documents</div> : (
+            <table className="task-table">
+              <thead><tr><th>Title</th><th>Type</th><th>Path</th></tr></thead>
+              <tbody>
+                {docs.map(d => (
+                  <tr key={d.id}>
+                    <td style={{fontWeight:500}}>{d.title}</td>
+                    <td><span className={`stat-badge s-todo`}>{d.type}</span></td>
+                    <td style={{fontFamily:'var(--mono)',fontSize:12,color:'var(--text-3)'}}>{d.file_path}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Search ──
+function SearchView() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [searched, setSearched] = useState(false);
+
+  const doSearch = async (e) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+    try {
+      const r = await api('/search', { method: 'POST', body: JSON.stringify({ query }) });
+      setResults(r);
+    } catch { setResults([]); }
+    setSearched(true);
+  };
+
+  return (
+    <div>
+      <h1 className="page-title">Search</h1>
+      <form onSubmit={doSearch}>
+        <div className="search-bar">
+          <input className="search-input" placeholder="Search tasks and docs..." value={query} onChange={e => setQuery(e.target.value)} autoFocus />
+          <button className="search-btn" type="submit">Search</button>
+        </div>
+      </form>
+      {searched && results.length === 0 && <div className="empty">No results found</div>}
+      {results.map((r, i) => (
+        <div key={i} className="search-result">
+          <div className="search-result-type" style={{color: r.type === 'task' ? 'var(--blue)' : 'var(--green)'}}>
+            {r.type}
+          </div>
+          <div className="search-result-title">{r.title}</div>
+          <div className="search-result-meta">
+            {r.projectSlug}
+            {r.taskStatus && <> · <span className={`stat-badge s-${r.taskStatus}`}>{r.taskStatus}</span></>}
+            {r.taskPriority && <> · <span className={`stat-badge ${r.taskPriority.toLowerCase()}`}>{r.taskPriority}</span></>}
+            {r.docType && <> · {r.docType}</>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Overview ──
+function OverviewView({ onSelectProject }) {
+  const [data, setData] = useState(null);
+  useEffect(() => { api('/overview').then(setData).catch(() => {}); }, []);
+
+  if (!data) return <div className="empty">Loading...</div>;
+
+  return (
+    <div>
+      <h1 className="page-title">Overview</h1>
+      <div className="stats-row">
+        <div className="stat-card"><div className="stat-card-value">{data.totalProjects}</div><div className="stat-card-label">Projects</div></div>
+        <div className="stat-card"><div className="stat-card-value">{data.totalTasks}</div><div className="stat-card-label">Tasks</div></div>
+        <div className="stat-card"><div className="stat-card-value">{data.totalDocs}</div><div className="stat-card-label">Documents</div></div>
+      </div>
+      <h2 style={{fontSize:18,fontWeight:600,marginBottom:16}}>Projects</h2>
+      <div className="card-grid">
+        {data.projects.map(p => (
+          <div key={p.slug} className="card" onClick={() => onSelectProject(p.slug)}>
+            <div className="card-name">{p.name}</div>
+            <div style={{display:'flex',gap:8,marginTop:8,flexWrap:'wrap'}}>
+              {Object.entries(p.tasksByStatus || {}).map(([s, c]) => (
+                <span key={s} className={`stat-badge s-${s}`}>{s}: {c}</span>
+              ))}
+            </div>
+            <div style={{display:'flex',gap:8,marginTop:6,flexWrap:'wrap'}}>
+              {Object.entries(p.tasksByPriority || {}).map(([pr, c]) => (
+                <span key={pr} className={`stat-badge ${pr.toLowerCase()}`}>{pr}: {c}</span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── App ──
+function App() {
+  const [authed, setAuthed] = useState(!!localStorage.getItem('dwork_token'));
+  const [view, setView] = useState('projects');
+  const [selectedProject, setSelectedProject] = useState(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem('dwork_token');
+    setAuthed(false);
+  };
+
+  const handleSelectProject = (slug) => {
+    setSelectedProject(slug);
+    setView('project-detail');
+  };
+
+  if (!authed) return <AuthScreen onAuth={() => setAuthed(true)} />;
+
+  return (
+    <div className="shell">
+      <Sidebar view={view === 'project-detail' ? 'projects' : view} setView={(v) => { setView(v); setSelectedProject(null); }} onLogout={handleLogout} />
+      <div className="main">
+        {view === 'projects' && <ProjectsView onSelect={handleSelectProject} />}
+        {view === 'project-detail' && selectedProject && (
+          <ProjectDetail slug={selectedProject} onBack={() => { setView('projects'); setSelectedProject(null); }} />
+        )}
+        {view === 'overview' && <OverviewView onSelectProject={handleSelectProject} />}
+        {view === 'search' && <SearchView />}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
 </html>

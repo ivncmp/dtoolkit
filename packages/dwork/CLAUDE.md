@@ -17,8 +17,8 @@ Service Layer (src/service/)
     ├── CLI (src/cli/)
     ├── REST API (src/server/)
     ├── MCP Server (src/mcp/)
-    ├── SDK Client (in @dtoolkit/sdk, future)
-    └── Dashboard (src/dashboard/, future)
+    ├── Dashboard (src/dashboard/, port+1)
+    └── SDK Client (in @dtoolkit/sdk, future)
 ```
 
 ## Stack
@@ -31,7 +31,7 @@ Service Layer (src/service/)
 | MCP | @modelcontextprotocol/sdk (HTTP transport) |
 | Validation | Zod |
 | CLI | commander + @clack/prompts |
-| Port | `:7881` (REST + MCP, same port) |
+| Port | `:7881` (REST + MCP), `:7882` (Dashboard) |
 
 ## Project structure
 
@@ -50,21 +50,33 @@ src/
 │   ├── docs.ts         CRUD for numbered docs + roadmap
 │   ├── search.ts       FTS5 search across tasks + docs (OR logic)
 │   ├── overview.ts     Global stats
-│   ├── sync.ts         Sync via dproxy (stub, phase 2)
+│   ├── sync.ts         Sync via dproxy
 │   └── utils.ts        genId helper
 ├── server/
 │   ├── index.ts        Fastify app + auth + CORS + route registration
 │   └── routes/
-│       └── health.ts   GET /health (no auth)
+│       ├── health.ts   GET /health (no auth)
+│       ├── projects.ts GET/POST/PATCH/DELETE /projects
+│       ├── tasks.ts    CRUD /projects/:slug/tasks, /tasks/:id
+│       ├── docs.ts     CRUD /projects/:slug/docs, /docs/:id
+│       ├── search.ts   POST /search
+│       ├── overview.ts GET /overview, GET /next
+│       ├── sync.ts     POST /sync/:slug
+│       ├── keys.ts     POST/GET/DELETE /keys (admin-only)
+│       └── permissions.ts  requireWrite() middleware
 ├── mcp/
 │   └── server.ts       13 MCP tools + 1 resource, all delegating to service
 ├── cli/
 │   ├── index.ts        Commander entry point + ASCII banner
 │   ├── init.ts         Interactive wizard (@clack/prompts)
-│   ├── start.ts        Server startup + project indexing
-│   └── status.ts       Health check
+│   ├── start.ts        Server startup + project indexing + dashboard launch
+│   ├── status.ts       Health check
+│   ├── configure.ts    Interactive config editor
+│   ├── sync.ts         CLI sync command
+│   └── keys.ts         CLI key management (create/list/revoke)
 ├── dashboard/
-│   └── index.html      Placeholder (phase 3)
+│   ├── server.ts       Fastify static server on port+1
+│   └── index.html      Single-file React 18 app (kanban, search, overview)
 └── fastify.d.ts        Type augmentation (db, config, dworkUser)
 ```
 
@@ -126,7 +138,7 @@ All delegate to the service layer:
 9. `add_doc` — numbered doc in docs/
 10. `search` — FTS5 across tasks + docs
 11. `what_to_do_next` — priority/deadline ranking
-12. `sync` — via dproxy (stub)
+12. `sync` — sync docs from source via dproxy
 13. `overview` — global stats
 
 ## Config
@@ -149,8 +161,11 @@ All delegate to the service layer:
 
 ```bash
 dwork init              # Interactive wizard (config, DB, optional first project)
-dwork start             # Start REST + MCP server on :7881
+dwork start             # Start REST + MCP on :7881, Dashboard on :7882
 dwork status            # Health check
+dwork sync <project>    # Sync project docs from source via dproxy
+dwork configure         # Reconfigure settings interactively
+dwork keys <action>     # Manage API keys (create/list/revoke)
 ```
 
 ## Dev commands

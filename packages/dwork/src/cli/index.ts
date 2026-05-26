@@ -65,6 +65,17 @@ program
   });
 
 program
+  .command('connect')
+  .description('Connect a client to a running dwork server')
+  .argument('[client]', 'Client: claude, codex, gemini, opencode')
+  .argument('[url]', 'dwork URL')
+  .option('--token <token>', 'Access token')
+  .action(async (client: string | undefined, url: string | undefined, opts: { token?: string }) => {
+    const { connect } = await import('./connect.js');
+    await connect(client, url, opts.token);
+  });
+
+program
   .command('configure')
   .description('Reconfigure dwork (interactive)')
   .argument('[path]', 'Data path')

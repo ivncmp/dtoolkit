@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { homedir, hostname } from 'node:os';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 import * as p from '@clack/prompts';
@@ -8,20 +8,20 @@ import pc from 'picocolors';
 const SUPPORTED_CLIENTS = ['claude', 'codex', 'gemini', 'opencode'] as const;
 type Client = (typeof SUPPORTED_CLIENTS)[number];
 
-interface BrainConfig {
+interface ServerConfig {
   mcp: Record<string, unknown>;
   permissions: string[];
   claudeMd: string;
 }
 
 export async function connect(client?: string, url?: string, tokenArg?: string) {
-  p.intro(pc.cyan('dbrain') + ' — Connect to a brain');
+  p.intro(pc.cyan('dwork') + ' — Connect to a dwork server');
 
   if (!client || !SUPPORTED_CLIENTS.includes(client as Client)) {
     p.log.error(
       client
         ? `Unknown client "${client}". Supported: ${SUPPORTED_CLIENTS.join(', ')}`
-        : `Client is required. Usage: dbrain connect <client> [url] [--token=...]`,
+        : `Client is required. Usage: dwork connect <client> [url] [--token=...]`,
     );
     p.log.info(`Supported clients: ${SUPPORTED_CLIENTS.join(', ')}`);
     p.outro(pc.red('Aborted.'));
@@ -32,8 +32,8 @@ export async function connect(client?: string, url?: string, tokenArg?: string) 
 
   if (!url) {
     const input = await p.text({
-      message: 'Brain URL',
-      placeholder: 'http://your-server:7878',
+      message: 'dwork URL',
+      placeholder: 'http://your-server:7881',
       validate: (v) => (!v || v.length === 0 ? 'URL is required' : undefined),
     });
     if (p.isCancel(input)) {
@@ -48,7 +48,7 @@ export async function connect(client?: string, url?: string, tokenArg?: string) 
   if (!tokenArg) {
     const input = await p.text({
       message: 'Access token',
-      placeholder: 'sk-dbr_...',
+      placeholder: 'sk-dwk_...',
       validate: (v) => (!v || v.length === 0 ? 'Token is required' : undefined),
     });
     if (p.isCancel(input)) {
@@ -59,32 +59,32 @@ export async function connect(client?: string, url?: string, tokenArg?: string) 
   }
 
   const s = p.spinner();
-  s.start('Connecting to brain');
+  s.start('Connecting to dwork');
 
-  let config: BrainConfig;
+  let config: ServerConfig;
   try {
     const res = await fetch(`${url}/connect`, {
       headers: { Authorization: `Bearer ${tokenArg}` },
     });
     if (res.status === 401) throw new Error('Invalid token');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    config = (await res.json()) as BrainConfig;
+    config = (await res.json()) as ServerConfig;
   } catch (err) {
     s.stop(pc.red('Failed to connect'));
     const message = err instanceof Error ? err.message : String(err);
     p.log.error(`Could not reach ${url}/connect — ${message}`);
-    p.log.info('Make sure the brain is running, the URL is correct, and the token is valid.');
+    p.log.info('Make sure dwork is running, the URL is correct, and the token is valid.');
     p.outro(pc.red('Connection failed.'));
     return;
   }
-  s.stop('Brain found');
+  s.stop('dwork found');
 
   const healthRes = await fetch(`${url}/health`)
-    .then((r) => r.json() as Promise<{ name?: string; entities?: number; facts?: number }>)
+    .then((r) => r.json() as Promise<{ projects?: number; tasks?: number; docs?: number }>)
     .catch(() => null);
-  if (healthRes?.name) {
+  if (healthRes) {
     p.log.info(
-      `Brain: ${pc.cyan(healthRes.name)} — ${healthRes.entities} entities, ${healthRes.facts} facts`,
+      `dwork: ${healthRes.projects} projects, ${healthRes.tasks} tasks, ${healthRes.docs} docs`,
     );
   }
 
@@ -108,7 +108,7 @@ export async function connect(client?: string, url?: string, tokenArg?: string) 
 }
 
 function configureClaude(
-  config: BrainConfig,
+  config: ServerConfig,
   url: string,
   token: string,
   s: ReturnType<typeof p.spinner>,
@@ -131,7 +131,7 @@ function configureClaude(
     }
   }
   if (!claudeConfig.mcpServers) claudeConfig.mcpServers = {};
-  claudeConfig.mcpServers['dbrain'] = {
+  claudeConfig.mcpServers['dwork'] = {
     type: 'http',
     url: `${url}/mcp`,
     headers: { Authorization: `Bearer ${token}` },
@@ -155,7 +155,7 @@ function configureClaude(
   }
   writeFileSync(settingsJson, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
 
-  writeDbrainMdSection(claudeMd, config.claudeMd);
+  writeMdSection(claudeMd, config.claudeMd);
 
   s.stop('Claude Code configured');
 
@@ -169,35 +169,35 @@ function configureClaude(
   );
 }
 
-const DBRAIN_START = '<!-- dbrain:start -->';
-const DBRAIN_END = '<!-- dbrain:end -->';
+const DWORK_START = '<!-- dwork:start -->';
+const DWORK_END = '<!-- dwork:end -->';
 
-function writeDbrainMdSection(filePath: string, content: string) {
-  const text = content.trim().replace('{hostname}', hostname().toLowerCase());
-  const section = `${DBRAIN_START}\n${text}\n${DBRAIN_END}`;
+function writeMdSection(filePath: string, content: string) {
+  const text = content.trim();
+  const section = `${DWORK_START}\n${text}\n${DWORK_END}`;
 
   let mdContent = section;
   if (existsSync(filePath)) {
     const existing = readFileSync(filePath, 'utf-8');
-    const startIdx = existing.indexOf(DBRAIN_START);
-    const endIdx = existing.indexOf(DBRAIN_END);
+    const startIdx = existing.indexOf(DWORK_START);
+    const endIdx = existing.indexOf(DWORK_END);
     if (startIdx !== -1 && endIdx !== -1) {
       const before = existing.slice(0, startIdx).trim();
-      const after = existing.slice(endIdx + DBRAIN_END.length).trim();
+      const after = existing.slice(endIdx + DWORK_END.length).trim();
       const parts = [before, section, after].filter(Boolean);
       mdContent = parts.join('\n\n');
     } else if (existing.trim()) {
-      mdContent = section + '\n\n' + existing.trim();
+      mdContent = existing.trim() + '\n\n' + section;
     }
   }
   writeFileSync(filePath, mdContent.trim() + '\n', 'utf-8');
 }
 
-const DBRAIN_MCP_TOML_START = '# dbrain MCP';
-const DBRAIN_MCP_TOML_END = '# /dbrain MCP';
+const DWORK_MCP_TOML_START = '# dwork MCP';
+const DWORK_MCP_TOML_END = '# /dwork MCP';
 
 function configureCodex(
-  brainConfig: BrainConfig,
+  serverConfig: ServerConfig,
   url: string,
   token: string,
   s: ReturnType<typeof p.spinner>,
@@ -220,21 +220,21 @@ function configureCodex(
   }
 
   const mcpSection = [
-    DBRAIN_MCP_TOML_START,
-    '[mcp_servers.dbrain]',
+    DWORK_MCP_TOML_START,
+    '[mcp_servers.dwork]',
     `url = "${url}/mcp"`,
     'default_tools_approval_mode = "approve"',
     '',
-    '[mcp_servers.dbrain.http_headers]',
+    '[mcp_servers.dwork.http_headers]',
     `Authorization = "Bearer ${token}"`,
-    DBRAIN_MCP_TOML_END,
+    DWORK_MCP_TOML_END,
   ].join('\n');
 
-  const startIdx = toml.indexOf(DBRAIN_MCP_TOML_START);
-  const endIdx = toml.indexOf(DBRAIN_MCP_TOML_END);
+  const startIdx = toml.indexOf(DWORK_MCP_TOML_START);
+  const endIdx = toml.indexOf(DWORK_MCP_TOML_END);
   if (startIdx !== -1 && endIdx !== -1) {
     const before = toml.slice(0, startIdx).trimEnd();
-    const after = toml.slice(endIdx + DBRAIN_MCP_TOML_END.length).trimStart();
+    const after = toml.slice(endIdx + DWORK_MCP_TOML_END.length).trimStart();
     const parts = [before, mcpSection, after].filter(Boolean);
     toml = parts.join('\n\n');
   } else {
@@ -242,7 +242,7 @@ function configureCodex(
   }
 
   writeFileSync(configToml, toml.trim() + '\n', 'utf-8');
-  writeDbrainMdSection(agentsMd, brainConfig.claudeMd);
+  writeMdSection(agentsMd, serverConfig.claudeMd);
 
   s.stop('Codex CLI configured');
 
@@ -255,8 +255,8 @@ function configureCodex(
   );
 }
 
-const DBRAIN_POLICY = `[[rule]]
-mcpName = "dbrain"
+const DWORK_POLICY = `[[rule]]
+mcpName = "dwork"
 toolName = "*"
 decision = "allow"
 priority = 200
@@ -264,7 +264,7 @@ modes = ["default", "autoEdit", "yolo"]
 `;
 
 function configureGemini(
-  config: BrainConfig,
+  config: ServerConfig,
   url: string,
   token: string,
   s: ReturnType<typeof p.spinner>,
@@ -274,7 +274,7 @@ function configureGemini(
   const geminiDir = join(homedir(), '.gemini');
   const settingsJson = join(geminiDir, 'settings.json');
   const policiesDir = join(geminiDir, 'policies');
-  const policyFile = join(policiesDir, 'dbrain.toml');
+  const policyFile = join(policiesDir, 'dwork.toml');
   const geminiMd = join(geminiDir, 'GEMINI.md');
 
   mkdirSync(geminiDir, { recursive: true });
@@ -291,21 +291,21 @@ function configureGemini(
 
   if (!settings.mcpServers) settings.mcpServers = {};
   const mcpServers = settings.mcpServers as Record<string, unknown>;
-  mcpServers['dbrain'] = {
+  mcpServers['dwork'] = {
     url: `${url}/mcp`,
     headers: { Authorization: `Bearer ${token}` },
   };
 
   writeFileSync(settingsJson, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
-  writeFileSync(policyFile, DBRAIN_POLICY, 'utf-8');
-  writeDbrainMdSection(geminiMd, config.claudeMd);
+  writeFileSync(policyFile, DWORK_POLICY, 'utf-8');
+  writeMdSection(geminiMd, config.claudeMd);
 
   s.stop('Gemini CLI configured');
 
   p.note(
     [
       `${pc.green('~/.gemini/settings.json')}        MCP server registered`,
-      `${pc.green('~/.gemini/policies/dbrain.toml')}  Auto-approve dbrain tools`,
+      `${pc.green('~/.gemini/policies/dwork.toml')}   Auto-approve dwork tools`,
       `${pc.green('~/.gemini/GEMINI.md')}             Behavioral instructions installed`,
     ].join('\n'),
     'Files updated',
@@ -313,7 +313,7 @@ function configureGemini(
 }
 
 function configureOpenCode(
-  brainConfig: BrainConfig,
+  serverConfig: ServerConfig,
   url: string,
   token: string,
   s: ReturnType<typeof p.spinner>,
@@ -337,7 +337,7 @@ function configureOpenCode(
 
   if (!config.mcp) config.mcp = {};
   const mcp = config.mcp as Record<string, unknown>;
-  mcp['dbrain'] = {
+  mcp['dwork'] = {
     url: `${url}/mcp`,
     headers: { Authorization: `Bearer ${token}` },
     enabled: true,
@@ -346,10 +346,10 @@ function configureOpenCode(
 
   if (!config.permission) config.permission = {};
   const permission = config.permission as Record<string, string>;
-  permission['dbrain_*'] = 'allow';
+  permission['dwork_*'] = 'allow';
 
   writeFileSync(configJson, JSON.stringify(config, null, 2) + '\n', 'utf-8');
-  writeDbrainMdSection(agentsMd, brainConfig.claudeMd);
+  writeMdSection(agentsMd, serverConfig.claudeMd);
 
   s.stop('OpenCode configured');
 

@@ -24,6 +24,7 @@ export async function taskRoutes(app: FastifyInstance) {
       estimate?: string;
       deadline?: string;
       detail?: string;
+      detail_doc?: { title: string; body: string; type: string };
       source?: string;
     };
     if (!title) return reply.code(400).send({ error: 'title is required' });

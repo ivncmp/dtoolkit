@@ -7,6 +7,7 @@ import type { Config } from '../core/config.js';
 import { indexProject } from '../core/indexer.js';
 import { parseBacklog, parseFrontmatter, serializeBacklog } from '../core/parser.js';
 
+import { createDocFile } from './docs.js';
 import { genId } from './utils.js';
 
 export interface TaskRow {
@@ -62,6 +63,7 @@ export function addTask(
     estimate?: string;
     deadline?: string;
     detail?: string;
+    detail_doc?: { title: string; body: string; type: string };
     source?: string;
   } = {},
 ): TaskRow {
@@ -69,6 +71,19 @@ export function addTask(
     | { path: string }
     | undefined;
   if (!projectRow) throw new Error(`Project '${project}' not found`);
+
+  const detailPath =
+    opts.detail ??
+    (opts.detail_doc
+      ? createDocFile(
+          db,
+          project,
+          projectRow.path,
+          opts.detail_doc.title,
+          opts.detail_doc.body,
+          opts.detail_doc.type,
+        )
+      : null);
 
   const backlogPath = join(projectRow.path, 'BACKLOG.md');
   const content = readFileSync(backlogPath, 'utf-8');
@@ -82,7 +97,7 @@ export function addTask(
   if (opts.type) metadata.type = opts.type;
   if (opts.estimate) metadata.estimate = opts.estimate;
   if (opts.deadline) metadata.deadline = opts.deadline;
-  if (opts.detail) metadata.detail = opts.detail;
+  if (detailPath) metadata.detail = detailPath;
   if (status !== 'todo') metadata.status = status;
 
   tasks.push({
@@ -115,7 +130,7 @@ export function addTask(
       estimate: opts.estimate || null,
       deadline: opts.deadline || null,
       source: opts.source || 'manual',
-      detail_path: opts.detail || null,
+      detail_path: detailPath,
       tags: '[]',
       line_number: null,
       created_at: new Date().toISOString(),

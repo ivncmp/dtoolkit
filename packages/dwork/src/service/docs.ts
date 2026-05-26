@@ -60,22 +60,17 @@ export function getDoc(
   return { ...doc, content };
 }
 
-export function addDoc(
+export function createDocFile(
   db: Database.Database,
-  config: Config,
-  project: string,
+  projectSlug: string,
+  projectPath: string,
   title: string,
   body: string,
   type: string,
-): DocRow {
-  const projectRow = db.prepare('SELECT path FROM projects WHERE slug = ?').get(project) as
-    | { path: string }
-    | undefined;
-  if (!projectRow) throw new Error(`Project '${project}' not found`);
-
+): string {
   const existingDocs = db
     .prepare("SELECT file_path FROM docs WHERE project_slug = ? AND file_path LIKE 'docs/%'")
-    .all(project) as { file_path: string }[];
+    .all(projectSlug) as { file_path: string }[];
 
   let maxNum = 0;
   for (const d of existingDocs) {
@@ -97,7 +92,24 @@ export function addDoc(
   const fm = { title, type };
   const content = ['---', stringifyYaml(fm).trimEnd(), '---', '', body, ''].join('\n');
 
-  writeFileSync(join(projectRow.path, relPath), content);
+  writeFileSync(join(projectPath, relPath), content);
+  return relPath;
+}
+
+export function addDoc(
+  db: Database.Database,
+  config: Config,
+  project: string,
+  title: string,
+  body: string,
+  type: string,
+): DocRow {
+  const projectRow = db.prepare('SELECT path FROM projects WHERE slug = ?').get(project) as
+    | { path: string }
+    | undefined;
+  if (!projectRow) throw new Error(`Project '${project}' not found`);
+
+  const relPath = createDocFile(db, project, projectRow.path, title, body, type);
   indexProject(db, project, projectRow.path);
 
   const inserted = db

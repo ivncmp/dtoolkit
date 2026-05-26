@@ -123,7 +123,7 @@ export function createMcpServer(app: FastifyInstance) {
     'add_task',
     {
       description:
-        'Add a task to a project. Appends to BACKLOG.md in the correct priority section.',
+        'Add a task to a project. Appends to BACKLOG.md in the correct priority section. Pass detail_doc to atomically create a detail document and link it.',
       inputSchema: {
         project: z.string().describe('Project slug'),
         title: z.string().describe('Task title'),
@@ -132,6 +132,18 @@ export function createMcpServer(app: FastifyInstance) {
         status: z.string().optional().describe('todo, refinement, doing, blocked'),
         estimate: z.string().optional().describe('Time estimate: 2h, 1d, 3d, 1w'),
         deadline: z.string().optional().describe('ISO date deadline'),
+        detail: z
+          .string()
+          .optional()
+          .describe('Path to an existing detail doc (e.g. docs/001_slug.md)'),
+        detail_doc: z
+          .object({
+            title: z.string().describe('Document title'),
+            body: z.string().describe('Document body (markdown)'),
+            type: z.string().describe('Doc type: note, idea, planning, decision, postmortem'),
+          })
+          .optional()
+          .describe('Create and link a detail document atomically'),
       },
     },
     async ({ project, title, ...opts }) => {
@@ -157,6 +169,7 @@ export function createMcpServer(app: FastifyInstance) {
         type: z.string().optional().describe('New type'),
         estimate: z.string().optional().describe('New estimate'),
         deadline: z.string().optional().describe('New deadline'),
+        detail: z.string().optional().describe('Path to detail doc (e.g. docs/001_slug.md)'),
       },
     },
     async ({ id, ...changes }) => {

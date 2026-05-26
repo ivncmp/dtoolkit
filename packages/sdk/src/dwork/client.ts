@@ -98,6 +98,8 @@ export class DWorkClient {
       status?: string;
       estimate?: string;
       deadline?: string;
+      detail?: string;
+      detail_doc?: { title: string; body: string; type: string };
     },
   ): Promise<DWorkTask> {
     return this.http.post(`/projects/${enc(project)}/tasks`, task);
@@ -112,6 +114,7 @@ export class DWorkClient {
       type?: string;
       estimate?: string;
       deadline?: string;
+      detail?: string;
     },
   ): Promise<{ updated: boolean; id: string }> {
     return this.http.patch(`/tasks/${enc(id)}`, changes);

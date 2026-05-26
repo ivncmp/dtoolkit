@@ -27,6 +27,36 @@ export interface TaskRow {
   updated_at: string;
 }
 
+export interface TaskWithDetail extends TaskRow {
+  detail_body: string | null;
+}
+
+export function enrichTasksWithDetails(db: Database.Database, tasks: TaskRow[]): TaskWithDetail[] {
+  const projectPaths = new Map<string, string>();
+
+  return tasks.map((task) => {
+    if (!task.detail_path) return { ...task, detail_body: null };
+
+    let projectPath = projectPaths.get(task.project_slug);
+    if (projectPath === undefined) {
+      const row = db.prepare('SELECT path FROM projects WHERE slug = ?').get(task.project_slug) as
+        | { path: string }
+        | undefined;
+      projectPath = row?.path ?? '';
+      projectPaths.set(task.project_slug, projectPath);
+    }
+
+    if (!projectPath) return { ...task, detail_body: null };
+
+    try {
+      const content = readFileSync(join(projectPath, task.detail_path), 'utf-8');
+      return { ...task, detail_body: content };
+    } catch {
+      return { ...task, detail_body: null };
+    }
+  });
+}
+
 export function getTasks(
   db: Database.Database,
   project: string,

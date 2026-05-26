@@ -60,6 +60,31 @@ export function getDoc(
   return { ...doc, content };
 }
 
+export function getDocByPath(
+  db: Database.Database,
+  projectSlug: string,
+  filePath: string,
+): DocWithContent | null {
+  const doc = db
+    .prepare('SELECT * FROM docs WHERE project_slug = ? AND file_path = ?')
+    .get(projectSlug, filePath) as DocRow | undefined;
+  if (!doc) return null;
+
+  const project = db.prepare('SELECT path FROM projects WHERE slug = ?').get(projectSlug) as
+    | { path: string }
+    | undefined;
+  if (!project) return null;
+
+  let content = '';
+  try {
+    content = readFileSync(join(project.path, doc.file_path), 'utf-8');
+  } catch {
+    // file may not exist
+  }
+
+  return { ...doc, content };
+}
+
 export function createDocFile(
   db: Database.Database,
   projectSlug: string,

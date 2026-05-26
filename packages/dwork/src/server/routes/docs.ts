@@ -40,6 +40,14 @@ export async function docRoutes(app: FastifyInstance) {
     return result;
   });
 
+  app.get('/projects/:slug/docs/*', async (request, reply) => {
+    const { slug, '*': filePath } = request.params as { slug: string; '*': string };
+    if (!filePath) return reply.code(400).send({ error: 'file path is required' });
+    const result = docService.getDocByPath(db, slug, filePath);
+    if (!result) return reply.code(404).send({ error: 'Doc not found' });
+    return result;
+  });
+
   app.patch('/docs/:id', async (request, reply) => {
     if (!requireWrite(request, reply)) return;
     const { id } = request.params as { id: string };

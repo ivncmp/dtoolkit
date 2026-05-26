@@ -106,7 +106,8 @@ export function createMcpServer(app: FastifyInstance) {
   mcp.registerTool(
     'get_tasks',
     {
-      description: 'Get tasks for a project, filtered by status and/or priority.',
+      description:
+        'Get tasks for a project, filtered by status and/or priority. Includes detail_body when the task has a linked detail doc.',
       inputSchema: {
         project: z.string().describe('Project slug'),
         status: z.string().optional().describe('Filter: todo, refinement, doing, blocked, done'),
@@ -114,7 +115,8 @@ export function createMcpServer(app: FastifyInstance) {
       },
     },
     async ({ project, status, priority }) => {
-      return json(taskService.getTasks(db, project, status, priority));
+      const tasks = taskService.getTasks(db, project, status, priority);
+      return json(taskService.enrichTasksWithDetails(db, tasks));
     },
   );
 
@@ -209,6 +211,37 @@ export function createMcpServer(app: FastifyInstance) {
     },
   );
 
+  // 8b. get_doc
+  mcp.registerTool(
+    'get_doc',
+    {
+      description:
+        'Get a single document with its full content. Look up by doc ID or by project slug + file path.',
+      inputSchema: {
+        id: z.string().optional().describe('Doc ID (e.g. doc_abc123)'),
+        project: z.string().optional().describe('Project slug (required when using file_path)'),
+        file_path: z
+          .string()
+          .optional()
+          .describe('Doc file path within the project (e.g. docs/005_slug.md)'),
+      },
+    },
+    async ({ id, project, file_path }) => {
+      let result: docService.DocWithContent | null = null;
+
+      if (id) {
+        result = docService.getDoc(db, config, id);
+      } else if (project && file_path) {
+        result = docService.getDocByPath(db, project, file_path);
+      } else {
+        return json({ error: 'Provide either id, or project + file_path' });
+      }
+
+      if (!result) return json({ error: 'Doc not found' });
+      return json(result);
+    },
+  );
+
   // 9. add_doc
   mcp.registerTool(
     'add_doc',
@@ -257,7 +290,8 @@ export function createMcpServer(app: FastifyInstance) {
       },
     },
     async ({ project }) => {
-      return json(taskService.whatToDoNext(db, project));
+      const tasks = taskService.whatToDoNext(db, project);
+      return json(taskService.enrichTasksWithDetails(db, tasks));
     },
   );
 

@@ -10,7 +10,8 @@ export async function taskRoutes(app: FastifyInstance) {
   app.get('/projects/:slug/tasks', async (request) => {
     const { slug } = request.params as { slug: string };
     const { status, priority } = request.query as { status?: string; priority?: string };
-    return taskService.getTasks(db, slug, status, priority);
+    const tasks = taskService.getTasks(db, slug, status, priority);
+    return taskService.enrichTasksWithDetails(db, tasks);
   });
 
   app.post('/projects/:slug/tasks', async (request, reply) => {

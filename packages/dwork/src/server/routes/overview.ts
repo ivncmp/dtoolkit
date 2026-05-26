@@ -10,6 +10,7 @@ export async function overviewRoutes(app: FastifyInstance) {
 
   app.get('/next', async (request) => {
     const { project } = request.query as { project?: string };
-    return taskService.whatToDoNext(app.db, project);
+    const tasks = taskService.whatToDoNext(app.db, project);
+    return taskService.enrichTasksWithDetails(app.db, tasks);
   });
 }

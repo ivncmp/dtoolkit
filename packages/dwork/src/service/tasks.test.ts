@@ -9,8 +9,8 @@ import type { Config } from '../core/config.js';
 import { indexProject } from '../core/indexer.js';
 import { scaffoldBacklog } from '../core/templates.js';
 
-import { createDocFile } from './docs.js';
-import { addTask, getTasks, updateTask } from './tasks.js';
+import { createDocFile, getDocByPath } from './docs.js';
+import { addTask, enrichTasksWithDetails, getTasks, updateTask } from './tasks.js';
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS projects (
@@ -279,5 +279,75 @@ describe('createDocFile', () => {
     );
 
     expect(relPath).toMatch(/^docs\/001_mcp-add-task-detail-doc-v2\.md$/);
+  });
+});
+
+describe('enrichTasksWithDetails', () => {
+  it('returns detail_body: null when task has no detail_path', () => {
+    addTask(db, config, 'test-project', 'No detail');
+    const tasks = getTasks(db, 'test-project');
+    const enriched = enrichTasksWithDetails(db, tasks);
+
+    expect(enriched).toHaveLength(1);
+    expect(enriched[0].detail_body).toBeNull();
+  });
+
+  it('includes detail body when task has a detail doc', () => {
+    const task = addTask(db, config, 'test-project', 'With detail', {
+      detail_doc: {
+        title: 'Design doc',
+        body: '## Plan\n\nDo the thing.',
+        type: 'planning',
+      },
+    });
+
+    const tasks = getTasks(db, 'test-project');
+    const enriched = enrichTasksWithDetails(db, tasks);
+    const found = enriched.find((t) => t.id === task.id);
+
+    expect(found).toBeDefined();
+    expect(found!.detail_body).toContain('## Plan');
+    expect(found!.detail_body).toContain('Do the thing.');
+  });
+
+  it('returns detail_body: null when detail file is missing', () => {
+    addTask(db, config, 'test-project', 'Broken detail', {
+      detail: 'docs/999_nonexistent.md',
+    });
+
+    const tasks = getTasks(db, 'test-project');
+    const enriched = enrichTasksWithDetails(db, tasks);
+    const found = enriched.find((t) => t.title === 'Broken detail');
+
+    expect(found).toBeDefined();
+    expect(found!.detail_body).toBeNull();
+  });
+});
+
+describe('getDocByPath', () => {
+  it('returns doc with content by project + file_path', () => {
+    addTask(db, config, 'test-project', 'Doc task', {
+      detail_doc: {
+        title: 'Test doc',
+        body: '# Content here',
+        type: 'planning',
+      },
+    });
+
+    const result = getDocByPath(db, 'test-project', 'docs/001_test-doc.md');
+
+    expect(result).not.toBeNull();
+    expect(result!.title).toBe('Test doc');
+    expect(result!.content).toContain('# Content here');
+  });
+
+  it('returns null for unknown file_path', () => {
+    const result = getDocByPath(db, 'test-project', 'docs/999_nope.md');
+    expect(result).toBeNull();
+  });
+
+  it('returns null for unknown project', () => {
+    const result = getDocByPath(db, 'nonexistent', 'docs/001_test.md');
+    expect(result).toBeNull();
   });
 });

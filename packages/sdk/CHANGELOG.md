@@ -1,5 +1,11 @@
 # @dtoolkit/sdk
 
+## 0.5.1
+
+### Patch Changes
+
+- b2f69b6: Support atomic task + detail doc creation in DWorkClient.
+
 ## 0.5.0
 
 ### Minor Changes

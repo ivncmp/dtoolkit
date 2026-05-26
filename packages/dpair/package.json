@@ -4,7 +4,7 @@
   "description": "Real-time pair-programming with a shared agent between two devs",
   "type": "module",
   "license": "MIT",
-  "author": "Iván Campillo <ivncmp@gmail.com>",
+  "author": "Iv\u00e1n Campillo <ivncmp@gmail.com>",
   "repository": {
     "type": "git",
     "url": "https://github.com/ivncmp/dtoolkit.git",
@@ -41,9 +41,7 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix"
   },
-  "dependencies": {
-    "@dtoolkit/core": "workspace:*"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.7.0"

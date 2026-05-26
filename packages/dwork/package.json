@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/dwork",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "AI-native, MD-driven project manager. Part of the dtoolkit suite.",
   "type": "module",
   "license": "MIT",

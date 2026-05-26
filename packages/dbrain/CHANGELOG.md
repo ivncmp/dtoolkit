@@ -1,5 +1,13 @@
 # @dtoolkit/dbrain
 
+## 0.4.2
+
+### Patch Changes
+
+- b2f69b6: Fix `configureClaude` in connect command to use the user-provided URL instead of the server's Host header, so the recorded MCP URL matches what the user typed.
+- Updated dependencies [b2f69b6]
+  - @dtoolkit/sdk@0.5.1
+
 ## 0.4.1
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @dtoolkit/dcontext
 
+## 0.2.0
+
+### Minor Changes
+
+- b2f69b6: Integrate dwork into session context: inject active tasks at session start and add dwork tools directive to the briefing.
+
+### Patch Changes
+
+- Updated dependencies [b2f69b6]
+  - @dtoolkit/sdk@0.5.1
+
 ## 0.1.5
 
 ### Patch Changes

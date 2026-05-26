@@ -1,5 +1,16 @@
 # @dtoolkit/dwork
 
+## 0.3.0
+
+### Minor Changes
+
+- b2f69b6: Add `dwork connect` command for configuring AI coding clients (Claude, Codex, Gemini, OpenCode) against a running dwork server. Also: stable 8-char task IDs persisted in BACKLOG.md, atomic task + detail doc creation in a single call, and dashboard version from /health.
+
+### Patch Changes
+
+- Updated dependencies [b2f69b6]
+  - @dtoolkit/sdk@0.5.1
+
 ## 0.2.1
 
 ### Patch Changes

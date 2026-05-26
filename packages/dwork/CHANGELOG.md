@@ -1,5 +1,11 @@
 # @dtoolkit/dwork
 
+## 0.4.0
+
+### Minor Changes
+
+- 197fd14: Enrich task responses with detail_body and add get_doc MCP tool + REST endpoint
+
 ## 0.3.0
 
 ### Minor Changes

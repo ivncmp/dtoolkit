@@ -10,6 +10,7 @@ export interface ParsedFrontmatter {
 }
 
 export interface ParsedTask {
+  id?: string;
   title: string;
   done: boolean;
   status: string;
@@ -90,7 +91,11 @@ export function parseBacklog(content: string, _projectSlug: string): ParsedTask[
       status = 'todo';
     }
 
+    const id = metadata.id;
+    if (id) delete metadata.id;
+
     tasks.push({
+      id,
       title: titlePart,
       done: done || inDone,
       status,
@@ -135,6 +140,8 @@ export function serializeBacklog(tasks: ParsedTask[], frontmatter: Frontmatter):
     for (const task of sectionTasks) {
       const checkbox = task.done || task.status === 'done' ? '[x]' : '[ ]';
       const metaEntries: string[] = [];
+
+      if (task.id) metaEntries.push(`id: ${task.id}`);
 
       for (const [key, value] of Object.entries(task.metadata)) {
         if (key === 'status' && section === 'Done') continue;

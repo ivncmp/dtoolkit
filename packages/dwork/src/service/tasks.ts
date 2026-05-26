@@ -8,7 +8,7 @@ import { indexProject } from '../core/indexer.js';
 import { parseBacklog, parseFrontmatter, serializeBacklog } from '../core/parser.js';
 
 import { createDocFile } from './docs.js';
-import { genId } from './utils.js';
+import { genId, genTaskId } from './utils.js';
 
 export interface TaskRow {
   id: string;
@@ -93,6 +93,7 @@ export function addTask(
   const priority = opts.priority || 'P2';
   const status = opts.status || 'todo';
 
+  const taskId = genTaskId();
   const metadata: Record<string, string> = {};
   if (opts.type) metadata.type = opts.type;
   if (opts.estimate) metadata.estimate = opts.estimate;
@@ -101,6 +102,7 @@ export function addTask(
   if (status !== 'todo') metadata.status = status;
 
   tasks.push({
+    id: taskId,
     title,
     done: false,
     status,
@@ -166,7 +168,7 @@ export function updateTask(
   const { frontmatter } = parseFrontmatter(content);
   const tasks = parseBacklog(content, task.project_slug);
 
-  const target = tasks.find((t) => t.title === task.title);
+  const target = tasks.find((t) => t.id === taskId) ?? tasks.find((t) => t.title === task.title);
   if (!target) return false;
 
   if (changes.title) target.title = changes.title;
@@ -206,7 +208,11 @@ export function deleteTask(db: Database.Database, config: Config, taskId: string
   const { frontmatter } = parseFrontmatter(content);
   const tasks = parseBacklog(content, task.project_slug);
 
-  const filtered = tasks.filter((t) => t.title !== task.title);
+  const targetIdx = tasks.findIndex((t) => t.id === taskId);
+  const filtered =
+    targetIdx >= 0
+      ? tasks.filter((_, i) => i !== targetIdx)
+      : tasks.filter((t) => t.title !== task.title);
   if (filtered.length === tasks.length) return false;
 
   const serialized = serializeBacklog(filtered, frontmatter);

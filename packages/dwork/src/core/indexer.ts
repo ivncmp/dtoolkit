@@ -1,10 +1,12 @@
 import { createHash } from 'node:crypto';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 import type Database from 'better-sqlite3';
 
-import { parseBacklog, parseFrontmatter } from './parser.js';
+import { genId, genTaskId } from '../service/utils.js';
+
+import { parseBacklog, parseFrontmatter, serializeBacklog } from './parser.js';
 
 export interface IndexResult {
   docsIndexed: number;
@@ -14,12 +16,6 @@ export interface IndexResult {
 
 export function computeHash(content: string): string {
   return createHash('sha256').update(content).digest('hex');
-}
-
-function genId(prefix: string): string {
-  const bytes = new Uint8Array(12);
-  crypto.getRandomValues(bytes);
-  return `${prefix}_${Buffer.from(bytes).toString('base64url')}`;
 }
 
 export function indexProject(
@@ -45,6 +41,37 @@ export function indexProject(
       const hash = computeHash(content);
       const existing = existingByPath.get(relPath);
 
+      if (relPath === 'BACKLOG.md') {
+        const migrated = migrateTaskIds(content, projectSlug, projectPath);
+        const actualContent = migrated ?? content;
+        const actualHash = migrated ? computeHash(actualContent) : hash;
+
+        if (!existing || existing.body_hash !== actualHash) {
+          const { frontmatter, body } = parseFrontmatter(actualContent);
+          const title = (frontmatter.title as string) || relPath;
+          const docType = 'backlog';
+          const now = new Date().toISOString();
+
+          if (existing) {
+            deleteFtsDoc(db, existing.id);
+            db.prepare(
+              'UPDATE docs SET title = ?, type = ?, body_hash = ?, updated_at = ? WHERE id = ?',
+            ).run(title, docType, actualHash, now, existing.id);
+            insertFtsDoc(db, existing.id, title, body, projectSlug, docType);
+          } else {
+            const id = genId('doc');
+            db.prepare(
+              'INSERT INTO docs (id, project_slug, title, type, file_path, body_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ).run(id, projectSlug, title, docType, relPath, actualHash, now, now);
+            insertFtsDoc(db, id, title, body, projectSlug, docType);
+          }
+          result.docsIndexed++;
+        }
+
+        result.tasksIndexed = indexBacklogTasks(db, projectSlug, actualContent);
+        continue;
+      }
+
       if (existing && existing.body_hash === hash) continue;
 
       const { frontmatter, body } = parseFrontmatter(content);
@@ -66,10 +93,6 @@ export function indexProject(
         insertFtsDoc(db, id, title, body, projectSlug, docType);
       }
       result.docsIndexed++;
-
-      if (relPath === 'BACKLOG.md') {
-        result.tasksIndexed = indexBacklogTasks(db, projectSlug, content);
-      }
     }
 
     for (const existing of existingDocs) {
@@ -93,7 +116,34 @@ function deleteFtsTask(db: Database.Database, taskId: string): void {
   db.prepare('DELETE FROM tasks_fts WHERE rowid = ?').run(row.rowid);
 }
 
-function indexBacklogTasks(db: Database.Database, projectSlug: string, content: string): number {
+function migrateTaskIds(
+  content: string,
+  projectSlug: string,
+  projectPath: string,
+): string | null {
+  const parsed = parseBacklog(content, projectSlug);
+
+  let needsMigration = false;
+  for (const task of parsed) {
+    if (!task.id) {
+      task.id = genTaskId();
+      needsMigration = true;
+    }
+  }
+
+  if (!needsMigration) return null;
+
+  const { frontmatter } = parseFrontmatter(content);
+  const migrated = serializeBacklog(parsed, frontmatter);
+  writeFileSync(join(projectPath, 'BACKLOG.md'), migrated);
+  return migrated;
+}
+
+function indexBacklogTasks(
+  db: Database.Database,
+  projectSlug: string,
+  content: string,
+): number {
   const parsed = parseBacklog(content, projectSlug);
 
   const existingTasks = db
@@ -110,7 +160,6 @@ function indexBacklogTasks(db: Database.Database, projectSlug: string, content: 
   const now = new Date().toISOString();
 
   for (const task of parsed) {
-    const id = genId('task');
     const type = task.metadata.type || 'task';
     const estimate = task.metadata.estimate || null;
     const deadline = task.metadata.deadline || null;
@@ -118,7 +167,7 @@ function indexBacklogTasks(db: Database.Database, projectSlug: string, content: 
     const tags = task.metadata.tags || '[]';
 
     insertTask.run(
-      id,
+      task.id,
       projectSlug,
       task.title,
       type,
@@ -134,7 +183,7 @@ function indexBacklogTasks(db: Database.Database, projectSlug: string, content: 
       now,
     );
 
-    insertFtsTask(db, id, task.title, '', projectSlug);
+    insertFtsTask(db, task.id as string, task.title, '', projectSlug);
   }
 
   return parsed.length;

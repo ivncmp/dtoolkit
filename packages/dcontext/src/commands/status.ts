@@ -1,4 +1,4 @@
-import { DBrainClient } from '@dtoolkit/sdk';
+import { DBrainClient, DWorkClient } from '@dtoolkit/sdk';
 import { Command } from 'commander';
 import pc from 'picocolors';
 
@@ -19,110 +19,187 @@ export function createStatusCommand(): Command {
     });
 }
 
+function section(title: string) {
+  console.log(`  ${pc.bold(pc.blue(title))}`);
+}
+
+function row(label: string, value: string) {
+  console.log(`    ${pc.dim(label.padEnd(12))} ${value}`);
+}
+
+function sep() {
+  console.log();
+}
+
 async function runStatus() {
   const config = await loadConfig();
   const stats = await loadStats();
-
-  console.log(pc.bold('dcontext status'));
-  console.log();
-
-  // dbrain connection
-  console.log(pc.bold('dbrain'));
   const { url, token } = config.dbrain;
+
+  console.log();
+  console.log(`  ${pc.bold('dcontext')} ${pc.dim('status')}`);
+  console.log(`  ${pc.dim('─'.repeat(40))}`);
+  sep();
+
+  // ── Services ──
+  section('Services');
+  sep();
+
   if (url) {
     try {
       const client = new DBrainClient(url, token);
       const health = await client.health();
-      console.log(`  ${pc.green(url)} — ${health.entities} entities, ${health.facts} facts`);
       const brainType = health.brainType ?? 'personal';
-      console.log(`  Type: ${brainType === 'shared' ? pc.green(brainType) : pc.blue(brainType)}`);
+      row(
+        'dbrain',
+        `${pc.green('●')} ${url} ${pc.dim('—')} ${health.entities} entities, ${health.facts} facts ${pc.dim(`(${brainType})`)}`,
+      );
       if (health.connectedBrains && health.connectedBrains > 0) {
-        console.log(`  Connected: ${pc.green(String(health.connectedBrains))} brain(s)`);
         try {
           const conns = await client.listConnections();
           for (const c of conns) {
-            const s = c.online ? pc.green('online') : pc.red('offline');
-            console.log(`    ${pc.bold(c.name)} ${s}`);
+            const s = c.online ? pc.green('●') : pc.red('●');
+            row('', `${s} ${c.name}`);
           }
         } catch {
-          // skip connection details if endpoint fails
+          // skip
         }
       }
     } catch {
-      console.log(`  ${pc.red(url)} (unreachable)`);
+      row('dbrain', `${pc.red('●')} ${url} ${pc.dim('(unreachable)')}`);
     }
   } else {
-    console.log(`  ${pc.red('not configured')} — run ${pc.cyan('dcontext init')}`);
+    row('dbrain', `${pc.red('●')} ${pc.dim('not configured')}`);
   }
-  console.log();
 
-  // targets
-  console.log(pc.bold('Targets'));
+  if (config.dwork?.url) {
+    try {
+      const dworkClient = new DWorkClient(config.dwork.url, config.dwork.token);
+      const overview = await dworkClient.overview();
+      row(
+        'dwork',
+        `${pc.green('●')} ${config.dwork.url} ${pc.dim('—')} ${overview.totalProjects} projects, ${overview.totalTasks} tasks`,
+      );
+    } catch {
+      row('dwork', `${pc.red('●')} ${config.dwork.url} ${pc.dim('(unreachable)')}`);
+    }
+  } else {
+    row('dwork', `${pc.dim('—')} ${pc.dim('not configured')}`);
+  }
+  sep();
+
+  // ── Targets ──
+  section('Targets');
+  sep();
   for (const name of ['claude', 'gemini', 'opencode'] as const) {
     const target = resolveTarget(name);
     if (!target) continue;
     const installed = await target.isInstalled();
     const cfg = config.targets[name];
     if (installed) {
-      const since = cfg?.installedAt ? ` (since ${cfg.installedAt.split('T')[0]})` : '';
-      console.log(`  ${name}: ${pc.green('installed')}${pc.dim(since)}`);
+      const since = cfg?.installedAt ? pc.dim(` since ${cfg.installedAt.split('T')[0]}`) : '';
+      row(name, `${pc.green('●')} installed${since}`);
     } else {
-      console.log(`  ${name}: ${pc.dim('not installed')}`);
+      row(name, `${pc.dim('○')} ${pc.dim('not installed')}`);
     }
   }
-  console.log();
+  sep();
 
-  // context for current directory
+  // ── Context ──
   const cwd = process.cwd();
   const entity = config.projects[cwd];
-  console.log(pc.bold('Context') + pc.dim(` (${cwd})`));
+  const dworkSlugs = config.dworkProjects?.[cwd];
+  section('Context');
+  row('cwd', pc.dim(cwd));
+  sep();
+
   if (entity) {
-    console.log(`  Entity: ${pc.blue(entity)}`);
+    row('entity', pc.blue(entity));
     if (url) {
       try {
         const client = new DBrainClient(url, token);
         const results = await client.search(`"${entity}"`, { limit: 5 });
         if (results.length > 0) {
-          console.log(`  Facts:  ${pc.green(String(results.length))}+ matching`);
+          row('facts', `${pc.green(String(results.length))}+ matching`);
           for (const r of results.slice(0, 3)) {
-            console.log(`    ${pc.dim('·')} ${r.fact.fact.slice(0, 80)}`);
+            console.log(`    ${pc.dim('             · ' + r.fact.fact.slice(0, 72))}`);
           }
           if (results.length > 3) {
-            console.log(`    ${pc.dim(`... and ${results.length - 3} more`)}`);
+            console.log(`    ${pc.dim(`             … and ${results.length - 3} more`)}`);
           }
         } else {
-          console.log(`  Facts:  ${pc.dim('none found')}`);
+          row('facts', pc.dim('none'));
         }
       } catch {
-        console.log(`  Facts:  ${pc.dim('could not query')}`);
+        row('facts', pc.dim('could not query'));
       }
     }
   } else {
-    console.log(
-      `  ${pc.dim('no entity mapped')} — run ${pc.cyan('dcontext init')} in this directory`,
-    );
+    row('entity', `${pc.dim('not mapped')} — run ${pc.cyan('dcontext init')}`);
   }
-  console.log();
+  if (dworkSlugs && dworkSlugs.length > 0) {
+    row('dwork', dworkSlugs.map((s) => pc.blue(s)).join(pc.dim(', ')));
+    if (config.dwork?.url) {
+      try {
+        const dworkClient = new DWorkClient(config.dwork.url, config.dwork.token);
+        let totalTasks = 0;
+        let totalDocs = 0;
+        for (const slug of dworkSlugs) {
+          const tasks = await dworkClient.listTasks(slug).catch(() => []);
+          const docs = await dworkClient.listDocs(slug).catch(() => []);
+          totalTasks += tasks.length;
+          totalDocs += docs.length;
+        }
+        row('tasks', String(totalTasks));
+        row('docs', String(totalDocs));
+      } catch {
+        // skip
+      }
+    }
+  }
+  sep();
 
-  // other mapped projects
+  // ── Other projects ──
   const projects = Object.entries(config.projects).filter(([path]) => path !== cwd);
   if (projects.length > 0) {
-    console.log(pc.bold('Other projects'));
+    section('Other projects');
+    sep();
     for (const [path, ent] of projects) {
-      console.log(`  ${pc.dim(path)} → ${pc.blue(ent)}`);
+      const short = path.replace(/^\/Users\/[^/]+/, '~');
+      row(ent, pc.dim(short));
     }
-    console.log();
+    sep();
   }
 
-  // stats
-  console.log(pc.bold('Stats'));
-  console.log(
-    `  Briefings:    ${stats.briefings.total}${stats.briefings.lastAt ? pc.dim(` (last: ${stats.briefings.lastAt.split('T')[0]})`) : ''}`,
-  );
-  console.log(
-    `  Extractions:  ${stats.extractions.total}${stats.extractions.messagesSaved ? ` (${stats.extractions.messagesSaved} messages)` : ''}${stats.extractions.lastAt ? pc.dim(` (last: ${stats.extractions.lastAt.split('T')[0]})`) : ''}`,
-  );
+  // ── Stats ──
+  section('Stats');
+  sep();
+  const lastBriefing = stats.briefings.lastAt
+    ? pc.dim(` last ${stats.briefings.lastAt.split('T')[0]}`)
+    : '';
+  row('briefings', `${stats.briefings.total}${lastBriefing}`);
+  const msgCount = stats.extractions.messagesSaved
+    ? ` ${pc.dim(`(${stats.extractions.messagesSaved} msgs)`)}`
+    : '';
+  const lastExtraction = stats.extractions.lastAt
+    ? pc.dim(` last ${stats.extractions.lastAt.split('T')[0]}`)
+    : '';
+  row('extractions', `${stats.extractions.total}${msgCount}${lastExtraction}`);
+  if (config.dwork?.url) {
+    try {
+      const dworkClient = new DWorkClient(config.dwork.url, config.dwork.token);
+      const overview = await dworkClient.overview();
+      const activeTasks = overview.totalTasks;
+      row(
+        'tasks',
+        `${activeTasks} ${pc.dim(`across ${overview.totalProjects} projects, ${overview.totalDocs} docs`)}`,
+      );
+    } catch {
+      // skip
+    }
+  }
+  sep();
 
+  console.log(`  ${pc.dim(`Config: ${getDataDir()}/config.json`)}`);
   console.log();
-  console.log(pc.dim(`Config: ${getDataDir()}/config.json`));
 }

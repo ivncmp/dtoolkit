@@ -116,11 +116,7 @@ function deleteFtsTask(db: Database.Database, taskId: string): void {
   db.prepare('DELETE FROM tasks_fts WHERE rowid = ?').run(row.rowid);
 }
 
-function migrateTaskIds(
-  content: string,
-  projectSlug: string,
-  projectPath: string,
-): string | null {
+function migrateTaskIds(content: string, projectSlug: string, projectPath: string): string | null {
   const parsed = parseBacklog(content, projectSlug);
 
   let needsMigration = false;
@@ -139,11 +135,7 @@ function migrateTaskIds(
   return migrated;
 }
 
-function indexBacklogTasks(
-  db: Database.Database,
-  projectSlug: string,
-  content: string,
-): number {
+function indexBacklogTasks(db: Database.Database, projectSlug: string, content: string): number {
   const parsed = parseBacklog(content, projectSlug);
 
   const existingTasks = db

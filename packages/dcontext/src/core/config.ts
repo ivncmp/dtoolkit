@@ -15,7 +15,12 @@ export interface DcontextConfig {
     url: string;
     token: string;
   };
+  dwork?: {
+    url: string;
+    token: string;
+  };
   projects: Record<string, string>;
+  dworkProjects: Record<string, string[]>;
   briefing: {
     maxFacts: number;
     includeIdentity: boolean;
@@ -40,6 +45,7 @@ const DEFAULT_CONFIG: DcontextConfig = {
     token: '',
   },
   projects: {},
+  dworkProjects: {},
   briefing: {
     maxFacts: 15,
     includeIdentity: true,

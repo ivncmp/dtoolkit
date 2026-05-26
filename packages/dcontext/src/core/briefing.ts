@@ -1,4 +1,4 @@
-import { DBrainClient } from '@dtoolkit/sdk';
+import { DBrainClient, DWorkClient } from '@dtoolkit/sdk';
 
 import type { DcontextConfig } from './config.js';
 
@@ -42,6 +42,7 @@ function truncateFact(fact: string, max: number): string {
 export async function generateBriefing(
   projectEntity: string,
   config: DcontextConfig,
+  cwd?: string,
 ): Promise<string | null> {
   const client = new DBrainClient(config.dbrain.url, config.dbrain.token);
 
@@ -108,6 +109,41 @@ export async function generateBriefing(
       );
     } catch {
       // skip if connections endpoint fails
+    }
+  }
+
+  const dworkSlugs = cwd ? config.dworkProjects?.[cwd] : undefined;
+  if (config.dwork?.url && dworkSlugs && dworkSlugs.length > 0) {
+    try {
+      const dwork = new DWorkClient(config.dwork.url, config.dwork.token);
+      const allTasks = (
+        await Promise.all(dworkSlugs.map((slug) => dwork.listTasks(slug).catch(() => [])))
+      ).flat();
+      const active = allTasks.filter(
+        (t) => t.status === 'doing' || t.status === 'blocked' || t.status === 'todo',
+      );
+      if (active.length > 0) {
+        parts.push('');
+        parts.push(`### Tasks (dwork)`);
+        const doing = active.filter((t) => t.status === 'doing');
+        const blocked = active.filter((t) => t.status === 'blocked');
+        const todo = active.filter((t) => t.status === 'todo');
+        for (const group of [
+          { label: 'doing', items: doing },
+          { label: 'blocked', items: blocked },
+          { label: 'todo', items: todo },
+        ]) {
+          for (const t of group.items) {
+            const project = t.project_slug;
+            const meta = [t.priority, t.estimate, t.deadline].filter(Boolean).join(', ');
+            parts.push(
+              `- [${group.label}] ${t.id} ${project}: ${truncateFact(t.title, 100)}${meta ? ` (${meta})` : ''}`,
+            );
+          }
+        }
+      }
+    } catch {
+      // dwork unavailable, skip
     }
   }
 

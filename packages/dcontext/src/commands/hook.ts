@@ -99,7 +99,7 @@ async function handleSessionStart(target: Target, cwd: string, config: DcontextC
     return;
   }
 
-  const briefing = await generateBriefing(projectEntity, config);
+  const briefing = await generateBriefing(projectEntity, config, cwd);
   if (!briefing) {
     process.stdout.write('{}');
     return;

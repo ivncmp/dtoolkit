@@ -1,5 +1,5 @@
 import * as p from '@clack/prompts';
-import { DBrainClient } from '@dtoolkit/sdk';
+import { DBrainClient, DWorkClient } from '@dtoolkit/sdk';
 import { Command } from 'commander';
 import pc from 'picocolors';
 
@@ -46,11 +46,18 @@ async function runInit() {
   ];
 
   if (config.initialized && config.dbrain.url) {
-    options.unshift({
-      value: 'remap',
-      label: 'Keep dbrain, remap this directory',
-      description: `Change entity mapping for ${process.cwd()}`,
-    });
+    options.unshift(
+      {
+        value: 'keep',
+        label: 'Keep current config',
+        description: 'Only update dwork connection',
+      },
+      {
+        value: 'remap',
+        label: 'Keep dbrain, remap this directory',
+        description: `Change entity mapping for ${process.cwd()}`,
+      },
+    );
   }
 
   const mode = await p.select({
@@ -65,7 +72,23 @@ async function runInit() {
     process.exit(0);
   }
 
-  if (mode === 'remap') {
+  if (mode === 'keep') {
+    await detectDwork(config);
+    config.initialized = true;
+    await saveConfig(config);
+    p.note(
+      [
+        `dbrain:  ${pc.green(config.dbrain.url)}`,
+        config.dwork ? `dwork:   ${pc.green(config.dwork.url)}` : '',
+        `Config:  ${pc.green(getDataDir() + '/config.json')}`,
+      ]
+        .filter(Boolean)
+        .join('\n'),
+      'Configuration',
+    );
+    p.outro('Done');
+    return;
+  } else if (mode === 'remap') {
     await finishInit(config);
   } else if (mode === 'local') {
     await startLocalDbrain(config);
@@ -254,12 +277,15 @@ async function finishInit(config: DcontextConfig) {
     p.log.warn(`Could not list entities: ${(err as Error).message}`);
   }
 
+  await detectDwork(config);
+
   config.initialized = true;
   await saveConfig(config);
 
   p.note(
     [
       `dbrain:  ${pc.green(config.dbrain.url)}`,
+      config.dwork ? `dwork:   ${pc.green(config.dwork.url)}` : '',
       entityName ? `Project: ${pc.green(process.cwd())} → ${pc.green(entityName)}` : '',
       `Config:  ${pc.green(getDataDir() + '/config.json')}`,
     ]
@@ -269,6 +295,97 @@ async function finishInit(config: DcontextConfig) {
   );
 
   p.outro(`Next: ${pc.cyan('dcontext install claude')}`);
+}
+
+async function detectDwork(config: DcontextConfig) {
+  if (config.dwork?.url) {
+    try {
+      const client = new DWorkClient(config.dwork.url, config.dwork.token);
+      const overview = await client.overview();
+      p.log.info(
+        `dwork: ${pc.green(config.dwork.url)} — ${overview.totalProjects} projects, ${overview.totalTasks} tasks`,
+      );
+      const keep = await p.confirm({
+        message: 'Keep current dwork connection?',
+        initialValue: true,
+      });
+      if (!p.isCancel(keep) && keep) return;
+    } catch {
+      p.log.warn(`dwork: ${pc.red(config.dwork.url)} (unreachable)`);
+    }
+  }
+
+  const connect = await p.confirm({
+    message: 'Connect to a dwork server? (project management)',
+    initialValue: !!config.dwork?.url,
+  });
+
+  if (p.isCancel(connect) || !connect) {
+    config.dwork = undefined;
+    return;
+  }
+
+  const answers = await p.group(
+    {
+      url: () =>
+        p.text({
+          message: 'dwork URL',
+          initialValue: config.dwork?.url || 'http://localhost:7881',
+          validate: (v) => (!v ? 'URL is required' : undefined),
+        }),
+      token: () =>
+        p.text({
+          message: 'dwork token (empty if none)',
+          initialValue: config.dwork?.token || '',
+        }),
+    },
+    {
+      onCancel: () => {
+        p.cancel('Init cancelled.');
+        process.exit(0);
+      },
+    },
+  );
+
+  const s = p.spinner();
+  s.start('Connecting to dwork');
+
+  let projects: { slug: string; name: string }[] = [];
+  try {
+    const client = new DWorkClient(answers.url, answers.token);
+    const listed = await client.listProjects();
+    projects = listed.map((pr) => ({ slug: pr.slug, name: pr.name }));
+    s.stop(`Connected — ${pc.green(String(projects.length))} projects`);
+    config.dwork = { url: answers.url, token: answers.token };
+  } catch (err) {
+    s.stop(pc.red('Connection failed'));
+    p.log.error((err as Error).message);
+    p.log.warn('Skipping dwork. You can add it later with dcontext init.');
+    config.dwork = undefined;
+    return;
+  }
+
+  if (projects.length > 0) {
+    const cwd = process.cwd();
+    const current = config.dworkProjects[cwd] || [];
+    const selected = await p.multiselect({
+      message: `Map ${pc.dim(cwd)} to dwork projects:`,
+      options: projects.map((pr) => ({
+        value: pr.slug,
+        label: `${pr.name} (${pr.slug})`,
+        selected: current.includes(pr.slug),
+      })),
+      required: false,
+    });
+
+    if (!p.isCancel(selected)) {
+      if ((selected as string[]).length > 0) {
+        config.dworkProjects[cwd] = selected as string[];
+      } else {
+        config.dworkProjects[cwd] = [];
+      }
+    }
+  }
 }
 
 export async function requireInit(): Promise<void> {

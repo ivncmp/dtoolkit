@@ -125,6 +125,9 @@ export async function generateBriefing(
       if (active.length > 0) {
         parts.push('');
         parts.push(`### Tasks (dwork)`);
+        parts.push(
+          '> Active tasks are listed below. **Do NOT call `get_tasks` or `list_projects` unless the user explicitly asks.** Use `update_task` only when the user requests a status change.',
+        );
         const doing = active.filter((t) => t.status === 'doing');
         const blocked = active.filter((t) => t.status === 'blocked');
         const todo = active.filter((t) => t.status === 'todo');

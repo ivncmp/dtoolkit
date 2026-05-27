@@ -129,6 +129,25 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .form-btn{padding:6px 14px;border:none;border-radius:6px;background:var(--accent);color:white;font-size:12px;font-weight:600;cursor:pointer}
 .form-btn:hover{opacity:.85}
 .form-btn.danger{background:#ef4444}
+.modal-overlay{position:fixed;inset:0;z-index:100;background:oklch(0 0 0/.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;width:90%;max-width:420px;box-shadow:0 16px 48px oklch(0 0 0/.15)}
+.modal h3{font-size:15px;font-weight:700;margin-bottom:14px;color:var(--text)}
+.modal p{font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.5}
+.modal select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;font-family:var(--font);margin-bottom:16px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+.entity-actions{display:flex;gap:8px}
+.action-btn{padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text-2);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .15s}
+.action-btn:hover{border-color:var(--text-3);color:var(--text)}
+.action-btn.danger{border-color:#fca5a5;color:#ef4444}
+.action-btn.danger:hover{background:#fef2f2;border-color:#ef4444}
+.card-delete-btn{
+  width:22px;height:22px;border:none;border-radius:4px;background:none;
+  color:var(--text-3);font-size:16px;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  opacity:0;transition:all .15s;
+}
+.entity-card:hover .card-delete-btn{opacity:1}
+.card-delete-btn:hover{background:oklch(0.95 0.05 25);color:#ef4444}
 .inline-msg{font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px}
 .inline-msg.success{background:oklch(0.90 0.10 148);color:oklch(0.30 0.15 148)}
 .inline-msg.error{background:oklch(0.90 0.10 25);color:oklch(0.40 0.15 25)}
@@ -221,6 +240,15 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .conv-card-date{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;letter-spacing:-.01em}
 .conv-card-source{margin-bottom:8px}
 .conv-card-meta{font-family:var(--mono);font-size:11px;color:var(--text-3)}
+.conv-progress{height:3px;border-radius:2px;background:var(--border-subtle);margin-top:8px;overflow:hidden}
+.conv-progress-bar{height:100%;border-radius:2px;transition:width .3s ease}
+.conv-progress-bar.full{background:var(--online)}
+.conv-progress-bar.partial{background:var(--accent)}
+.conv-progress-bar.none{background:var(--border-subtle)}
+.msg-processed{opacity:.55}
+.processed-badge{font-size:9px;font-family:var(--mono);font-weight:600;padding:1px 5px;border-radius:3px;margin-left:6px;vertical-align:middle}
+.processed-badge.yes{background:oklch(0.92 0.06 148);color:oklch(0.35 0.15 148)}
+.processed-badge.no{background:var(--surface-2);color:var(--text-3)}
 
 /* ── DETAIL ─────────────────────────────── */
 .back-btn{
@@ -378,9 +406,11 @@ function setActiveBrainPrefix(name) { _activeBrainPrefix = name ? `/proxy/${enco
 function api(path, opts = {}) {
   const token = localStorage.getItem(TOKEN_KEY) || '';
   const prefix = _activeBrainPrefix;
+  const headers = { 'Authorization': `Bearer ${token}`, ...opts.headers };
+  if (opts.body) headers['Content-Type'] = 'application/json';
   return fetch(`${API_BASE}${prefix}${path}`, {
     ...opts,
-    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...opts.headers },
+    headers,
   }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
 }
 
@@ -572,9 +602,54 @@ function LoginPage({ onLogin }) {
 }
 
 /* ── DASHBOARD PAGE ───────────────────────────────────── */
-function DashboardPage({ nav, overview, conversations, brainName }) {
+function DeleteEntityModal({ entity, allEntities, onClose, onDone }) {
+  const [mergeTarget, setMergeTarget] = useState('');
+  const others = (allEntities || []).filter(e => e.id !== entity.id);
+  const hasFacts = entity.total > 0;
+
+  const handleDelete = async (merge) => {
+    const qs = merge && mergeTarget ? `?mergeInto=${encodeURIComponent(mergeTarget)}` : '';
+    await api(`/entities/${entity.id}${qs}`, { method: 'DELETE' });
+    onDone();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <h3>Delete {entity.name}?</h3>
+        {hasFacts ? (
+          <>
+            <p>This entity has {entity.total} fact{entity.total > 1 ? 's' : ''}. Move them to another entity or delete everything.</p>
+            <select value={mergeTarget} onChange={e => setMergeTarget(e.target.value)}>
+              <option value="">— Don't move facts (delete all) —</option>
+              {others.map(e => <option key={e.id} value={e.id}>{e.name} ({e.total} facts)</option>)}
+            </select>
+            <div className="modal-actions">
+              <button className="action-btn" onClick={onClose}>Cancel</button>
+              {mergeTarget
+                ? <button className="form-btn" onClick={() => handleDelete(true)}>Merge &amp; delete</button>
+                : <button className="form-btn danger" onClick={() => handleDelete(false)}>Delete all</button>
+              }
+            </div>
+          </>
+        ) : (
+          <>
+            <p>This entity has no facts. It will be archived.</p>
+            <div className="modal-actions">
+              <button className="action-btn" onClick={onClose}>Cancel</button>
+              <button className="form-btn danger" onClick={() => handleDelete(false)}>Delete</button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DashboardPage({ nav, overview, conversations, brainName, onRefresh }) {
   const [q, setQ] = useState('');
   const [srcFilter, setSrcFilter] = useState('all');
+  const [deleteEntity, setDeleteEntity] = useState(null);
 
   const entities = overview || [];
   const totalFacts = entities.reduce((s, e) => s + e.total, 0);
@@ -627,7 +702,10 @@ function DashboardPage({ nav, overview, conversations, brainName }) {
         <div className="entity-grid" style={{ marginBottom: 36 }}>
           {filtered.map(e => (
             <div key={e.id} className="entity-card" style={{ '--card-accent': TYPE_COLOR[e.type] || 'var(--accent)' }} onClick={() => nav(`#/entity/${e.id}`)}>
-              <div className="entity-name">{e.name}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div className="entity-name" style={{ flex: 1 }}>{e.name}</div>
+                <button className="card-delete-btn" title="Delete" onClick={ev => { ev.stopPropagation(); setDeleteEntity(e); }}>&times;</button>
+              </div>
               <div className="entity-tags">
                 <Badge variant={e.type}>{e.type}</Badge>
                 <Badge variant="area">{e.category}</Badge>
@@ -642,6 +720,7 @@ function DashboardPage({ nav, overview, conversations, brainName }) {
           ))}
           {filtered.length === 0 && <div className="empty">No entities found</div>}
         </div>
+        {deleteEntity && <DeleteEntityModal entity={deleteEntity} allEntities={entities} onClose={() => setDeleteEntity(null)} onDone={() => { setDeleteEntity(null); onRefresh && onRefresh(); }} />}
 
         <div className="sec-head" style={{ marginBottom: 10 }}>
           <span className="sec-title">Conversations</span>
@@ -669,7 +748,10 @@ function DashboardPage({ nav, overview, conversations, brainName }) {
                     {c.source || 'unknown'}
                   </span>
                 </div>
-                <div className="conv-card-meta">{c.message_count || 0} msgs</div>
+                <div className="conv-card-meta">{c.message_count || 0} msgs · {c.processed_count || 0} processed</div>
+                {(() => { const total = c.message_count || 0; const proc = c.processed_count || 0; const pct = total > 0 ? (proc / total) * 100 : 0; const cls = pct >= 100 ? 'full' : pct > 0 ? 'partial' : 'none'; return (
+                  <div className="conv-progress"><div className={`conv-progress-bar ${cls}`} style={{ width: `${pct}%` }}></div></div>
+                ); })()}
               </div>
             );
           })}
@@ -681,9 +763,10 @@ function DashboardPage({ nav, overview, conversations, brainName }) {
 }
 
 /* ── ENTITY DETAIL ────────────────────────────────────── */
-function EntityDetailPage({ id, nav }) {
+function EntityDetailPage({ id, nav, allEntities }) {
   const [entity, setEntity] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showDelete, setShowDelete] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -698,6 +781,7 @@ function EntityDetailPage({ id, nav }) {
   const warm = facts.filter(f => f.tier === 'warm');
   const cold = facts.filter(f => f.tier === 'cold');
   const tiers = [{ t: 'hot', items: hot }, { t: 'warm', items: warm }, { t: 'cold', items: cold }].filter(g => g.items.length);
+  const modalEntity = { id, name: entity.name, total: facts.length };
 
   return (
     <>
@@ -711,7 +795,11 @@ function EntityDetailPage({ id, nav }) {
           <h1 className="detail-title">{entity.name}</h1>
           <Badge variant={entity.type}>{entity.type}</Badge>
           <Badge variant="area">{entity.category}</Badge>
+          <div style={{ marginLeft: 'auto' }} className="entity-actions">
+            <button className="action-btn danger" onClick={() => setShowDelete(true)}>Delete</button>
+          </div>
         </div>
+        {showDelete && <DeleteEntityModal entity={modalEntity} allEntities={allEntities} onClose={() => setShowDelete(false)} onDone={() => nav('#/dashboard')} />}
         <div className="detail-stat-row">
           {[{ l: 'Total', v: facts.length, c: 'var(--text)' }, { l: 'Hot', v: hot.length, c: '#f59e0b' }, { l: 'Warm', v: warm.length, c: '#eab308' }, { l: 'Cold', v: cold.length, c: '#3b82f6' }].map(s => (
             <div key={s.l} className="detail-stat">
@@ -771,10 +859,13 @@ function ConversationDetailPage({ id, nav }) {
           <h1 className="detail-title">{date}</h1>
           <Badge>{convo.source || 'unknown'}</Badge>
         </div>
-        <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 24, fontFamily: 'var(--mono)' }}>{msgs.length} messages</p>
+        {(() => { const proc = msgs.filter(m => m.processed).length; const pct = msgs.length > 0 ? (proc / msgs.length) * 100 : 0; const cls = pct >= 100 ? 'full' : pct > 0 ? 'partial' : 'none'; return (<>
+          <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 8, fontFamily: 'var(--mono)' }}>{msgs.length} messages · {proc} processed ({Math.round(pct)}%)</p>
+          <div className="conv-progress" style={{ marginBottom: 24 }}><div className={`conv-progress-bar ${cls}`} style={{ width: `${pct}%` }}></div></div>
+        </>); })()}
         {msgs.map((m, i) => (
-          <div key={m.id || i} className={`msg msg-${m.role}`}>
-            <div className="msg-role">{m.role}</div>
+          <div key={m.id || i} className={`msg msg-${m.role}${m.processed ? ' msg-processed' : ''}`}>
+            <div className="msg-role">{m.role}{m.processed ? <span className="processed-badge yes">processed</span> : <span className="processed-badge no">pending</span>}</div>
             <div className="msg-text">{m.content}</div>
           </div>
         ))}
@@ -1107,6 +1198,11 @@ function App() {
     nav('#/dashboard');
   }, []);
 
+  const refreshData = useCallback(() => {
+    api('/memory/summary').then(setOverview).catch(() => {});
+    api('/conversations?limit=200').then(setConversations).catch(() => {});
+  }, [activeBrain]);
+
   useEffect(() => {
     if (!authed && route !== '/login') nav('#/login');
     if (authed && (route === '/' || route === '/login')) nav('#/dashboard');
@@ -1131,12 +1227,12 @@ function App() {
 
   const renderPage = () => {
     const [sec, ...rest] = segs;
-    if (sec === 'entity') return <EntityDetailPage id={rest[0]} nav={nav} />;
+    if (sec === 'entity') return <EntityDetailPage id={rest[0]} nav={nav} allEntities={overview} />;
     if (sec === 'conversation') return <ConversationDetailPage id={rest[0]} nav={nav} />;
     if (sec === 'api') return <APIDocsPage />;
     if (sec === 'mcp') return <MCPDocsPage />;
     if (sec === 'keys' && brain.brainType === 'shared') return <KeysPage />;
-    return <DashboardPage nav={nav} overview={overview} conversations={conversations} brainName={activeBrainName} />;
+    return <DashboardPage nav={nav} overview={overview} conversations={conversations} brainName={activeBrainName} onRefresh={refreshData} />;
   };
 
   const mobileNav = (path) => { nav(path); setSidebarOpen(false); };

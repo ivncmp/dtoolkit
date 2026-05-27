@@ -15,11 +15,11 @@ export async function compactRoutes(app: FastifyInstance) {
       limit?: number;
     };
 
-    const steps = (body.steps ?? ['dedup', 'tiers']).filter((s): s is 'dedup' | 'tiers' =>
-      ['dedup', 'tiers'].includes(s),
+    const steps = (body.steps ?? ['dedup', 'tiers']).filter(
+      (s): s is 'dedup' | 'tiers' | 'process' => ['dedup', 'tiers', 'process'].includes(s),
     );
 
-    const result = compact({
+    const result = await compact({
       db: app.db,
       tiers: app.config.tiers,
       threshold: body.threshold ?? app.config.compact.threshold,

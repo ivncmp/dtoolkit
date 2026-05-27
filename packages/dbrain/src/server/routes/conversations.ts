@@ -12,7 +12,8 @@ export async function conversationRoutes(app: FastifyInstance) {
   app.get('/conversations', async (request) => {
     const { source, limit = 50 } = request.query as { source?: string; limit?: number };
     let sql = `SELECT c.id, c.source, c.started_at, c.ended_at, c.summary,
-      (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id) AS message_count
+      (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id) AS message_count,
+      (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id AND m.processed = 1) AS processed_count
       FROM conversations c`;
     const params: (string | number)[] = [];
     if (source) {

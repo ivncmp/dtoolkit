@@ -7,6 +7,7 @@ import pc from 'picocolors';
 import { compact } from '../core/compact.js';
 import { loadConfig } from '../core/config.js';
 import { createDatabase } from '../core/db.js';
+import { initLlm, isLlmConfigured } from '../core/llm.js';
 import { startDashboard } from '../dashboard/server.js';
 import { createServer } from '../server/index.js';
 
@@ -19,6 +20,7 @@ export async function start(pathArg?: string) {
   const dataPath = resolveDataPath(pathArg);
   const config = { ...loadConfig(dataPath), dataPath };
   const db = createDatabase(config);
+  initLlm(config);
   const app = createServer(config, db);
 
   const address = await app.listen({ port: config.port, host: config.host });
@@ -33,15 +35,16 @@ export async function start(pathArg?: string) {
 
   let compactLine = '';
   if (config.compact.schedule) {
-    const job = new Cron(config.compact.schedule, () => {
+    const job = new Cron(config.compact.schedule, async () => {
       console.log(`\n${pc.dim('[compact]')} Starting scheduled compaction...`);
       try {
-        const result = compact({
+        const steps = isLlmConfigured() ? ['process', 'dedup', 'tiers'] as const : ['dedup', 'tiers'] as const;
+        const result = await compact({
           db,
           tiers: config.tiers,
           threshold: config.compact.threshold,
           limit: config.compact.limit,
-          steps: ['dedup', 'tiers'],
+          steps: [...steps],
           onProgress: (msg) => console.log(`  ${pc.dim('[compact]')} ${msg}`),
         });
 
@@ -53,10 +56,11 @@ export async function start(pathArg?: string) {
            ON CONFLICT(key) DO UPDATE SET content = excluded.content, updated_at = excluded.updated_at`,
         ).run(payload, now);
 
-        console.log(
-          `${pc.dim('[compact]')} Done — ` +
-            `${result.factsDeduped} deduped, ${result.tiersUpdated} tiers updated`,
-        );
+        const parts = [];
+        if (result.factsExtracted) parts.push(`${result.factsExtracted} facts extracted`);
+        if (result.factsDeduped) parts.push(`${result.factsDeduped} deduped`);
+        if (result.tiersUpdated) parts.push(`${result.tiersUpdated} tiers updated`);
+        console.log(`${pc.dim('[compact]')} Done — ${parts.join(', ') || 'no changes'}`);
       } catch (err) {
         console.error(`${pc.red('[compact]')} Error: ${(err as Error).message}`);
       }
@@ -74,5 +78,6 @@ ${pc.cyan(name)} is awake
   ${pc.green('Dashboard')}: http://localhost:${dashboardPort}
   ${pc.green('Brain')}:     ${config.dataPath}
   ${pc.green('Token')}:     ${config.token.slice(0, 16)}...${compactLine}
+  ${pc.green('LLM')}:       ${config.llm.dproxyUrl ? `${config.llm.dproxyUrl} (dproxy)` : pc.dim('not configured')}
 `);
 }

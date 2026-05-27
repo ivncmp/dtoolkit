@@ -101,6 +101,36 @@ export async function configure(pathArg?: string) {
           initialValue: config.compact.schedule || '',
           placeholder: '0 3 * * *',
         }),
+      dproxyUrl: () =>
+        p.text({
+          message: 'LLM: dproxy server URL (empty to disable)',
+          initialValue: config.llm.dproxyUrl || '',
+          placeholder: 'http://localhost:7880',
+        }),
+      dproxyToken: ({ results }) =>
+        results.dproxyUrl
+          ? p.text({
+              message: 'LLM: dproxy auth token',
+              initialValue: config.llm.dproxyToken || '',
+              placeholder: 'sk-dproxy_...',
+            })
+          : Promise.resolve(''),
+      llmProvider: ({ results }) =>
+        results.dproxyUrl
+          ? p.text({
+              message: 'LLM: provider (empty for dproxy default)',
+              initialValue: config.llm.provider || '',
+              placeholder: 'claude',
+            })
+          : Promise.resolve(''),
+      llmModel: ({ results }) =>
+        results.dproxyUrl
+          ? p.text({
+              message: 'LLM: model (empty for provider default)',
+              initialValue: config.llm.model || '',
+              placeholder: 'claude-haiku-4-5-20251001',
+            })
+          : Promise.resolve(''),
     },
     {
       onCancel: () => {
@@ -128,6 +158,14 @@ export async function configure(pathArg?: string) {
       limit: parseInt(answers.compactLimit, 10),
       schedule: answers.compactSchedule || undefined,
     },
+    llm: answers.dproxyUrl
+      ? {
+          dproxyUrl: answers.dproxyUrl,
+          dproxyToken: (answers.dproxyToken as string) || undefined,
+          provider: (answers.llmProvider as string) || undefined,
+          model: (answers.llmModel as string) || undefined,
+        }
+      : undefined,
   };
 
   if (JSON.stringify(updated) === JSON.stringify(raw)) {

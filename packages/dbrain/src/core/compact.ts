@@ -2,13 +2,17 @@ import { computeTier, diceCoefficient } from '@dtoolkit/core';
 import type { TierConfig } from '@dtoolkit/core';
 import type Database from 'better-sqlite3';
 
+import { processConversations } from './process.js';
+
+export type CompactStep = 'dedup' | 'tiers' | 'process';
+
 export interface CompactOptions {
   db: Database.Database;
   tiers: TierConfig;
   threshold?: number;
   limit?: number;
   dryRun?: boolean;
-  steps?: ('dedup' | 'tiers')[];
+  steps?: CompactStep[];
   onProgress?: (msg: string) => void;
 }
 
@@ -16,6 +20,10 @@ export interface CompactResult {
   factsDeduped: number;
   factsProcessed: number;
   tiersUpdated: number;
+  conversationsProcessed: number;
+  messagesProcessed: number;
+  entitiesCreated: number;
+  factsExtracted: number;
 }
 
 interface FactRow {
@@ -28,7 +36,7 @@ interface FactRow {
   compacted_at: string | null;
 }
 
-export function compact(opts: CompactOptions): CompactResult {
+export async function compact(opts: CompactOptions): Promise<CompactResult> {
   const {
     db,
     tiers,
@@ -39,7 +47,23 @@ export function compact(opts: CompactOptions): CompactResult {
     onProgress,
   } = opts;
 
-  const result: CompactResult = { factsDeduped: 0, factsProcessed: 0, tiersUpdated: 0 };
+  const result: CompactResult = {
+    factsDeduped: 0,
+    factsProcessed: 0,
+    tiersUpdated: 0,
+    conversationsProcessed: 0,
+    messagesProcessed: 0,
+    entitiesCreated: 0,
+    factsExtracted: 0,
+  };
+
+  if (steps.includes('process')) {
+    const proc = await processConversations({ db, dryRun, onProgress });
+    result.conversationsProcessed = proc.conversationsProcessed;
+    result.messagesProcessed = proc.messagesProcessed;
+    result.entitiesCreated = proc.entitiesCreated;
+    result.factsExtracted = proc.factsCreated;
+  }
 
   if (steps.includes('dedup')) {
     const dedup = deduplicateFacts(db, threshold, limit, dryRun, onProgress);

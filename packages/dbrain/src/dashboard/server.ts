@@ -47,8 +47,6 @@ export function startDashboard(port: number) {
   app.listen({ port, host: '0.0.0.0' }, (err) => {
     if (err) {
       console.error(`Dashboard failed to start: ${err.message}`);
-      return;
     }
-    console.log(`Dashboard: http://localhost:${port}`);
   });
 }

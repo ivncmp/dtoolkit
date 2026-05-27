@@ -90,6 +90,42 @@ export async function init(pathArg?: string, flags?: { nonInteractive?: boolean 
           message: 'Your timezone',
           initialValue: Intl.DateTimeFormat().resolvedOptions().timeZone,
         }),
+      compactSchedule: () =>
+        p.text({
+          message: 'Compaction cron schedule (empty to disable)',
+          initialValue: '0 3 * * *',
+          placeholder: '0 3 * * *',
+        }),
+      dproxyUrl: () =>
+        p.text({
+          message: 'LLM: dproxy server URL (empty to skip)',
+          initialValue: '',
+          placeholder: 'http://localhost:7880',
+        }),
+      dproxyToken: ({ results }) =>
+        results.dproxyUrl
+          ? p.text({
+              message: 'LLM: dproxy auth token',
+              initialValue: '',
+              placeholder: 'sk-dproxy_...',
+            })
+          : Promise.resolve(''),
+      llmProvider: ({ results }) =>
+        results.dproxyUrl
+          ? p.text({
+              message: 'LLM: provider (empty for dproxy default)',
+              initialValue: '',
+              placeholder: 'claude',
+            })
+          : Promise.resolve(''),
+      llmModel: ({ results }) =>
+        results.dproxyUrl
+          ? p.text({
+              message: 'LLM: model (empty for provider default)',
+              initialValue: '',
+              placeholder: 'claude-haiku-4-5-20251001',
+            })
+          : Promise.resolve(''),
     },
     {
       onCancel: () => {
@@ -119,7 +155,19 @@ export async function init(pathArg?: string, flags?: { nonInteractive?: boolean 
     brainType: answers.brainType as 'personal' | 'shared',
     connections: [],
     tiers: { hotDays: 7, hotMinAccess: 10, warmDays: 30 },
-    compact: { threshold: 0.85, limit: 1000 },
+    compact: {
+      threshold: 0.85,
+      limit: 1000,
+      schedule: (answers.compactSchedule as string) || undefined,
+    },
+    llm: answers.dproxyUrl
+      ? {
+          dproxyUrl: answers.dproxyUrl as string,
+          dproxyToken: (answers.dproxyToken as string) || undefined,
+          provider: (answers.llmProvider as string) || undefined,
+          model: (answers.llmModel as string) || undefined,
+        }
+      : {},
   };
 
   const s = p.spinner();
@@ -227,6 +275,11 @@ function initNonInteractive(pathArg?: string) {
   const ownerName = process.env.DBRAIN_OWNER_NAME || 'Human';
   const ownerTimezone =
     process.env.DBRAIN_TIMEZONE || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const compactSchedule = process.env.DBRAIN_COMPACT_SCHEDULE || undefined;
+  const dproxyUrl = process.env.DBRAIN_DPROXY_URL || undefined;
+  const dproxyToken = process.env.DBRAIN_DPROXY_TOKEN || undefined;
+  const llmProvider = process.env.DBRAIN_LLM_PROVIDER || undefined;
+  const llmModel = process.env.DBRAIN_LLM_MODEL || undefined;
 
   if (existsSync(join(dataPath, 'config.json'))) {
     console.log(`Config already exists at ${dataPath}, skipping init.`);
@@ -242,7 +295,10 @@ function initNonInteractive(pathArg?: string) {
     brainType,
     connections: [],
     tiers: { hotDays: 7, hotMinAccess: 10, warmDays: 30 },
-    compact: { threshold: 0.85, limit: 1000 },
+    compact: { threshold: 0.85, limit: 1000, schedule: compactSchedule },
+    llm: dproxyUrl
+      ? { dproxyUrl, dproxyToken, provider: llmProvider, model: llmModel }
+      : {},
   };
 
   mkdirSync(dataPath, { recursive: true });

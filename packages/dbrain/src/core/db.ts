@@ -33,7 +33,8 @@ CREATE TABLE IF NOT EXISTS facts (
 
 CREATE VIRTUAL TABLE IF NOT EXISTS facts_fts USING fts5(
   fact, entity_id, category,
-  content='facts', content_rowid='rowid'
+  content='facts', content_rowid='rowid',
+  tokenize='unicode61 remove_diacritics 2'
 );
 
 CREATE TABLE IF NOT EXISTS documents (
@@ -127,6 +128,20 @@ function migrate(db: Database.Database): void {
     }
 
     db.prepare('INSERT INTO schema_version (version) VALUES (?)').run(2);
+  }
+
+  if (current < 3) {
+    db.exec(`
+      DROP TABLE IF EXISTS facts_fts;
+      CREATE VIRTUAL TABLE facts_fts USING fts5(
+        fact, entity_id, category,
+        content='facts', content_rowid='rowid',
+        tokenize='unicode61 remove_diacritics 2'
+      );
+      INSERT INTO facts_fts(rowid, fact, entity_id, category)
+        SELECT rowid, fact, entity_id, category FROM facts;
+    `);
+    db.prepare('INSERT INTO schema_version (version) VALUES (?)').run(3);
   }
 }
 

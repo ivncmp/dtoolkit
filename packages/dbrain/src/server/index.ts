@@ -15,7 +15,7 @@ import { searchRoutes } from './routes/search.js';
 import { workspaceRoutes } from './routes/workspace.js';
 
 export function createServer(config: Config, db: Database.Database) {
-  const app = Fastify({ logger: true });
+  const app = Fastify({ logger: { level: 'error' } });
 
   app.decorate('db', db);
   app.decorate('config', config);

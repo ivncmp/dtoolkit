@@ -35,6 +35,14 @@ export const ConfigSchema = z.object({
       provider: z.string().optional(),
     })
     .default({ threshold: 0.85, limit: 1000 }),
+  llm: z
+    .object({
+      dproxyUrl: z.string().optional(),
+      dproxyToken: z.string().optional(),
+      provider: z.string().optional(),
+      model: z.string().optional(),
+    })
+    .default({}),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

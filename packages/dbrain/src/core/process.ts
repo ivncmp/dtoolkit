@@ -61,12 +61,19 @@ Given a conversation, identify:
 1. **Entities** — people, projects, systems, events, or resources mentioned
 2. **Facts** — specific, atomic pieces of information worth remembering
 
-Rules:
+Entity rules:
+- Only create entities for SIGNIFICANT things: projects the user works on, systems they maintain, people they interact with regularly, organizations they belong to
+- Do NOT create entities for: minor mentions, celebrities, cultural references, family members (store those as facts on the user entity), individual services/containers running inside a system, hardware components of a system, files, config keys, or one-off references
+- If something is a component/part of a bigger system, add it as a fact on that system instead of creating a separate entity
+- Prefer fewer, meaningful entities over many granular ones
+
+Fact rules:
 - Only extract facts that are meaningful and worth storing long-term
 - Skip greetings, filler, debugging noise, and transient task details
 - Each fact should be one atomic statement, not a paragraph
 - Use the entity name exactly as it appears in the conversation
 - For the user, use their name if mentioned, otherwise use "user"
+- Do NOT extract sensitive data: children's ages, private IDs, tokens, passwords
 - Categorize entities using PARA: projects, areas, resources, archives
 - Fact categories: preference, decision, milestone, context, skill, relationship
 

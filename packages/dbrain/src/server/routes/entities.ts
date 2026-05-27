@@ -73,10 +73,23 @@ export async function entityRoutes(app: FastifyInstance) {
   app.delete('/entities/:id', async (request, reply) => {
     if (!requireWrite(request, reply)) return;
     const { id } = request.params as { id: string };
+    const { mergeInto } = (request.query as { mergeInto?: string });
+    const now = new Date().toISOString();
+
+    if (mergeInto) {
+      const target = db.prepare("SELECT id FROM entities WHERE id = ? AND status = 'active'").get(mergeInto);
+      if (!target) return reply.code(404).send({ error: 'Target entity not found' });
+      if (mergeInto === id) return reply.code(400).send({ error: 'Cannot merge entity into itself' });
+      db.prepare('UPDATE facts SET entity_id = ? WHERE entity_id = ?').run(mergeInto, id);
+      db.prepare('UPDATE entities SET updated_at = ? WHERE id = ?').run(now, mergeInto);
+    } else {
+      db.prepare("UPDATE facts SET status = 'archived' WHERE entity_id = ?").run(id);
+    }
+
     const result = db
       .prepare("UPDATE entities SET status = 'archived', updated_at = ? WHERE id = ?")
-      .run(new Date().toISOString(), id);
+      .run(now, id);
     if (result.changes === 0) return reply.code(404).send({ error: 'Entity not found' });
-    return { id, status: 'archived' };
+    return { id, status: 'archived', mergedInto: mergeInto || null };
   });
 }

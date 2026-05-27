@@ -663,14 +663,14 @@ Good: "User prefers React over Vue for new frontend projects"`,
       inputSchema: {
         dryRun: z.boolean().optional().default(false).describe('Preview without writing changes'),
         steps: z
-          .array(z.enum(['dedup', 'tiers']))
+          .array(z.enum(['dedup', 'tiers', 'process']))
           .optional()
-          .describe('Steps to run (default: both)'),
+          .describe('Steps to run (default: dedup + tiers; add process for LLM extraction)'),
       },
     },
     async ({ dryRun, steps }) => {
       const activeSteps = steps ?? ['dedup', 'tiers'];
-      const result = compact({
+      const result = await compact({
         db,
         tiers: app.config.tiers,
         threshold: app.config.compact.threshold,

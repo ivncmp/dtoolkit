@@ -221,6 +221,15 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .conv-card-date{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;letter-spacing:-.01em}
 .conv-card-source{margin-bottom:8px}
 .conv-card-meta{font-family:var(--mono);font-size:11px;color:var(--text-3)}
+.conv-progress{height:3px;border-radius:2px;background:var(--border-subtle);margin-top:8px;overflow:hidden}
+.conv-progress-bar{height:100%;border-radius:2px;transition:width .3s ease}
+.conv-progress-bar.full{background:var(--online)}
+.conv-progress-bar.partial{background:var(--accent)}
+.conv-progress-bar.none{background:var(--border-subtle)}
+.msg-processed{opacity:.55}
+.processed-badge{font-size:9px;font-family:var(--mono);font-weight:600;padding:1px 5px;border-radius:3px;margin-left:6px;vertical-align:middle}
+.processed-badge.yes{background:oklch(0.92 0.06 148);color:oklch(0.35 0.15 148)}
+.processed-badge.no{background:var(--surface-2);color:var(--text-3)}
 
 /* ── DETAIL ─────────────────────────────── */
 .back-btn{
@@ -669,7 +678,10 @@ function DashboardPage({ nav, overview, conversations, brainName }) {
                     {c.source || 'unknown'}
                   </span>
                 </div>
-                <div className="conv-card-meta">{c.message_count || 0} msgs</div>
+                <div className="conv-card-meta">{c.message_count || 0} msgs · {c.processed_count || 0} processed</div>
+                {(() => { const total = c.message_count || 0; const proc = c.processed_count || 0; const pct = total > 0 ? (proc / total) * 100 : 0; const cls = pct >= 100 ? 'full' : pct > 0 ? 'partial' : 'none'; return (
+                  <div className="conv-progress"><div className={`conv-progress-bar ${cls}`} style={{ width: `${pct}%` }}></div></div>
+                ); })()}
               </div>
             );
           })}
@@ -771,10 +783,13 @@ function ConversationDetailPage({ id, nav }) {
           <h1 className="detail-title">{date}</h1>
           <Badge>{convo.source || 'unknown'}</Badge>
         </div>
-        <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 24, fontFamily: 'var(--mono)' }}>{msgs.length} messages</p>
+        {(() => { const proc = msgs.filter(m => m.processed).length; const pct = msgs.length > 0 ? (proc / msgs.length) * 100 : 0; const cls = pct >= 100 ? 'full' : pct > 0 ? 'partial' : 'none'; return (<>
+          <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 8, fontFamily: 'var(--mono)' }}>{msgs.length} messages · {proc} processed ({Math.round(pct)}%)</p>
+          <div className="conv-progress" style={{ marginBottom: 24 }}><div className={`conv-progress-bar ${cls}`} style={{ width: `${pct}%` }}></div></div>
+        </>); })()}
         {msgs.map((m, i) => (
-          <div key={m.id || i} className={`msg msg-${m.role}`}>
-            <div className="msg-role">{m.role}</div>
+          <div key={m.id || i} className={`msg msg-${m.role}${m.processed ? ' msg-processed' : ''}`}>
+            <div className="msg-role">{m.role}{m.processed ? <span className="processed-badge yes">processed</span> : <span className="processed-badge no">pending</span>}</div>
             <div className="msg-text">{m.content}</div>
           </div>
         ))}

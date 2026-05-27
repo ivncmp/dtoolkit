@@ -94,8 +94,9 @@ program
 
 program
   .command('compact')
-  .description('Compact the brain (deduplicate facts, recalculate tiers)')
+  .description('Compact the brain (deduplicate facts, recalculate tiers, process conversations)')
   .option('--path <path>', 'Data path')
+  .option('--process', 'Extract entities + facts from unprocessed conversations via LLM')
   .option('--dedup', 'Deduplicate cold facts only')
   .option('--tiers', 'Recalculate tiers only')
   .option('--dry-run', 'Preview without writing')

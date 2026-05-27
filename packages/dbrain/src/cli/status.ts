@@ -49,12 +49,16 @@ export async function status(pathArg?: string) {
     }
   }
 
+  const llmLine = config.llm.dproxyUrl
+    ? `\n  ${pc.green('LLM')}:      ${config.llm.dproxyUrl} (dproxy)`
+    : `\n  ${pc.green('LLM')}:      ${pc.dim('not configured')}`;
+
   console.log(`
 ${pc.cyan('dbrain')} status
 
   ${pc.green('Data')}:     ${config.dataPath}
   ${pc.green('Port')}:     ${config.port}
   ${pc.green('Host')}:     ${config.host}
-  ${pc.green('Database')}: ${dbExists ? `${(dbSize / 1024).toFixed(1)} KB` : 'not created'}${compactLines}
+  ${pc.green('Database')}: ${dbExists ? `${(dbSize / 1024).toFixed(1)} KB` : 'not created'}${compactLines}${llmLine}
 `);
 }

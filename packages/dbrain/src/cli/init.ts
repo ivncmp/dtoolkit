@@ -120,6 +120,7 @@ export async function init(pathArg?: string, flags?: { nonInteractive?: boolean 
     connections: [],
     tiers: { hotDays: 7, hotMinAccess: 10, warmDays: 30 },
     compact: { threshold: 0.85, limit: 1000 },
+    llm: {},
   };
 
   const s = p.spinner();
@@ -243,6 +244,7 @@ function initNonInteractive(pathArg?: string) {
     connections: [],
     tiers: { hotDays: 7, hotMinAccess: 10, warmDays: 30 },
     compact: { threshold: 0.85, limit: 1000 },
+    llm: {},
   };
 
   mkdirSync(dataPath, { recursive: true });

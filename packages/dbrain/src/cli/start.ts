@@ -7,6 +7,7 @@ import pc from 'picocolors';
 import { compact } from '../core/compact.js';
 import { loadConfig } from '../core/config.js';
 import { createDatabase } from '../core/db.js';
+import { initLlm } from '../core/llm.js';
 import { startDashboard } from '../dashboard/server.js';
 import { createServer } from '../server/index.js';
 
@@ -19,6 +20,7 @@ export async function start(pathArg?: string) {
   const dataPath = resolveDataPath(pathArg);
   const config = { ...loadConfig(dataPath), dataPath };
   const db = createDatabase(config);
+  initLlm(config);
   const app = createServer(config, db);
 
   const address = await app.listen({ port: config.port, host: config.host });
@@ -74,5 +76,6 @@ ${pc.cyan(name)} is awake
   ${pc.green('Dashboard')}: http://localhost:${dashboardPort}
   ${pc.green('Brain')}:     ${config.dataPath}
   ${pc.green('Token')}:     ${config.token.slice(0, 16)}...${compactLine}
+  ${pc.green('LLM')}:       ${config.llm.dproxyUrl ? `${config.llm.dproxyUrl} (dproxy)` : pc.dim('not configured')}
 `);
 }

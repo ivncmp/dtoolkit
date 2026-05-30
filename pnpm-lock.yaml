@@ -238,6 +238,9 @@ importers:
       '@dtoolkit/adapter-opencode':
         specifier: workspace:*
         version: link:../adapter-opencode
+      '@dtoolkit/codegraph-sdk':
+        specifier: workspace:*
+        version: link:../codegraph-sdk
       '@dtoolkit/core':
         specifier: workspace:*
         version: link:../core

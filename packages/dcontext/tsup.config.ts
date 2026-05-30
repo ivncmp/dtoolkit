@@ -8,6 +8,7 @@ export default defineConfig({
   format: ["esm"],
   target: "node22",
   clean: true,
+  external: ["@dtoolkit/codegraph-sdk"],
   define: {
     __VERSION__: JSON.stringify(pkg.version),
   },

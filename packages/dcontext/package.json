@@ -48,6 +48,7 @@
     "@dtoolkit/adapter-codex": "workspace:*",
     "@dtoolkit/adapter-gemini": "workspace:*",
     "@dtoolkit/adapter-opencode": "workspace:*",
+    "@dtoolkit/codegraph-sdk": "workspace:*",
     "@dtoolkit/core": "workspace:*",
     "@dtoolkit/sdk": "workspace:*",
     "commander": "^13.0.0",

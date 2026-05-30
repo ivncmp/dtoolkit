@@ -94,5 +94,6 @@ export async function configure(pathArg?: string) {
   }
 
   writeFileSync(join(dataPath, 'config.json'), JSON.stringify(updated, null, 2) + '\n', 'utf-8');
+
   p.outro(pc.green('Config updated. Restart the server to apply changes.'));
 }

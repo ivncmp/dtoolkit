@@ -9,6 +9,7 @@ import { createDatabase } from '../core/db.js';
 import { indexProject } from '../core/indexer.js';
 import { startDashboard } from '../dashboard/server.js';
 import { createServer } from '../server/index.js';
+import { openAllGraphs } from '../service/codegraph.js';
 
 function resolveDataPath(pathArg?: string): string {
   if (pathArg) return resolve(pathArg.replace('~', homedir()));
@@ -36,6 +37,8 @@ export async function start(pathArg?: string) {
     // projects dir may not exist
   }
 
+  const graphCount = openAllGraphs(db, config.dataPath);
+
   const address = await app.listen({ port: config.port, host: config.host });
 
   const dashboardPort = config.port + 1;
@@ -58,5 +61,6 @@ ${pc.cyan('dwork')} is running
   ${pc.green('Token')}:     ${config.token.slice(0, 16)}...
   ${pc.green('Projects')}: ${projects}
   ${pc.green('Tasks')}:    ${tasks}
+  ${pc.green('Graphs')}:   ${graphCount}
 `);
 }

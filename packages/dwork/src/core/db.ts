@@ -75,6 +75,24 @@ CREATE INDEX IF NOT EXISTS idx_tasks_priority ON tasks(priority);
 CREATE INDEX IF NOT EXISTS idx_docs_project ON docs(project_slug);
 CREATE INDEX IF NOT EXISTS idx_docs_type ON docs(type);
 CREATE INDEX IF NOT EXISTS idx_api_keys_token ON api_keys(token);
+
+CREATE TABLE IF NOT EXISTS graphs (
+  name        TEXT PRIMARY KEY,
+  node_count  INTEGER DEFAULT 0,
+  edge_count  INTEGER DEFAULT 0,
+  file_count  INTEGER DEFAULT 0,
+  db_size     INTEGER DEFAULT 0,
+  synced_at   TEXT NOT NULL,
+  created_at  TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS graph_projects (
+  graph_name    TEXT NOT NULL REFERENCES graphs(name) ON DELETE CASCADE,
+  project_slug  TEXT NOT NULL REFERENCES projects(slug) ON DELETE CASCADE,
+  PRIMARY KEY (graph_name, project_slug)
+);
+
+CREATE INDEX IF NOT EXISTS idx_graph_projects_slug ON graph_projects(project_slug);
 `;
 
 function migrate(db: Database.Database): void {

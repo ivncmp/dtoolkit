@@ -48,13 +48,13 @@ export async function codegraphRoutes(app: FastifyInstance) {
 
     cgService.closeGraph(name);
 
-    const graphDir = join(app.config.dataPath, 'graphs', name, '.codegraph');
+    const graphDir = join(app.config.dataPath, 'graphs', name);
     mkdirSync(graphDir, { recursive: true });
-    writeFileSync(join(graphDir, 'codegraph.db'), buffer);
+    const dbPath = join(graphDir, 'codegraph.db');
+    writeFileSync(dbPath, buffer);
 
-    const storagePath = join(app.config.dataPath, 'graphs', name);
     try {
-      cgService.openGraph(name, storagePath);
+      cgService.openGraph(name, dbPath);
     } catch (err) {
       return reply
         .code(422)

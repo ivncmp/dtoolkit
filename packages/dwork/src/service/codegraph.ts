@@ -16,8 +16,7 @@ import type Database from 'better-sqlite3';
 const require = createRequire(import.meta.url);
 const { CodeGraph } = require('@dtoolkit/codegraph-sdk') as {
   CodeGraph: {
-    openSync(path: string): CodeGraphInstance;
-    isInitialized(path: string): boolean;
+    openDb(dbPath: string): CodeGraphInstance;
   };
 };
 
@@ -49,9 +48,9 @@ function graphStoragePath(dataPath: string, name: string): string {
   return join(dataPath, 'graphs', name);
 }
 
-export function openGraph(name: string, storagePath: string): void {
+export function openGraph(name: string, dbPath: string): void {
   if (graphs.has(name)) return;
-  const cg = CodeGraph.openSync(storagePath);
+  const cg = CodeGraph.openDb(dbPath);
   graphs.set(name, cg);
 }
 
@@ -74,10 +73,10 @@ export function openAllGraphs(db: Database.Database, dataPath: string): number {
   const rows = db.prepare('SELECT name FROM graphs').all() as Array<{ name: string }>;
   let loaded = 0;
   for (const row of rows) {
-    const path = graphStoragePath(dataPath, row.name);
-    if (existsSync(join(path, '.codegraph', 'codegraph.db'))) {
+    const dbPath = join(graphStoragePath(dataPath, row.name), 'codegraph.db');
+    if (existsSync(dbPath)) {
       try {
-        openGraph(row.name, path);
+        openGraph(row.name, dbPath);
         loaded++;
       } catch {
         // skip broken graphs

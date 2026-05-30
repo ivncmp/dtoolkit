@@ -285,6 +285,19 @@ export class CodeGraph {
   }
 
   /**
+   * Open a CodeGraph database directly from a DB file path.
+   * Skips directory validation — useful for query-only access
+   * when the DB is stored outside the standard .codegraph/ layout.
+   */
+  static openDb(dbPath: string): CodeGraph {
+    const resolvedPath = path.resolve(dbPath);
+    const db = DatabaseConnection.open(resolvedPath);
+    const queries = new QueryBuilder(db.getDb());
+    const projectRoot = path.dirname(resolvedPath);
+    return new CodeGraph(db, queries, projectRoot);
+  }
+
+  /**
    * Check if a directory has been initialized as a CodeGraph project
    */
   static isInitialized(projectRoot: string): boolean {

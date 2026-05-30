@@ -7,6 +7,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
+import * as cgService from '../service/codegraph.js';
 import * as docService from '../service/docs.js';
 import * as overviewService from '../service/overview.js';
 import * as projectService from '../service/projects.js';
@@ -360,6 +361,99 @@ export function createMcpServer(app: FastifyInstance) {
     },
     async () => {
       return json(overviewService.overview(db));
+    },
+  );
+
+  // --- Graph tools ---
+
+  mcp.registerTool(
+    'graph_search',
+    {
+      description:
+        'Search symbols in a code graph. Returns matching functions, classes, methods, etc.',
+      inputSchema: {
+        graph: z.string().describe('Graph name (e.g. "dtoolkit")'),
+        query: z.string().describe('Search query (symbol name or keyword)'),
+        kind: z
+          .string()
+          .optional()
+          .describe('Filter by node kind: function, class, method, interface, etc.'),
+        limit: z.number().optional().describe('Max results (default 20)'),
+      },
+    },
+    async ({ graph, query, kind, limit }) => {
+      return json(cgService.searchNodes(graph, query, kind, limit ?? 20));
+    },
+  );
+
+  mcp.registerTool(
+    'graph_stats',
+    {
+      description: 'Get statistics about a code graph: node/edge counts, languages, etc.',
+      inputSchema: {
+        graph: z.string().describe('Graph name'),
+      },
+    },
+    async ({ graph }) => {
+      return json(cgService.stats(graph));
+    },
+  );
+
+  mcp.registerTool(
+    'graph_trace',
+    {
+      description: 'Find the shortest path between two symbols in the code graph.',
+      inputSchema: {
+        graph: z.string().describe('Graph name'),
+        from: z.string().describe('Source node ID'),
+        to: z.string().describe('Target node ID'),
+      },
+    },
+    async ({ graph, from, to }) => {
+      const path = cgService.findPath(graph, from, to);
+      if (!path) return json({ path: null, message: 'No path found' });
+      return json({ path });
+    },
+  );
+
+  mcp.registerTool(
+    'graph_impact',
+    {
+      description:
+        'Calculate the impact radius of a symbol — all nodes that could be affected by changes to it.',
+      inputSchema: {
+        graph: z.string().describe('Graph name'),
+        node_id: z.string().describe('Node ID to analyze'),
+        depth: z.number().optional().describe('Max traversal depth (default 3)'),
+      },
+    },
+    async ({ graph, node_id, depth }) => {
+      return json(cgService.getImpactRadius(graph, node_id, depth ?? 3));
+    },
+  );
+
+  mcp.registerTool(
+    'graph_context',
+    {
+      description:
+        'Get full context for a symbol: callers, callees, and type hierarchy combined.',
+      inputSchema: {
+        graph: z.string().describe('Graph name'),
+        node_id: z.string().describe('Node ID'),
+        depth: z.number().optional().describe('Caller/callee depth (default 1)'),
+      },
+    },
+    async ({ graph, node_id, depth }) => {
+      const d = depth ?? 1;
+      const node = cgService.getNode(graph, node_id);
+      if (!node) return json({ error: 'Node not found' });
+      return json({
+        node,
+        callers: cgService.getCallers(graph, node_id, d),
+        callees: cgService.getCallees(graph, node_id, d),
+        usages: cgService.findUsages(graph, node_id),
+        hierarchy: cgService.getTypeHierarchy(graph, node_id),
+      });
     },
   );
 

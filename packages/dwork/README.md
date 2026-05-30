@@ -102,12 +102,15 @@ Connect via `http://localhost:7881/mcp` with Bearer token auth.
 | `get_project` | Full project context (README + TECH + task stats) |
 | `list_projects` | All projects with summaries |
 | `create_project` | Scaffold a new project (4 MDs + directory) |
+| `update_project` | Update project name, description, status, or source_path |
 | `get_tasks` | Tasks filtered by status/priority |
 | `add_task` | Add task to BACKLOG.md |
-| `update_task` | Modify task in BACKLOG.md |
+| `update_task` | Modify task in BACKLOG.md (supports moving to another project via `project`) |
 | `get_roadmap` | Read ROADMAP.md |
 | `get_docs` | List project documents |
+| `get_doc` | Get single document with full content (by ID or project + file_path) |
 | `add_doc` | Create numbered doc in docs/ |
+| `update_doc` | Update document title, body, or type |
 | `search` | FTS5 search across tasks + docs |
 | `what_to_do_next` | Suggest next tasks by priority/deadline |
 | `sync` | Sync docs from source code via dproxy |

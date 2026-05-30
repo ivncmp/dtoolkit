@@ -102,6 +102,28 @@ export function createMcpServer(app: FastifyInstance) {
     },
   );
 
+  // 3b. update_project
+  mcp.registerTool(
+    'update_project',
+    {
+      description: "Update a project's name, description, status, or source path.",
+      inputSchema: {
+        slug: z.string().describe('Project slug'),
+        name: z.string().optional().describe('New display name'),
+        description: z.string().optional().describe('New description'),
+        status: z.string().optional().describe('New status: active, paused, archived'),
+        source_path: z
+          .string()
+          .optional()
+          .describe('New path to the real project source code'),
+      },
+    },
+    async ({ slug, ...changes }) => {
+      const ok = projectService.updateProject(db, slug, changes);
+      return json({ updated: ok, slug });
+    },
+  );
+
   // 4. get_tasks
   mcp.registerTool(
     'get_tasks',
@@ -162,7 +184,8 @@ export function createMcpServer(app: FastifyInstance) {
   mcp.registerTool(
     'update_task',
     {
-      description: 'Update a task. Modifies BACKLOG.md and re-indexes.',
+      description:
+        'Update a task. Modifies BACKLOG.md and re-indexes. Set project to move the task to a different project.',
       inputSchema: {
         id: z.string().describe('Task ID'),
         title: z.string().optional().describe('New title'),
@@ -172,6 +195,10 @@ export function createMcpServer(app: FastifyInstance) {
         estimate: z.string().optional().describe('New estimate'),
         deadline: z.string().optional().describe('New deadline'),
         detail: z.string().optional().describe('Path to detail doc (e.g. docs/001_slug.md)'),
+        project: z
+          .string()
+          .optional()
+          .describe('Move task to this project slug (removes from current, adds to target)'),
       },
     },
     async ({ id, ...changes }) => {
@@ -261,6 +288,24 @@ export function createMcpServer(app: FastifyInstance) {
       } catch (err) {
         return json({ error: (err as Error).message });
       }
+    },
+  );
+
+  // 9b. update_doc
+  mcp.registerTool(
+    'update_doc',
+    {
+      description: 'Update a document. Modifies the file on disk and re-indexes.',
+      inputSchema: {
+        id: z.string().describe('Doc ID'),
+        title: z.string().optional().describe('New title'),
+        body: z.string().optional().describe('New body (markdown)'),
+        type: z.string().optional().describe('New doc type'),
+      },
+    },
+    async ({ id, ...changes }) => {
+      const ok = docService.updateDoc(db, config, id, changes);
+      return json({ updated: ok, id });
     },
   );
 

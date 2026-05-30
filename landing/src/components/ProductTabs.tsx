@@ -117,7 +117,7 @@ $ curl localhost:7880/api/ask \\
     features: [
       'BACKLOG.md as kanban — parsed and indexed automatically',
       'Numbered docs with full-text search',
-      'MCP tools: add_task, update_task, search, what_to_do_next',
+      'MCP tools: add_task, update_task, update_project, update_doc, search, what_to_do_next',
       'React dashboard with kanban board and file tree',
       'Sync across projects via dproxy',
     ],

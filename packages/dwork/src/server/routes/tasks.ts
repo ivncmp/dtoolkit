@@ -49,6 +49,7 @@ export async function taskRoutes(app: FastifyInstance) {
       estimate?: string;
       deadline?: string;
       detail?: string;
+      project?: string;
     };
     const ok = taskService.updateTask(db, config, id, changes);
     if (!ok) return reply.code(404).send({ error: 'Task not found' });

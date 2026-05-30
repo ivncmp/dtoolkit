@@ -115,6 +115,7 @@ export class DWorkClient {
       estimate?: string;
       deadline?: string;
       detail?: string;
+      project?: string;
     },
   ): Promise<{ updated: boolean; id: string }> {
     return this.http.patch(`/tasks/${enc(id)}`, changes);

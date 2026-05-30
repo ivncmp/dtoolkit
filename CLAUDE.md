@@ -108,7 +108,7 @@ tools/
 - `src/core/` — config.ts (Zod schema + env overrides), db.ts (SQLite + FTS5 contentless), models.ts (Zod enums), parser.ts (BACKLOG.md parse/serialize), indexer.ts (MD→SQLite sync), templates.ts (scaffold)
 - `src/service/` — projects.ts (CRUD + scaffold), tasks.ts (CRUD via BACKLOG.md), docs.ts (numbered docs), search.ts (FTS5 OR), overview.ts (stats), sync.ts (via dproxy), utils.ts (genId)
 - `src/server/` — Fastify app with routes: projects, tasks, docs, search, overview, sync, keys, health, permissions
-- `src/mcp/` — 13 MCP tools + 1 resource (dwork://projects), all delegating to service layer
+- `src/mcp/` — 16 MCP tools + 1 resource (dwork://projects), all delegating to service layer
 - `src/dashboard/` — Single-file React 18 app (CDN, no build step), served on port+1. Overview (default, global kanban), project detail (kanban/tasks/docs tabs), task detail modal with MD editor, file tree docs view, mobile responsive, Light/Dark themes
 - `src/cli/` — init wizard, start (server + dashboard), status, sync, configure, keys
 - Data stored in `~/.dwork/` (config.json, dwork.db, projects/)

@@ -65,7 +65,7 @@ src/
 │       ├── keys.ts     POST/GET/DELETE /keys (admin-only)
 │       └── permissions.ts  requireWrite() middleware
 ├── mcp/
-│   └── server.ts       13 MCP tools + 1 resource, all delegating to service
+│   └── server.ts       16 MCP tools + 1 resource, all delegating to service
 ├── cli/
 │   ├── index.ts        Commander entry point + ASCII banner
 │   ├── init.ts         Interactive wizard (@clack/prompts)
@@ -141,23 +141,26 @@ type: backlog
 
 FTS5 uses **contentless tables** (`content=''`, `contentless_delete=1`). The body lives in `.md` files, never in SQLite. The indexer manages FTS manually (no triggers).
 
-## MCP Tools (13)
+## MCP Tools (16)
 
 All delegate to the service layer:
 
 1. `get_project` — project context (README + TECH + task stats)
 2. `list_projects` — all projects with summaries
 3. `create_project` — scaffold 4 MDs + directory
-4. `get_tasks` — filtered tasks
-5. `add_task` — append to BACKLOG.md
-6. `update_task` — modify BACKLOG.md line
-7. `get_roadmap` — ROADMAP.md content
-8. `get_docs` — list docs
-9. `add_doc` — numbered doc in docs/
-10. `search` — FTS5 across tasks + docs
-11. `what_to_do_next` — priority/deadline ranking
-12. `sync` — sync docs from source via dproxy
-13. `overview` — global stats
+4. `update_project` — update name, description, status, or source_path
+5. `get_tasks` — filtered tasks
+6. `add_task` — append to BACKLOG.md
+7. `update_task` — modify BACKLOG.md line (supports moving task to another project via `project` param)
+8. `get_roadmap` — ROADMAP.md content
+9. `get_docs` — list docs
+10. `get_doc` — single doc with full content (by ID or project + file_path)
+11. `add_doc` — numbered doc in docs/
+12. `update_doc` — update doc title, body, or type
+13. `search` — FTS5 across tasks + docs
+14. `what_to_do_next` — priority/deadline ranking
+15. `sync` — sync docs from source via dproxy
+16. `overview` — global stats
 
 ## Config
 

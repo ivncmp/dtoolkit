@@ -4,6 +4,12 @@ import type {
   DWorkApiKeyCreateResponse,
   DWorkApiKeyListItem,
   DWorkDoc,
+  DWorkGraph,
+  DWorkGraphNode,
+  DWorkGraphSearchResult,
+  DWorkGraphStats,
+  DWorkGraphSubgraph,
+  DWorkGraphUploadResult,
   DWorkHealthResponse,
   DWorkOverview,
   DWorkProject,
@@ -198,5 +204,79 @@ export class DWorkClient {
 
   async revokeApiKey(id: string): Promise<{ id: string; revoked: boolean }> {
     return this.http.del(`/keys/${enc(id)}`);
+  }
+
+  // --- Graphs ---
+
+  async listGraphs(): Promise<DWorkGraph[]> {
+    return this.http.get('/graphs');
+  }
+
+  async getGraph(name: string): Promise<DWorkGraph> {
+    return this.http.get(`/graphs/${enc(name)}`);
+  }
+
+  async deleteGraph(name: string): Promise<void> {
+    await this.http.requestRaw('DELETE', `/graphs/${enc(name)}`);
+  }
+
+  async uploadGraph(name: string, dbBuffer: Uint8Array | ArrayBuffer): Promise<DWorkGraphUploadResult> {
+    return this.http.postBinary(`/graphs/${enc(name)}/upload`, dbBuffer);
+  }
+
+  async linkGraphProjects(name: string, slugs: string[]): Promise<{ linked: string[] }> {
+    return this.http.post(`/graphs/${enc(name)}/projects`, { slugs });
+  }
+
+  async unlinkGraphProject(name: string, slug: string): Promise<void> {
+    await this.http.requestRaw('DELETE', `/graphs/${enc(name)}/projects/${enc(slug)}`);
+  }
+
+  async graphStats(name: string): Promise<DWorkGraphStats> {
+    return this.http.get(`/graphs/${enc(name)}/stats`);
+  }
+
+  async searchGraphNodes(
+    name: string,
+    query: string,
+    options?: { kind?: string; limit?: number },
+  ): Promise<DWorkGraphSearchResult[]> {
+    const params = new URLSearchParams({ q: query });
+    if (options?.kind) params.set('kind', options.kind);
+    if (options?.limit) params.set('limit', String(options.limit));
+    return this.http.get(`/graphs/${enc(name)}/nodes${qs(params)}`);
+  }
+
+  async getGraphNode(name: string, nodeId: string): Promise<DWorkGraphNode> {
+    return this.http.get(`/graphs/${enc(name)}/nodes/${enc(nodeId)}`);
+  }
+
+  async getGraphCallers(
+    name: string,
+    nodeId: string,
+    depth?: number,
+  ): Promise<Array<{ node: DWorkGraphNode; edge: { source: string; target: string; kind: string } }>> {
+    const params = new URLSearchParams();
+    if (depth) params.set('depth', String(depth));
+    return this.http.get(`/graphs/${enc(name)}/nodes/${enc(nodeId)}/callers${qs(params)}`);
+  }
+
+  async getGraphImpact(name: string, nodeId: string, depth?: number): Promise<DWorkGraphSubgraph> {
+    const params = new URLSearchParams();
+    if (depth) params.set('depth', String(depth));
+    return this.http.get(`/graphs/${enc(name)}/nodes/${enc(nodeId)}/impact${qs(params)}`);
+  }
+
+  async traceGraphPath(
+    name: string,
+    from: string,
+    to: string,
+  ): Promise<{ path: Array<{ node: DWorkGraphNode; edge: { source: string; target: string; kind: string } | null }> | null }> {
+    const params = new URLSearchParams({ from, to });
+    return this.http.get(`/graphs/${enc(name)}/trace${qs(params)}`);
+  }
+
+  async getGraphFiles(name: string): Promise<Array<{ path: string; language: string; nodeCount: number }>> {
+    return this.http.get(`/graphs/${enc(name)}/files`);
   }
 }

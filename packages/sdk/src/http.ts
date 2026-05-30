@@ -57,6 +57,26 @@ export class HttpClient {
     return this.request('DELETE', path);
   }
 
+  async postBinary<T>(path: string, buffer: Uint8Array | ArrayBuffer): Promise<T> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/octet-stream',
+    };
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method: 'POST',
+      headers,
+      body: buffer,
+      signal: this.timeoutMs ? AbortSignal.timeout(this.timeoutMs) : undefined,
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new SdkError(res.status, text, path);
+    }
+    return res.json() as Promise<T>;
+  }
+
   private rawRequest(method: string, path: string, body?: unknown): Promise<Response> {
     const headers: Record<string, string> = {};
 

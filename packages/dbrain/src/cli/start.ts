@@ -38,7 +38,9 @@ export async function start(pathArg?: string) {
     const job = new Cron(config.compact.schedule, async () => {
       console.log(`\n${pc.dim('[compact]')} Starting scheduled compaction...`);
       try {
-        const steps = isLlmConfigured() ? ['process', 'dedup', 'tiers'] as const : ['dedup', 'tiers'] as const;
+        const steps = isLlmConfigured()
+          ? (['process', 'dedup', 'tiers'] as const)
+          : (['dedup', 'tiers'] as const);
         const result = await compact({
           db,
           tiers: config.tiers,

@@ -4,6 +4,7 @@ import Fastify from 'fastify';
 import type { Config } from '../core/config.js';
 import { mountMcp } from '../mcp/server.js';
 
+import { codegraphRoutes } from './routes/codegraph.js';
 import { docRoutes } from './routes/docs.js';
 import { healthRoutes } from './routes/health.js';
 import { keyRoutes } from './routes/keys.js';
@@ -76,6 +77,7 @@ export function createServer(config: Config, db: Database.Database) {
   app.register(overviewRoutes);
   app.register(syncRoutes);
   app.register(keyRoutes);
+  app.register(codegraphRoutes);
   mountMcp(app);
 
   return app;

@@ -296,9 +296,7 @@ function initNonInteractive(pathArg?: string) {
     connections: [],
     tiers: { hotDays: 7, hotMinAccess: 10, warmDays: 30 },
     compact: { threshold: 0.85, limit: 1000, schedule: compactSchedule },
-    llm: dproxyUrl
-      ? { dproxyUrl, dproxyToken, provider: llmProvider, model: llmModel }
-      : {},
+    llm: dproxyUrl ? { dproxyUrl, dproxyToken, provider: llmProvider, model: llmModel } : {},
   };
 
   mkdirSync(dataPath, { recursive: true });

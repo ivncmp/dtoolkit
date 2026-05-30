@@ -112,10 +112,7 @@ export function createMcpServer(app: FastifyInstance) {
         name: z.string().optional().describe('New display name'),
         description: z.string().optional().describe('New description'),
         status: z.string().optional().describe('New status: active, paused, archived'),
-        source_path: z
-          .string()
-          .optional()
-          .describe('New path to the real project source code'),
+        source_path: z.string().optional().describe('New path to the real project source code'),
       },
     },
     async ({ slug, ...changes }) => {

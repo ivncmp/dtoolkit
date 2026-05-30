@@ -105,6 +105,10 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .page{padding:28px 32px 80px}
 .page-title{font-size:24px;font-weight:700;letter-spacing:-.03em;margin-bottom:20px}
 .page-subtitle{font-size:13px;color:var(--text-2);margin-bottom:24px}
+.editable-field{cursor:pointer;border-radius:6px;padding:2px 8px;margin-left:-8px;transition:background .15s}
+.editable-field:hover{background:var(--surface-2)}
+.edit-icon{display:none;margin-left:6px;font-size:14px;color:var(--text-3);vertical-align:middle}
+.editable-field:hover .edit-icon{display:inline}
 
 /* ── LOGIN ──────────────────────────────── */
 .login-bg{
@@ -778,6 +782,10 @@ function ProjectDetail({ slug, nav }) {
   const [showAddTask, setShowAddTask] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newPriority, setNewPriority] = useState('P2');
+  const [editingName, setEditingName] = useState(false);
+  const [editingDesc, setEditingDesc] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDesc, setEditDesc] = useState('');
 
   const load = useCallback(() => {
     api(`/projects/${slug}`).then(setProject).catch(() => {});
@@ -786,6 +794,24 @@ function ProjectDetail({ slug, nav }) {
   }, [slug]);
 
   useEffect(() => { load(); }, [load]);
+
+  const saveName = async () => {
+    const trimmed = editName.trim();
+    if (trimmed && trimmed !== project.name) {
+      await api(`/projects/${slug}`, { method: 'PATCH', body: JSON.stringify({ name: trimmed }) });
+      load();
+    }
+    setEditingName(false);
+  };
+
+  const saveDesc = async () => {
+    const trimmed = editDesc.trim();
+    if (trimmed !== (project.description || '')) {
+      await api(`/projects/${slug}`, { method: 'PATCH', body: JSON.stringify({ description: trimmed || null }) });
+      load();
+    }
+    setEditingDesc(false);
+  };
 
   const addTask = async (e) => {
     e.preventDefault();
@@ -801,9 +827,26 @@ function ProjectDetail({ slug, nav }) {
     <div className="page">
       <button className="back-btn" onClick={() => nav('#/projects')}>← All Projects</button>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
-        <div>
-          <h1 className="page-title" style={{margin:0}}>{project.name}</h1>
-          <div className="page-subtitle" style={{margin:'4px 0 0'}}>{project.description || project.slug}</div>
+        <div style={{flex:1,minWidth:0}}>
+          {editingName ? (
+            <input className="form-input" style={{fontSize:20,fontWeight:700,padding:'2px 8px',width:'100%'}}
+              value={editName} onChange={e => setEditName(e.target.value)} autoFocus
+              onBlur={saveName} onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false); }} />
+          ) : (
+            <h1 className="page-title editable-field" style={{margin:0}}
+              onClick={() => { setEditName(project.name); setEditingName(true); }}>
+              {project.name}<span className="edit-icon">✎</span></h1>
+          )}
+          {editingDesc ? (
+            <input className="form-input" style={{fontSize:13,padding:'2px 8px',marginTop:4,width:'100%',color:'var(--text-2)'}}
+              value={editDesc} onChange={e => setEditDesc(e.target.value)} autoFocus
+              onBlur={saveDesc} onKeyDown={e => { if (e.key === 'Enter') saveDesc(); if (e.key === 'Escape') setEditingDesc(false); }}
+              placeholder="Add a description..." />
+          ) : (
+            <div className="page-subtitle editable-field" style={{margin:'4px 0 0'}}
+              onClick={() => { setEditDesc(project.description || ''); setEditingDesc(true); }}>
+              {project.description || project.slug}<span className="edit-icon">✎</span></div>
+          )}
         </div>
         <button className="form-btn" onClick={() => setShowAddTask(true)}>+ Add Task</button>
       </div>

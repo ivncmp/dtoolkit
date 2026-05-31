@@ -1,16 +1,17 @@
 <p align="center">
-  <img src="../logo.png" alt="dtoolkit" />
+  <img src="../logo.png" alt="dtoolkit" width="420"/>
 </p>
 
 <h1 align="center">@dtoolkit/examples</h1>
-<p align="center">Usage examples for the <code>@dtoolkit/sdk</code> package — typed HTTP clients for <strong>dbrain</strong> and <strong>dproxy</strong></p>
+<p align="center">Usage examples for the <code>@dtoolkit/sdk</code> package — typed HTTP clients for <strong>dbrain</strong>, <strong>dproxy</strong>, and <strong>dwork</strong></p>
 
 ## What's covered
 
-These examples demonstrate the two SDK clients:
+These examples demonstrate the three SDK clients:
 
 - **`DBrainClient`** — persistent memory server: entities, facts, search, conversations, federation
 - **`DProxyClient`** — universal model proxy: ask (batch & streaming), file attachments, history, memory
+- **`DWorkClient`** — AI-native project manager: projects, tasks, docs, search, overview
 
 > Other dtoolkit packages (`dcontext`, `dproxy` CLI, adapters) are CLI tools without a programmatic SDK — they're not covered here.
 
@@ -22,22 +23,24 @@ npm install
 npm start
 ```
 
-That's it. `npm start` initializes a temporary dbrain, starts both servers, runs the full demo, and cleans everything up when done. No configuration needed.
+That's it. `npm start` initializes temporary servers, runs the full demo, and cleans everything up when done. No configuration needed.
 
 ```bash
 npm run start:dbrain       # run only dbrain examples
 npm run start:dproxy       # run only dproxy examples
+npm run start:dwork        # run only dwork examples
 ```
 
 ### Against existing servers
 
-If dbrain and dproxy are already running (local, remote, or Docker):
+If dbrain, dproxy, and dwork are already running (local, remote, or Docker):
 
 ```bash
 cp .env.example .env       # edit with your server URLs and tokens
-npm run demo               # both clients
+npm run demo               # all clients
 npm run dbrain             # dbrain client only
 npm run dproxy             # dproxy client only
+npm run dwork              # dwork client only
 ```
 
 ## Examples
@@ -66,6 +69,16 @@ Covers `DProxyClient` from `@dtoolkit/sdk`:
 - History — list recent entries, fetch full entry
 - Memory — write, read, search, delete key-value memory
 
+### dwork ([src/dwork.ts](src/dwork.ts))
+
+Covers `DWorkClient` from `@dtoolkit/sdk`:
+
+- Health check — server status, project/task/doc counts
+- Project CRUD — create, list, update projects
+- Task management — create tasks, update status, kanban workflow
+- Search — FTS5 query across projects, tasks, and docs
+- Overview — global stats and what-to-do-next
+
 ### Combined ([src/demo.ts](src/demo.ts))
 
 Quick end-to-end demo hitting both clients. Good for smoke-testing a full dtoolkit setup.
@@ -90,6 +103,8 @@ When running against existing servers, examples read from `.env`:
 | `DBRAIN_TOKEN` | `changeme` | dbrain Bearer token |
 | `DPROXY_URL` | `http://localhost:7880` | dproxy server URL |
 | `DPROXY_TOKEN` | *(empty)* | dproxy Bearer token (optional) |
+| `DWORK_URL` | `http://localhost:7881` | dwork server URL |
+| `DWORK_TOKEN` | `changeme` | dwork Bearer token |
 
 When using `npm start`, configuration is automatic — a temporary brain with a test token is created and cleaned up after the run.
 

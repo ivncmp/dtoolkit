@@ -5,10 +5,11 @@ const clusters = [
     color: 'purple',
     description: 'Give your agents persistent memory and automatic context injection.',
     packages: [
-      { name: 'dbrain', version: '0.4.1', description: 'Persistent memory server — the brain. SQLite + FTS5, REST + MCP, federation across brains.', npm: 'https://www.npmjs.com/package/@dtoolkit/dbrain' },
-      { name: 'dcontext', version: '0.1.5', description: 'Hook-based context injection. Identity, project facts, and conversation logs — automatic.', npm: 'https://www.npmjs.com/package/@dtoolkit/dcontext' },
-      { name: 'sdk', version: '0.5.0', description: 'Typed HTTP clients for dbrain, dproxy, and dwork. Shared auth and error handling.', npm: 'https://www.npmjs.com/package/@dtoolkit/sdk' },
+      { name: 'dbrain', version: '0.6.0', description: 'Persistent memory server — the brain. SQLite + FTS5, REST + MCP, federation across brains.', npm: 'https://www.npmjs.com/package/@dtoolkit/dbrain' },
+      { name: 'dcontext', version: '0.3.0', description: 'Hook-based context injection. Identity, project facts, and conversation logs — automatic.', npm: 'https://www.npmjs.com/package/@dtoolkit/dcontext' },
+      { name: 'sdk', version: '0.6.0', description: 'Typed HTTP clients for dbrain, dproxy, and dwork. Shared auth and error handling.', npm: 'https://www.npmjs.com/package/@dtoolkit/sdk' },
       { name: 'core', version: '0.5.0', description: 'Shared types and Zod schemas — Entity, Fact, Tier, ContextBlock, adapters.', npm: 'https://www.npmjs.com/package/@dtoolkit/core' },
+      { name: 'codegraph-sdk', version: '0.2.0', description: 'Code intelligence SDK — semantic knowledge graph via tree-sitter. Fork of codegraph by Colby McHenry.', npm: 'https://www.npmjs.com/package/@dtoolkit/codegraph-sdk' },
     ],
   },
   {
@@ -28,7 +29,7 @@ const clusters = [
     color: 'emerald',
     description: 'AI-native project management. Markdown is the source of truth.',
     packages: [
-      { name: 'dwork', version: '0.2.1', description: 'Markdown-driven project manager with kanban dashboard, tasks, docs, and FTS5 search.', npm: 'https://www.npmjs.com/package/@dtoolkit/dwork' },
+      { name: 'dwork', version: '0.5.0', description: 'Markdown-driven project manager with kanban dashboard, tasks, docs, and FTS5 search.', npm: 'https://www.npmjs.com/package/@dtoolkit/dwork' },
     ],
   },
   {
@@ -73,7 +74,7 @@ const colorMap: Record<string, { badge: string; border: string; dot: string }> =
         <span class="gradient-text">ecosystem</span>
       </h2>
       <p class="mt-4 text-lg text-[var(--text-3)] max-w-2xl mx-auto">
-        18 packages organized in clusters. Install what you need — each works standalone or together.
+        20 packages organized in clusters. Install what you need — each works standalone or together.
       </p>
     </div>
 

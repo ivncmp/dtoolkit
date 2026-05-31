@@ -28,6 +28,7 @@ Each product has **one job**, works standalone, and composes with the rest via a
 | [`@dtoolkit/adapter-codex`](packages/adapter-codex/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-codex.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-codex) | Adapter for Codex CLI |
 | [`@dtoolkit/adapter-gemini`](packages/adapter-gemini/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-gemini.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-gemini) | Adapter for Gemini CLI |
 | [`@dtoolkit/adapter-opencode`](packages/adapter-opencode/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-opencode.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-opencode) | Adapter for OpenCode CLI |
+| [`@dtoolkit/codegraph-sdk`](packages/codegraph-sdk/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/codegraph-sdk.svg)](https://www.npmjs.com/package/@dtoolkit/codegraph-sdk) | Code intelligence SDK — fork of [codegraph](https://colbymchenry.github.io/codegraph/) |
 
 ### Memory & Context
 
@@ -176,6 +177,10 @@ git push             # CI runs lint + test + build
                      # release workflow creates a version PR
                      # merging publishes to npm
 ```
+
+## Acknowledgements
+
+- [`@dtoolkit/codegraph-sdk`](packages/codegraph-sdk/) is a library-only fork of [codegraph](https://colbymchenry.github.io/codegraph/) by [Colby McHenry](https://github.com/colbymchenry).
 
 ## License
 

@@ -33,10 +33,6 @@ pnpm --filter @dtoolkit/dwork dev        # tsx watch
 
 ```
 packages/
-├── core/              Shared types + Zod schemas (Entity, Fact, Tier, ContextBlock, Adapter)
-│                      Includes AdapterStreamEvent, LineBuffer for JSONL parsing
-│                      Also: shared dcontext MD section helpers (writeDcontextMdSection, etc.)
-│                      Build: tsc. No runtime deps beyond zod. Other packages depend on this.
 ├── adapter-claude/    Shell-out adapter for Claude Code CLI (stream-json + deltas)
 │                      Also: DcontextTarget for Claude Code hooks (settings.json + CLAUDE.md)
 ├── adapter-codex/     Shell-out adapter for Codex CLI (JSONL streaming)
@@ -48,28 +44,44 @@ packages/
 │                      All adapters: Build: tsc. Depend on core only.
 │                      All implement stream() + execute() via dproxy.ts
 │                      Claude/Codex/Gemini/OpenCode also implement Target via dcontext.ts
+├── codegraph-sdk/     Code intelligence SDK — semantic knowledge graph from any codebase
+│                      Fork of codegraph (library-only). Used by dwork for code graph features.
+│                      Build: tsc. SQLite (better-sqlite3) + tree-sitter WASM parsers.
+├── core/              Shared types + Zod schemas (Entity, Fact, Tier, ContextBlock, Adapter)
+│                      Includes AdapterStreamEvent, LineBuffer for JSONL parsing
+│                      Also: shared dcontext MD section helpers (writeDcontextMdSection, etc.)
+│                      Build: tsc. No runtime deps beyond zod. Other packages depend on this.
 ├── dbrain/            Persistent memory server — the brain
 │                      Fastify REST API + MCP HTTP on :7878, React dashboard on :7879
 │                      SQLite + FTS5 via better-sqlite3. Federation: personal→shared brain connections.
 │                      CLI: dbrain init/start/connect/status/compact/configure/link/unlink/connections/keys
 │                      Build: tsc + copy dashboard assets + chmod bin
-├── dwork/             AI-native, MD-driven project manager
-│                      Fastify REST API + MCP HTTP on :7881, React dashboard on :7882
-│                      SQLite + FTS5 via better-sqlite3. Markdown files as source of truth.
-│                      CLI: dwork init/start/status/sync/configure/keys
-│                      Build: tsc + copy dashboard assets + chmod bin
-├── sdk/               Typed HTTP clients for dtoolkit services (dbrain + dproxy + dwork)
-│                      DBrainClient + DProxyClient + DWorkClient, shared HttpClient base
-│                      Build: tsc. Auth: unified Bearer token.
 ├── dcontext/          dbrain hooks for AI coding CLIs
 │                      Injects identity + project facts at session start, saves exchanges pre-compaction
 │                      Hooks into Claude Code, Codex CLI, Gemini CLI, OpenCode via their native hook systems
 │                      CLI: dcontext init/install/uninstall/status/explore
 │                      Build: tsup (single ESM bundle). Requires dbrain.
-└── dproxy/            Universal CLI adapter for invoking models via local CLIs
-                       Commander-based CLI with context injection pipeline
-                       Uses adapter packages for multi-provider support (--provider flag)
-                       Build: tsup (single ESM bundle)
+├── dcouncil/          Multi-agent debate for architecture decisions (CLI: dcouncil)
+├── dforge/            Internal marketplace for skills, hooks, and slash commands (CLI: dforge)
+├── dguard/            Pre-commit for agents — validate LLM output before applying (CLI: dguard)
+├── dops/              Agent observability — tokens, cost, tools, success rate, errors (CLI: dops)
+├── dpair/             Real-time pair-programming with a shared agent (CLI: dpair)
+├── dpolicy/           Policy-as-code for the team harness (library, no CLI)
+├── dproxy/            Universal CLI adapter for invoking models via local CLIs
+│                      Commander-based CLI with context injection pipeline
+│                      Uses adapter packages for multi-provider support (--provider flag)
+│                      Build: tsup (single ESM bundle)
+├── dreplay/           Session browser for the team — privacy-aware (CLI: dreplay)
+├── droute/            Model router (Haiku/Sonnet/Opus) + cost tracking (CLI: droute)
+├── dstream/           Daily digest — what each agent learned, decided, or blocked today (CLI: dstream)
+├── dwork/             AI-native, MD-driven project manager
+│                      Fastify REST API + MCP HTTP on :7881, React dashboard on :7882
+│                      SQLite + FTS5 via better-sqlite3. Markdown files as source of truth.
+│                      CLI: dwork init/start/status/sync/configure/keys
+│                      Build: tsc + copy dashboard assets + chmod bin
+└── sdk/               Typed HTTP clients for dtoolkit services (dbrain + dproxy + dwork)
+                       DBrainClient + DProxyClient + DWorkClient, shared HttpClient base
+                       Build: tsc. Auth: unified Bearer token.
 landing/               Public website — Astro 6 + React 19 + Tailwind CSS 3
                        Static site deployed to Vercel. Not a published package.
                        Dev: cd landing && pnpm dev
@@ -77,7 +89,7 @@ tools/
 └── tsconfig/          Shared base tsconfig (ES2022, NodeNext, strict)
 ```
 
-**Dependency graph**: `core` ← `adapter-*` ← `dproxy`/`dcontext`. `core` ← `sdk` ← (consumers). `core` ← `dbrain`. `core` ← `sdk` ← `dwork`. Turbo handles build ordering via `^build`.
+**Dependency graph**: `core` ← `adapter-*` ← `dproxy`/`dcontext`. `core` ← `sdk` ← `dwork`. `core` ← `dbrain`. `codegraph-sdk` ← `dwork`. The remaining packages (dcouncil through dstream) are scaffolded stubs with no internal deps yet. Turbo handles build ordering via `^build`.
 
 ### dbrain internals
 

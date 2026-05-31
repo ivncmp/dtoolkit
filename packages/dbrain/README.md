@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo.png" alt="dbrain" />
+  <img src="logo.png" alt="dbrain" width="420"/>
 </p>
 
 <h1 align="center">@dtoolkit/dbrain</h1>

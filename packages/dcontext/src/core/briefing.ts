@@ -113,9 +113,11 @@ export async function generateBriefing(
   }
 
   const dworkSlugs = cwd ? config.dworkProjects?.[cwd] : undefined;
-  if (config.dwork?.url && dworkSlugs && dworkSlugs.length > 0) {
+  const dwork =
+    config.dwork?.url ? new DWorkClient(config.dwork.url, config.dwork.token) : null;
+
+  if (dwork && dworkSlugs && dworkSlugs.length > 0) {
     try {
-      const dwork = new DWorkClient(config.dwork.url, config.dwork.token);
       const allTasks = (
         await Promise.all(dworkSlugs.map((slug) => dwork.listTasks(slug).catch(() => [])))
       ).flat();
@@ -147,6 +149,27 @@ export async function generateBriefing(
       }
     } catch {
       // dwork unavailable, skip
+    }
+  }
+
+  if (dwork) {
+    try {
+      const graphs = await dwork.listGraphs();
+      if (graphs.length > 0) {
+        parts.push('');
+        parts.push('### Code Intelligence (codegraph)');
+        parts.push(
+          '> Code graph available via dwork MCP: `graph_search`, `graph_trace`, `graph_impact`, `graph_context`',
+        );
+        for (const g of graphs) {
+          const synced = g.synced_at?.split('T')[0] ?? '';
+          parts.push(
+            `- **${g.name}**: ${g.node_count} symbols, ${g.edge_count} edges, ${g.file_count} files${synced ? ` (synced ${synced})` : ''}`,
+          );
+        }
+      }
+    } catch {
+      // dwork unavailable for graphs, skip
     }
   }
 

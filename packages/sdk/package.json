@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/sdk",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Typed HTTP clients for dtoolkit services (dbrain + dproxy)",
   "type": "module",
   "license": "MIT",

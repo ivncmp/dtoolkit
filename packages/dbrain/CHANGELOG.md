@@ -1,5 +1,16 @@
 # @dtoolkit/dbrain
 
+## 0.6.0
+
+### Minor Changes
+
+- 5587c80: LLM-powered compaction: process conversations via dproxy SDK, entity delete/merge from dashboard, compaction schedule + LLM config in init wizard, FTS5 unicode61 tokenizer with remove_diacritics
+
+### Patch Changes
+
+- Updated dependencies [9a5be95]
+  - @dtoolkit/sdk@0.6.0
+
 ## 0.5.0
 
 ### Minor Changes

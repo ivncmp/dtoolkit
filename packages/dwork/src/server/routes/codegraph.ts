@@ -16,7 +16,16 @@ export async function codegraphRoutes(app: FastifyInstance) {
     const rows = app.db.prepare('SELECT * FROM graphs ORDER BY name').all() as Array<
       Record<string, unknown>
     >;
-    return rows;
+    const links = app.db
+      .prepare('SELECT graph_name, project_slug FROM graph_projects')
+      .all() as Array<{ graph_name: string; project_slug: string }>;
+    const projectsByGraph = new Map<string, string[]>();
+    for (const l of links) {
+      const arr = projectsByGraph.get(l.graph_name) ?? [];
+      arr.push(l.project_slug);
+      projectsByGraph.set(l.graph_name, arr);
+    }
+    return rows.map((r) => ({ ...r, projects: projectsByGraph.get(r.name as string) ?? [] }));
   });
 
   app.get('/graphs/:name', async (request, reply) => {

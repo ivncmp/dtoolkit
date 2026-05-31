@@ -641,6 +641,43 @@
       letter-spacing: .04em;
       text-transform: uppercase;
       font-family: var(--mono);
+      background: var(--surface-2);
+      color: var(--text-2);
+    }
+
+    .graph-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-family: var(--mono);
+      cursor: pointer;
+      background: linear-gradient(135deg, oklch(0.92 0.08 252), oklch(0.95 0.04 280));
+      color: var(--accent);
+      border: 1px solid oklch(0.82 0.10 252);
+      transition: all .15s;
+    }
+    .graph-chip:hover {
+      background: linear-gradient(135deg, oklch(0.86 0.12 252), oklch(0.90 0.08 280));
+      border-color: var(--accent);
+      box-shadow: 0 1px 4px oklch(0.5 0.15 252 / .15);
+    }
+    .graph-chip .graph-chip-meta {
+      font-weight: 400;
+      font-size: 9px;
+      opacity: .7;
+    }
+    [data-palette=ocean] .graph-chip {
+      background: linear-gradient(135deg, oklch(0.22 0.06 252), oklch(0.18 0.05 280));
+      border-color: oklch(0.35 0.10 252);
+    }
+    [data-palette=ocean] .graph-chip:hover {
+      background: linear-gradient(135deg, oklch(0.28 0.10 252), oklch(0.24 0.08 280));
+      border-color: var(--accent);
+      box-shadow: 0 1px 4px oklch(0.5 0.15 252 / .2);
     }
 
     /* ── KANBAN ─────────────────────────────── */
@@ -1581,11 +1618,23 @@
     /* ── PROJECTS VIEW ────────────────────────────────────── */
     function ProjectsView({ nav }) {
       const [projects, setProjects] = useState([]);
+      const [graphsByProject, setGraphsByProject] = useState({});
       const [showNew, setShowNew] = useState(false);
       const [slug, setSlug] = useState('');
       const [name, setName] = useState('');
 
-      useEffect(() => { api('/projects').then(setProjects).catch(() => { }); }, []);
+      useEffect(() => {
+        api('/projects').then(setProjects).catch(() => { });
+        api('/graphs').then(all => {
+          const map = {};
+          for (const g of all) {
+            for (const s of (g.projects || [])) {
+              (map[s] = map[s] || []).push(g);
+            }
+          }
+          setGraphsByProject(map);
+        }).catch(() => { });
+      }, []);
 
       const createProject = async (e) => {
         e.preventDefault();
@@ -1634,6 +1683,17 @@
                     ))}
                     {Object.keys(p.taskCounts || {}).length === 0 && <span className="stat-badge s-todo">No tasks</span>}
                   </div>
+                  {(graphsByProject[p.slug] || []).length > 0 && (
+                    <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
+                      {graphsByProject[p.slug].map(g => (
+                        <span key={g.name} className="graph-chip"
+                          onClick={e => { e.stopPropagation(); nav(`#/graph/${g.name}`); }}>
+                          <Icon.graphs /> {g.name}
+                          <span className="graph-chip-meta">{g.node_count.toLocaleString()} sym &middot; {g.edge_count.toLocaleString()} edges</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -1893,6 +1953,7 @@
       const [project, setProject] = useState(null);
       const [tasks, setTasks] = useState([]);
       const [docs, setDocs] = useState([]);
+      const [graphs, setGraphs] = useState([]);
       const [tab, setTab] = useState('kanban');
       const [showAddTask, setShowAddTask] = useState(false);
       const [newTitle, setNewTitle] = useState('');
@@ -1906,6 +1967,7 @@
         api(`/projects/${slug}`).then(setProject).catch(() => { });
         api(`/projects/${slug}/tasks`).then(setTasks).catch(() => { });
         api(`/projects/${slug}/docs`).then(setDocs).catch(() => { });
+        api('/graphs').then(all => setGraphs(all.filter(g => g.projects && g.projects.includes(slug)))).catch(() => { });
       }, [slug]);
 
       useEffect(() => { load(); }, [load]);
@@ -1961,6 +2023,16 @@
                 <div className="page-subtitle editable-field" style={{ margin: '4px 0 0' }}
                   onClick={() => { setEditDesc(project.description || ''); setEditingDesc(true); }}>
                   {project.description || project.slug}<span className="edit-icon">✎</span></div>
+              )}
+              {graphs.length > 0 && (
+                <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                  {graphs.map(g => (
+                    <span key={g.name} className="graph-chip" onClick={() => nav(`#/graph/${g.name}`)}>
+                      <Icon.graphs /> {g.name}
+                      <span className="graph-chip-meta">{g.node_count.toLocaleString()} sym &middot; {g.edge_count.toLocaleString()} edges</span>
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
             <button className="form-btn" onClick={() => setShowAddTask(true)}>+ Add Task</button>
@@ -2144,6 +2216,7 @@
     function OverviewView({ nav }) {
       const [data, setData] = useState(null);
       const [allTasks, setAllTasks] = useState([]);
+      const [graphsByProject, setGraphsByProject] = useState({});
       const [dragOver, setDragOver] = useState(null);
       const [dragging, setDragging] = useState(null);
       const [selectedTask, setSelectedTask] = useState(null);
@@ -2157,6 +2230,15 @@
           overview.projects.map(p => api(`/projects/${p.slug}/tasks`).then(tasks => tasks.map(t => ({ ...t, _project: p.slug, _projectName: p.name }))).catch(() => []))
         );
         setAllTasks(taskArrays.flat());
+        api('/graphs').then(all => {
+          const map = {};
+          for (const g of all) {
+            for (const s of (g.projects || [])) {
+              (map[s] = map[s] || []).push(g);
+            }
+          }
+          setGraphsByProject(map);
+        }).catch(() => { });
       }, []);
       useEffect(() => { loadAll(); }, [loadAll]);
 
@@ -2210,6 +2292,17 @@
                     <span key={s} className={`stat-badge s-${s}`}>{s}: {c}</span>
                   ))}
                 </div>
+                {(graphsByProject[p.slug] || []).length > 0 && (
+                  <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
+                    {graphsByProject[p.slug].map(g => (
+                      <span key={g.name} className="graph-chip"
+                        onClick={e => { e.stopPropagation(); nav(`#/graph/${g.name}`); }}>
+                        <Icon.graphs /> {g.name}
+                        <span className="graph-chip-meta">{g.node_count.toLocaleString()} sym &middot; {g.edge_count.toLocaleString()} edges</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -2266,6 +2359,16 @@
                     <span className="stat-badge">{g.edge_count.toLocaleString()} edges</span>
                     <span className="stat-badge">{g.file_count} files</span>
                   </div>
+                  {g.projects && g.projects.length > 0 && (
+                    <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
+                      {g.projects.map(slug => (
+                        <span key={slug} className="graph-chip"
+                          onClick={e => { e.stopPropagation(); nav(`#/project/${slug}`); }}>
+                          {slug}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -2284,6 +2387,7 @@
 
     function GraphDetail({ name, nav }) {
       const [stats, setStats] = useState(null);
+      const [linkedProjects, setLinkedProjects] = useState([]);
       const [tab, setTab] = useState('explore');
       const [search, setSearch] = useState('');
       const [results, setResults] = useState([]);
@@ -2334,6 +2438,7 @@
 
       useEffect(() => {
         api(`/graphs/${name}/stats`).then(setStats).catch(() => { });
+        api(`/graphs/${name}`).then(g => setLinkedProjects(g.projects || [])).catch(() => { });
         api(`/graphs/${name}/graph?kind=function,class,method&limit=200`).then(data => {
           setGraphType('overview');
           setGraphData(data);
@@ -2763,9 +2868,19 @@
         <div className="page page-graph">
           <button className="back-btn" onClick={() => nav('#/graphs')}>&#8592; All Graphs</button>
           <h1 className="page-title" style={{ margin: '0 0 4px' }}>{name}</h1>
-          <div className="page-subtitle" style={{ marginBottom: 16 }}>
+          <div className="page-subtitle" style={{ marginBottom: linkedProjects.length > 0 ? 8 : 16 }}>
             {stats.nodeCount.toLocaleString()} symbols &middot; {stats.edgeCount.toLocaleString()} edges &middot; {stats.fileCount} files
           </div>
+          {linkedProjects.length > 0 && (
+            <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: 11, color: 'var(--text-3)', fontWeight: 600 }}>Projects:</span>
+              {linkedProjects.map(slug => (
+                <span key={slug} className="graph-chip" onClick={() => nav(`#/project/${slug}`)}>
+                  {slug}
+                </span>
+              ))}
+            </div>
+          )}
 
           <div className="card-stats" style={{ marginBottom: 16 }}>
             {Object.entries(stats.nodesByKind || {}).slice(0, 8).map(([kind, count]) => (

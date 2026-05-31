@@ -116,6 +116,10 @@ const work = new DWorkClient("http://localhost:7881", "sk-dwk_...");
 const projects = await work.listProjects();
 const project = await work.getProject("my-project");
 await work.createProject({ slug: "new-project", name: "New Project" });
+await work.updateProject("my-project", {
+  name: "Renamed Project",
+  description: "Updated description",
+});
 
 // Tasks
 const tasks = await work.listTasks("my-project", { status: "doing" });
@@ -125,6 +129,7 @@ await work.addTask("my-project", {
   status: "todo",
 });
 await work.updateTask("task_abc", { status: "done" });
+await work.updateTask("task_abc", { project: "other-project" }); // move between projects
 
 // Docs
 const docs = await work.listDocs("my-project");
@@ -132,7 +137,11 @@ const doc = await work.getDoc("doc_xyz");
 await work.addDoc("my-project", {
   title: "Auth Design",
   body: "# Auth Design\n\n...",
-  type: "detail",
+  type: "planning",
+});
+await work.updateDoc("doc_xyz", {
+  title: "Auth Design v2",
+  body: "# Updated content\n\n...",
 });
 
 // Search & overview

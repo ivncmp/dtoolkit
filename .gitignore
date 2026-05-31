@@ -10,4 +10,5 @@ dist/
 .idea/
 .claude/
 handoff*
-sandbox
+sandbox/
+.codegraph/

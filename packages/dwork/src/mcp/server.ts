@@ -7,6 +7,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
+import * as cgService from '../service/codegraph.js';
 import * as docService from '../service/docs.js';
 import * as overviewService from '../service/overview.js';
 import * as projectService from '../service/projects.js';
@@ -102,6 +103,25 @@ export function createMcpServer(app: FastifyInstance) {
     },
   );
 
+  // 3b. update_project
+  mcp.registerTool(
+    'update_project',
+    {
+      description: "Update a project's name, description, status, or source path.",
+      inputSchema: {
+        slug: z.string().describe('Project slug'),
+        name: z.string().optional().describe('New display name'),
+        description: z.string().optional().describe('New description'),
+        status: z.string().optional().describe('New status: active, paused, archived'),
+        source_path: z.string().optional().describe('New path to the real project source code'),
+      },
+    },
+    async ({ slug, ...changes }) => {
+      const ok = projectService.updateProject(db, slug, changes);
+      return json({ updated: ok, slug });
+    },
+  );
+
   // 4. get_tasks
   mcp.registerTool(
     'get_tasks',
@@ -162,7 +182,8 @@ export function createMcpServer(app: FastifyInstance) {
   mcp.registerTool(
     'update_task',
     {
-      description: 'Update a task. Modifies BACKLOG.md and re-indexes.',
+      description:
+        'Update a task. Modifies BACKLOG.md and re-indexes. Set project to move the task to a different project.',
       inputSchema: {
         id: z.string().describe('Task ID'),
         title: z.string().optional().describe('New title'),
@@ -172,6 +193,10 @@ export function createMcpServer(app: FastifyInstance) {
         estimate: z.string().optional().describe('New estimate'),
         deadline: z.string().optional().describe('New deadline'),
         detail: z.string().optional().describe('Path to detail doc (e.g. docs/001_slug.md)'),
+        project: z
+          .string()
+          .optional()
+          .describe('Move task to this project slug (removes from current, adds to target)'),
       },
     },
     async ({ id, ...changes }) => {
@@ -264,6 +289,24 @@ export function createMcpServer(app: FastifyInstance) {
     },
   );
 
+  // 9b. update_doc
+  mcp.registerTool(
+    'update_doc',
+    {
+      description: 'Update a document. Modifies the file on disk and re-indexes.',
+      inputSchema: {
+        id: z.string().describe('Doc ID'),
+        title: z.string().optional().describe('New title'),
+        body: z.string().optional().describe('New body (markdown)'),
+        type: z.string().optional().describe('New doc type'),
+      },
+    },
+    async ({ id, ...changes }) => {
+      const ok = docService.updateDoc(db, config, id, changes);
+      return json({ updated: ok, id });
+    },
+  );
+
   // 10. search
   mcp.registerTool(
     'search',
@@ -318,6 +361,98 @@ export function createMcpServer(app: FastifyInstance) {
     },
     async () => {
       return json(overviewService.overview(db));
+    },
+  );
+
+  // --- Graph tools ---
+
+  mcp.registerTool(
+    'graph_search',
+    {
+      description:
+        'Search symbols in a code graph. Returns matching functions, classes, methods, etc.',
+      inputSchema: {
+        graph: z.string().describe('Graph name (e.g. "dtoolkit")'),
+        query: z.string().describe('Search query (symbol name or keyword)'),
+        kind: z
+          .string()
+          .optional()
+          .describe('Filter by node kind: function, class, method, interface, etc.'),
+        limit: z.number().optional().describe('Max results (default 20)'),
+      },
+    },
+    async ({ graph, query, kind, limit }) => {
+      return json(cgService.searchNodes(graph, query, kind, limit ?? 20));
+    },
+  );
+
+  mcp.registerTool(
+    'graph_stats',
+    {
+      description: 'Get statistics about a code graph: node/edge counts, languages, etc.',
+      inputSchema: {
+        graph: z.string().describe('Graph name'),
+      },
+    },
+    async ({ graph }) => {
+      return json(cgService.stats(graph));
+    },
+  );
+
+  mcp.registerTool(
+    'graph_trace',
+    {
+      description: 'Find the shortest path between two symbols in the code graph.',
+      inputSchema: {
+        graph: z.string().describe('Graph name'),
+        from: z.string().describe('Source node ID'),
+        to: z.string().describe('Target node ID'),
+      },
+    },
+    async ({ graph, from, to }) => {
+      const path = cgService.findPath(graph, from, to);
+      if (!path) return json({ path: null, message: 'No path found' });
+      return json({ path });
+    },
+  );
+
+  mcp.registerTool(
+    'graph_impact',
+    {
+      description:
+        'Calculate the impact radius of a symbol — all nodes that could be affected by changes to it.',
+      inputSchema: {
+        graph: z.string().describe('Graph name'),
+        node_id: z.string().describe('Node ID to analyze'),
+        depth: z.number().optional().describe('Max traversal depth (default 3)'),
+      },
+    },
+    async ({ graph, node_id, depth }) => {
+      return json(cgService.getImpactRadius(graph, node_id, depth ?? 3));
+    },
+  );
+
+  mcp.registerTool(
+    'graph_context',
+    {
+      description: 'Get full context for a symbol: callers, callees, and type hierarchy combined.',
+      inputSchema: {
+        graph: z.string().describe('Graph name'),
+        node_id: z.string().describe('Node ID'),
+        depth: z.number().optional().describe('Caller/callee depth (default 1)'),
+      },
+    },
+    async ({ graph, node_id, depth }) => {
+      const d = depth ?? 1;
+      const node = cgService.getNode(graph, node_id);
+      if (!node) return json({ error: 'Node not found' });
+      return json({
+        node,
+        callers: cgService.getCallers(graph, node_id, d),
+        callees: cgService.getCallees(graph, node_id, d),
+        usages: cgService.findUsages(graph, node_id),
+        hierarchy: cgService.getTypeHierarchy(graph, node_id),
+      });
     },
   );
 

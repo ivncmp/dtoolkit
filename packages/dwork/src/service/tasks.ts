@@ -183,17 +183,18 @@ export function updateTask(
     estimate?: string;
     deadline?: string;
     detail?: string;
+    project?: string;
   },
 ): boolean {
   const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as TaskRow | undefined;
   if (!task) return false;
 
-  const projectRow = db
+  const sourceProjectRow = db
     .prepare('SELECT path FROM projects WHERE slug = ?')
     .get(task.project_slug) as { path: string } | undefined;
-  if (!projectRow) return false;
+  if (!sourceProjectRow) return false;
 
-  const backlogPath = join(projectRow.path, 'BACKLOG.md');
+  const backlogPath = join(sourceProjectRow.path, 'BACKLOG.md');
   const content = readFileSync(backlogPath, 'utf-8');
   const { frontmatter } = parseFrontmatter(content);
   const tasks = parseBacklog(content, task.project_slug);
@@ -217,9 +218,32 @@ export function updateTask(
   if (changes.deadline) target.metadata.deadline = changes.deadline;
   if (changes.detail) target.metadata.detail = changes.detail;
 
-  const serialized = serializeBacklog(tasks, frontmatter);
-  writeFileSync(backlogPath, serialized);
-  indexProject(db, task.project_slug, projectRow.path);
+  if (changes.project && changes.project !== task.project_slug) {
+    const destProjectRow = db
+      .prepare('SELECT path FROM projects WHERE slug = ?')
+      .get(changes.project) as { path: string } | undefined;
+    if (!destProjectRow) return false;
+
+    const remaining = tasks.filter((t) => t !== target);
+    const serializedSource = serializeBacklog(remaining, frontmatter);
+    writeFileSync(backlogPath, serializedSource);
+
+    const destBacklogPath = join(destProjectRow.path, 'BACKLOG.md');
+    const destContent = readFileSync(destBacklogPath, 'utf-8');
+    const { frontmatter: destFrontmatter } = parseFrontmatter(destContent);
+    const destTasks = parseBacklog(destContent, changes.project);
+
+    destTasks.push({ ...target, lineNumber: 0 });
+    const serializedDest = serializeBacklog(destTasks, destFrontmatter);
+    writeFileSync(destBacklogPath, serializedDest);
+
+    indexProject(db, task.project_slug, sourceProjectRow.path);
+    indexProject(db, changes.project, destProjectRow.path);
+  } else {
+    const serialized = serializeBacklog(tasks, frontmatter);
+    writeFileSync(backlogPath, serialized);
+    indexProject(db, task.project_slug, sourceProjectRow.path);
+  }
 
   return true;
 }

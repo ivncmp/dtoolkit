@@ -123,13 +123,9 @@ export async function processConversations(opts: ProcessOptions): Promise<Proces
     if (messages.length === 0) continue;
 
     const date = conv.started_at.split('T')[0];
-    onProgress?.(
-      `\n${pc.bold(date)} ${pc.dim(`· ${messages.length} msgs · ${conv.source}`)}`,
-    );
+    onProgress?.(`\n${pc.bold(date)} ${pc.dim(`· ${messages.length} msgs · ${conv.source}`)}`);
 
-    const transcript = messages
-      .map((m) => `[${m.role}]: ${m.content}`)
-      .join('\n\n');
+    const transcript = messages.map((m) => `[${m.role}]: ${m.content}`).join('\n\n');
 
     let extraction: Extraction;
     try {
@@ -180,7 +176,10 @@ export async function processConversations(opts: ProcessOptions): Promise<Proces
 
     const entityMap = resolveEntities(db, extraction.entities);
     const factsCreated = insertFacts(db, extraction.facts, entityMap);
-    markProcessed(db, messages.map((m) => m.id));
+    markProcessed(
+      db,
+      messages.map((m) => m.id),
+    );
 
     result.conversationsProcessed++;
     result.messagesProcessed += messages.length;
@@ -192,7 +191,10 @@ export async function processConversations(opts: ProcessOptions): Promise<Proces
 }
 
 function parseExtraction(text: string): Extraction {
-  const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+  const cleaned = text
+    .replace(/```json\s*/g, '')
+    .replace(/```\s*/g, '')
+    .trim();
   try {
     const parsed = JSON.parse(cleaned) as Extraction;
     return {

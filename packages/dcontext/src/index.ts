@@ -8,6 +8,7 @@ import { createHookCommand } from './commands/hook.js';
 import { createInitCommand, requireInit } from './commands/init.js';
 import { createInstallCommand } from './commands/install.js';
 import { createStatusCommand } from './commands/status.js';
+import { createSyncCommand } from './commands/sync.js';
 import { createUninstallCommand } from './commands/uninstall.js';
 
 const program = new Command();
@@ -36,6 +37,7 @@ program.addCommand(guarded(createInstallCommand()));
 program.addCommand(guarded(createUninstallCommand()));
 program.addCommand(guarded(createStatusCommand()));
 program.addCommand(guarded(createExploreCommand()));
+program.addCommand(guarded(createSyncCommand()));
 program.addCommand(createHookCommand());
 
 program.parse();

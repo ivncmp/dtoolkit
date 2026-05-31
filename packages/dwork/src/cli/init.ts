@@ -154,10 +154,10 @@ export async function init(pathArg?: string, flags?: { nonInteractive?: boolean 
 
   p.note(
     [
-      `Data:   ${pc.green(dataPath)}`,
-      `Port:   ${pc.green(String(port))}`,
-      `Host:   ${pc.green(config.host)}`,
-      `Token:  ${pc.green(config.token)}`,
+      `Data:       ${pc.green(dataPath)}`,
+      `Port:       ${pc.green(String(port))}`,
+      `Host:       ${pc.green(config.host)}`,
+      `Token:      ${pc.green(config.token)}`,
     ].join('\n'),
     'Configuration',
   );

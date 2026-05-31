@@ -1,0 +1,50 @@
+{
+  "name": "@dtoolkit/codegraph-sdk",
+  "version": "0.1.0",
+  "description": "Code intelligence SDK — semantic knowledge graph from any codebase. Fork of @colbymchenry/codegraph (library-only, no CLI/MCP/installer).",
+  "homepage": "https://github.com/colbymchenry/codegraph",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivncmp/dtoolkit",
+    "directory": "packages/codegraph-sdk"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && node -e \"const fs=require('fs');fs.mkdirSync('dist/db',{recursive:true});fs.copyFileSync('src/db/schema.sql','dist/db/schema.sql');fs.mkdirSync('dist/extraction/wasm',{recursive:true});fs.readdirSync('src/extraction/wasm').filter(f=>f.endsWith('.wasm')).forEach(f=>fs.copyFileSync('src/extraction/wasm/'+f,'dist/extraction/wasm/'+f))\"",
+    "dev": "tsc --watch",
+    "clean": "node -e \"const fs=require('fs');fs.rmSync('dist',{recursive:true,force:true})\"",
+    "test": "vitest run --passWithNoTests"
+  },
+  "keywords": [
+    "code-intelligence",
+    "knowledge-graph",
+    "static-analysis",
+    "tree-sitter"
+  ],
+  "author": "Colby McHenry (original), dtoolkit contributors (fork)",
+  "license": "MIT",
+  "dependencies": {
+    "chokidar": "^4.0.3",
+    "ignore": "^7.0.5",
+    "jsonc-parser": "^3.3.1",
+    "picomatch": "^4.0.3",
+    "tree-sitter-wasms": "^0.1.11",
+    "web-tree-sitter": "^0.25.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/picomatch": "^4.0.2",
+    "typescript": "^5.0.0",
+    "vitest": "^2.1.9"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

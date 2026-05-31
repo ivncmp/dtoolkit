@@ -96,6 +96,76 @@ export interface DWorkApiKeyCreateResponse {
   permissions: string;
 }
 
+// --- Graph types ---
+
+export interface DWorkGraph {
+  name: string;
+  node_count: number;
+  edge_count: number;
+  file_count: number;
+  db_size: number;
+  synced_at: string;
+  created_at: string;
+  projects?: string[];
+}
+
+export interface DWorkGraphUploadResult {
+  name: string;
+  nodeCount: number;
+  edgeCount: number;
+  fileCount: number;
+  dbSize: number;
+  syncedAt: string;
+}
+
+export interface DWorkGraphStats {
+  nodeCount: number;
+  edgeCount: number;
+  fileCount: number;
+  nodesByKind: Record<string, number>;
+  edgesByKind: Record<string, number>;
+  filesByLanguage: Record<string, number>;
+  dbSizeBytes: number;
+  lastUpdated: number;
+}
+
+export interface DWorkGraphNode {
+  id: string;
+  kind: string;
+  name: string;
+  qualifiedName: string;
+  filePath: string;
+  language: string;
+  startLine: number;
+  endLine: number;
+  startColumn: number;
+  endColumn: number;
+  signature: string | null;
+  visibility: string | null;
+  isExported: boolean;
+  isAsync: boolean;
+  isStatic: boolean;
+  isAbstract: boolean;
+  updatedAt: number;
+}
+
+export interface DWorkGraphSearchResult {
+  node: DWorkGraphNode;
+  score: number;
+}
+
+export interface DWorkGraphEdge {
+  source: string;
+  target: string;
+  kind: string;
+}
+
+export interface DWorkGraphSubgraph {
+  nodes: DWorkGraphNode[];
+  edges: DWorkGraphEdge[];
+  roots: string[];
+}
+
 export interface DWorkApiKeyListItem {
   id: string;
   tokenPreview: string;

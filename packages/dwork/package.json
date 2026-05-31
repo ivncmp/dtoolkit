@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.3.0",
+    "@dtoolkit/codegraph-sdk": "workspace:*",
     "@dtoolkit/core": "workspace:*",
     "@dtoolkit/sdk": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",

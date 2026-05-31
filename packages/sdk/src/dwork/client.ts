@@ -220,7 +220,10 @@ export class DWorkClient {
     await this.http.requestRaw('DELETE', `/graphs/${enc(name)}`);
   }
 
-  async uploadGraph(name: string, dbBuffer: Uint8Array | ArrayBuffer): Promise<DWorkGraphUploadResult> {
+  async uploadGraph(
+    name: string,
+    dbBuffer: Uint8Array | ArrayBuffer,
+  ): Promise<DWorkGraphUploadResult> {
     return this.http.postBinary(`/graphs/${enc(name)}/upload`, dbBuffer);
   }
 
@@ -255,7 +258,9 @@ export class DWorkClient {
     name: string,
     nodeId: string,
     depth?: number,
-  ): Promise<Array<{ node: DWorkGraphNode; edge: { source: string; target: string; kind: string } }>> {
+  ): Promise<
+    Array<{ node: DWorkGraphNode; edge: { source: string; target: string; kind: string } }>
+  > {
     const params = new URLSearchParams();
     if (depth) params.set('depth', String(depth));
     return this.http.get(`/graphs/${enc(name)}/nodes/${enc(nodeId)}/callers${qs(params)}`);
@@ -271,12 +276,40 @@ export class DWorkClient {
     name: string,
     from: string,
     to: string,
-  ): Promise<{ path: Array<{ node: DWorkGraphNode; edge: { source: string; target: string; kind: string } | null }> | null }> {
+  ): Promise<{
+    path: Array<{
+      node: DWorkGraphNode;
+      edge: { source: string; target: string; kind: string } | null;
+    }> | null;
+  }> {
     const params = new URLSearchParams({ from, to });
     return this.http.get(`/graphs/${enc(name)}/trace${qs(params)}`);
   }
 
-  async getGraphFiles(name: string): Promise<Array<{ path: string; language: string; nodeCount: number }>> {
+  async getGraphFiles(
+    name: string,
+  ): Promise<Array<{ path: string; language: string; nodeCount: number }>> {
     return this.http.get(`/graphs/${enc(name)}/files`);
+  }
+
+  async graphGetSubgraph(
+    name: string,
+    options?: { kind?: string; file?: string; limit?: number },
+  ): Promise<DWorkGraphSubgraph> {
+    const params = new URLSearchParams();
+    if (options?.kind) params.set('kind', options.kind);
+    if (options?.file) params.set('file', options.file);
+    if (options?.limit) params.set('limit', String(options.limit));
+    return this.http.get(`/graphs/${enc(name)}/graph${qs(params)}`);
+  }
+
+  async graphDeadCode(name: string, kinds?: string): Promise<DWorkGraphNode[]> {
+    const params = new URLSearchParams();
+    if (kinds) params.set('kinds', kinds);
+    return this.http.get(`/graphs/${enc(name)}/deadcode${qs(params)}`);
+  }
+
+  async graphCircularDependencies(name: string): Promise<string[][]> {
+    return this.http.get(`/graphs/${enc(name)}/circular`);
   }
 }

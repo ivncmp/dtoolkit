@@ -435,8 +435,7 @@ export function createMcpServer(app: FastifyInstance) {
   mcp.registerTool(
     'graph_context',
     {
-      description:
-        'Get full context for a symbol: callers, callees, and type hierarchy combined.',
+      description: 'Get full context for a symbol: callers, callees, and type hierarchy combined.',
       inputSchema: {
         graph: z.string().describe('Graph name'),
         node_id: z.string().describe('Node ID'),

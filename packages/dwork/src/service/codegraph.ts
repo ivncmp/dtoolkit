@@ -162,18 +162,45 @@ export function getGraph(
   limit = 200,
 ): SerializedSubgraph {
   const cg = requireGraph(graphName);
-  const kinds = kind ? (kind.split(',') as Node['kind'][]) : undefined;
+  const kinds = kind
+    ? (kind.split(',') as Node['kind'][])
+    : (['function', 'class', 'method'] as Node['kind'][]);
 
-  const results = cg.searchNodes('', { kinds, limit });
-  if (results.length === 0) return { nodes: [], edges: [], roots: [] };
+  const candidates = cg.searchNodes('', { kinds, limit: 100 });
+  if (candidates.length === 0) return { nodes: [], edges: [], roots: [] };
 
-  const subgraph = cg.traverse(results[0].node.id, {
-    maxDepth: 2,
-    nodeKinds: kinds,
-    limit,
-  });
+  // Rank by callees count — nodes with more outgoing calls are hubs
+  const ranked = candidates
+    .map((r) => ({ node: r.node, callees: cg.getCallees(r.node.id, 1).length }))
+    .sort((a, b) => b.callees - a.callees)
+    .slice(0, 15);
 
-  let result = serializeSubgraph(subgraph);
+  const allNodes = new Map<string, Node>();
+  const allEdges: Edge[] = [];
+  const rootIds: string[] = [];
+  const seenEdges = new Set<string>();
+
+  for (const { node: root } of ranked) {
+    if (root.kind === 'method' || root.kind === 'function') {
+      rootIds.push(root.id);
+    }
+    const sg = cg.getCallGraph(root.id, 1);
+    for (const [id, node] of sg.nodes) allNodes.set(id, node);
+    for (const edge of sg.edges) {
+      const k = `${edge.source}→${edge.target}`;
+      if (!seenEdges.has(k)) {
+        seenEdges.add(k);
+        allEdges.push(edge);
+      }
+    }
+    if (allNodes.size >= limit) break;
+  }
+
+  let result: SerializedSubgraph = {
+    nodes: Array.from(allNodes.values()),
+    edges: allEdges,
+    roots: rootIds,
+  };
 
   if (file) {
     const filtered = result.nodes.filter((n) => n.filePath.includes(file));

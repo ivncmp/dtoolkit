@@ -25,7 +25,9 @@ const { CodeGraph, getDatabasePath, isInitialized } = require('@dtoolkit/codegra
 function deriveGraphName(cwd: string): string {
   try {
     const { execSync } = require('node:child_process');
-    const remote = (execSync('git remote get-url origin', { cwd, encoding: 'utf-8' }) as string).trim();
+    const remote = (
+      execSync('git remote get-url origin', { cwd, encoding: 'utf-8' }) as string
+    ).trim();
     const match = remote.match(/\/([^/]+?)(?:\.git)?$/);
     if (match?.[1]) return match[1];
   } catch {
@@ -85,7 +87,9 @@ async function runSync(opts: { name?: string }) {
       },
     });
     const stats = cg.getStats();
-    s.stop(`Indexed — ${stats.nodeCount} symbols, ${stats.edgeCount} edges, ${stats.fileCount} files`);
+    s.stop(
+      `Indexed — ${stats.nodeCount} symbols, ${stats.edgeCount} edges, ${stats.fileCount} files`,
+    );
   }
 
   // --- Upload ---

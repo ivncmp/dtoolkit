@@ -19,6 +19,10 @@ export interface DcontextConfig {
     url: string;
     token: string;
   };
+  dops?: {
+    url: string;
+    token: string;
+  };
   projects: Record<string, string>;
   dworkProjects: Record<string, string[]>;
   briefing: {

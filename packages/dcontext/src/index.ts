@@ -3,6 +3,7 @@ declare const __VERSION__: string;
 import { Command } from 'commander';
 import pc from 'picocolors';
 
+import { createConfigureCommand } from './commands/configure.js';
 import { createExploreCommand } from './commands/explore.js';
 import { createHookCommand } from './commands/hook.js';
 import { createInitCommand, requireInit } from './commands/init.js';
@@ -33,6 +34,7 @@ const guarded = (cmd: Command): Command => {
 };
 
 program.addCommand(createInitCommand());
+program.addCommand(guarded(createConfigureCommand()));
 program.addCommand(guarded(createInstallCommand()));
 program.addCommand(guarded(createUninstallCommand()));
 program.addCommand(guarded(createStatusCommand()));

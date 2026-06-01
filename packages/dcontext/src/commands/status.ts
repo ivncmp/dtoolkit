@@ -86,6 +86,26 @@ async function runStatus() {
   } else {
     row('dwork', `${pc.dim('—')} ${pc.dim('not configured')}`);
   }
+
+  if (config.dops?.url) {
+    try {
+      const headers: Record<string, string> = { Accept: 'application/json' };
+      if (config.dops.token) headers['Authorization'] = `Bearer ${config.dops.token}`;
+      const res = await fetch(`${config.dops.url}/health`, {
+        headers,
+        signal: AbortSignal.timeout(3000),
+      });
+      if (res.ok) {
+        row('dops', `${pc.green('●')} ${config.dops.url}`);
+      } else {
+        row('dops', `${pc.red('●')} ${config.dops.url} ${pc.dim(`(HTTP ${res.status})`)}`);
+      }
+    } catch {
+      row('dops', `${pc.red('●')} ${config.dops.url} ${pc.dim('(unreachable)')}`);
+    }
+  } else {
+    row('dops', `${pc.dim('—')} ${pc.dim('not configured')}`);
+  }
   sep();
 
   // ── Targets ──

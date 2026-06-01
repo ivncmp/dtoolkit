@@ -1,14 +1,14 @@
 ---
-const clusters = [
+const availableClusters = [
   {
     name: 'Memory & Context',
     color: 'purple',
     description: 'Give your agents persistent memory and automatic context injection.',
     packages: [
-      { name: 'dbrain', version: '0.6.0', description: 'Persistent memory server — the brain. SQLite + FTS5, REST + MCP, federation across brains.', npm: 'https://www.npmjs.com/package/@dtoolkit/dbrain' },
-      { name: 'dcontext', version: '0.3.0', description: 'Hook-based context injection. Identity, project facts, and conversation logs — automatic.', npm: 'https://www.npmjs.com/package/@dtoolkit/dcontext' },
-      { name: 'sdk', version: '0.6.0', description: 'Typed HTTP clients for dbrain, dproxy, and dwork. Shared auth and error handling.', npm: 'https://www.npmjs.com/package/@dtoolkit/sdk' },
-      { name: 'core', version: '0.5.0', description: 'Shared types and Zod schemas — Entity, Fact, Tier, ContextBlock, adapters.', npm: 'https://www.npmjs.com/package/@dtoolkit/core' },
+      { name: 'dbrain', version: '0.6.3', description: 'Persistent memory server — the brain. SQLite + FTS5, REST + MCP, federation across brains.', npm: 'https://www.npmjs.com/package/@dtoolkit/dbrain' },
+      { name: 'dcontext', version: '0.4.0', description: 'Hook-based context injection. Identity, project facts, and conversation logs — automatic.', npm: 'https://www.npmjs.com/package/@dtoolkit/dcontext' },
+      { name: 'sdk', version: '0.6.1', description: 'Typed HTTP clients for dbrain, dproxy, and dwork. Shared auth and error handling.', npm: 'https://www.npmjs.com/package/@dtoolkit/sdk' },
+      { name: 'core', version: '0.6.0', description: 'Shared types and Zod schemas — Entity, Fact, Tier, ContextBlock, adapters.', npm: 'https://www.npmjs.com/package/@dtoolkit/core' },
       { name: 'codegraph-sdk', version: '0.2.0', description: 'Code intelligence SDK — semantic knowledge graph via tree-sitter. Fork of codegraph by Colby McHenry.', npm: 'https://www.npmjs.com/package/@dtoolkit/codegraph-sdk' },
     ],
   },
@@ -17,11 +17,11 @@ const clusters = [
     color: 'amber',
     description: 'One CLI to invoke any model provider. Swap Claude, Codex, Gemini or OpenCode with a flag.',
     packages: [
-      { name: 'dproxy', version: '1.4.2', description: 'Universal adapter for invoking models via local CLIs. ask, chat, serve, templates.', npm: 'https://www.npmjs.com/package/@dtoolkit/dproxy' },
-      { name: 'adapter-claude', version: '1.3.2', description: 'Shell-out adapter for Claude Code CLI with streaming and delta support.', npm: 'https://www.npmjs.com/package/@dtoolkit/adapter-claude' },
-      { name: 'adapter-codex', version: '1.3.2', description: 'Shell-out adapter for Codex CLI with JSONL streaming.', npm: 'https://www.npmjs.com/package/@dtoolkit/adapter-codex' },
-      { name: 'adapter-gemini', version: '1.3.2', description: 'Shell-out adapter for Gemini CLI with stream-json support.', npm: 'https://www.npmjs.com/package/@dtoolkit/adapter-gemini' },
-      { name: 'adapter-opencode', version: '1.3.2', description: 'Shell-out adapter for OpenCode CLI with JSONL streaming.', npm: 'https://www.npmjs.com/package/@dtoolkit/adapter-opencode' },
+      { name: 'dproxy', version: '1.4.3', description: 'Universal adapter for invoking models via local CLIs. ask, chat, serve, templates.', npm: 'https://www.npmjs.com/package/@dtoolkit/dproxy' },
+      { name: 'adapter-claude', version: '1.4.0', description: 'Shell-out adapter for Claude Code CLI with streaming and delta support.', npm: 'https://www.npmjs.com/package/@dtoolkit/adapter-claude' },
+      { name: 'adapter-codex', version: '1.4.0', description: 'Shell-out adapter for Codex CLI with JSONL streaming.', npm: 'https://www.npmjs.com/package/@dtoolkit/adapter-codex' },
+      { name: 'adapter-gemini', version: '1.4.0', description: 'Shell-out adapter for Gemini CLI with stream-json support.', npm: 'https://www.npmjs.com/package/@dtoolkit/adapter-gemini' },
+      { name: 'adapter-opencode', version: '1.4.0', description: 'Shell-out adapter for OpenCode CLI with JSONL streaming.', npm: 'https://www.npmjs.com/package/@dtoolkit/adapter-opencode' },
     ],
   },
   {
@@ -29,44 +29,31 @@ const clusters = [
     color: 'emerald',
     description: 'AI-native project management. Markdown is the source of truth.',
     packages: [
-      { name: 'dwork', version: '0.5.0', description: 'Markdown-driven project manager with kanban dashboard, tasks, docs, and FTS5 search.', npm: 'https://www.npmjs.com/package/@dtoolkit/dwork' },
+      { name: 'dwork', version: '0.5.1', description: 'Markdown-driven project manager with kanban dashboard, tasks, docs, and FTS5 search.', npm: 'https://www.npmjs.com/package/@dtoolkit/dwork' },
+      { name: 'dops', version: '0.1.0', description: 'Agent observability — tokens, cost, tools, success rate, errors per session.', npm: 'https://www.npmjs.com/package/@dtoolkit/dops' },
     ],
   },
-  {
-    name: 'Team & Governance',
-    color: 'blue',
-    description: 'Control, observe, and coordinate your team\'s AI agents at scale.',
-    packages: [
-      { name: 'dcouncil', version: '0.0.6', description: 'Multi-agent debate for architecture decisions — security, performance, simplicity.', npm: 'https://www.npmjs.com/package/@dtoolkit/dcouncil' },
-      { name: 'dguard', version: '0.0.6', description: 'Pre-commit for agents — validate LLM output before applying.', npm: 'https://www.npmjs.com/package/@dtoolkit/dguard' },
-      { name: 'dpolicy', version: '0.0.6', description: 'Policy-as-code for the team harness — centralized rules, versioned, repo-synced.', npm: 'https://www.npmjs.com/package/@dtoolkit/dpolicy' },
-      { name: 'dops', version: '0.0.6', description: 'Agent observability — tokens, cost, tools, success rate, errors per hook.', npm: 'https://www.npmjs.com/package/@dtoolkit/dops' },
-      { name: 'droute', version: '0.0.6', description: 'Model router (Haiku/Sonnet/Opus) with cost tracking and per-project policies.', npm: 'https://www.npmjs.com/package/@dtoolkit/droute' },
-    ],
-  },
-  {
-    name: 'Collaboration',
-    color: 'rose',
-    description: 'Pair programming, session replay, and daily digests for the whole team.',
-    packages: [
-      { name: 'dpair', version: '0.0.6', description: 'Real-time pair-programming with a shared agent between two devs.', npm: 'https://www.npmjs.com/package/@dtoolkit/dpair' },
-      { name: 'dreplay', version: '0.0.8', description: 'Session browser for the team — tools, decisions, files touched (privacy-aware).', npm: 'https://www.npmjs.com/package/@dtoolkit/dreplay' },
-      { name: 'dstream', version: '0.0.8', description: 'Daily digest — what each agent learned, decided, or blocked today.', npm: 'https://www.npmjs.com/package/@dtoolkit/dstream' },
-      { name: 'dforge', version: '0.0.6', description: 'Internal marketplace for skills, hooks, and slash commands.', npm: 'https://www.npmjs.com/package/@dtoolkit/dforge' },
-    ],
-  },
+];
+
+const comingSoonPackages = [
+  { name: 'dcouncil', description: 'Multi-agent debate for architecture decisions — security, performance, simplicity.' },
+  { name: 'dguard', description: 'Pre-commit for agents — validate LLM output before applying.' },
+  { name: 'dpolicy', description: 'Policy-as-code for the team harness — centralized rules, versioned, repo-synced.' },
+  { name: 'droute', description: 'Model router (Haiku/Sonnet/Opus) with cost tracking and per-project policies.' },
+  { name: 'dpair', description: 'Real-time pair-programming with a shared agent between two devs.' },
+  { name: 'dreplay', description: 'Session browser for the team — tools, decisions, files touched (privacy-aware).' },
+  { name: 'dstream', description: 'Daily digest — what each agent learned, decided, or blocked today.' },
+  { name: 'dforge', description: 'Internal marketplace for skills, hooks, and slash commands.' },
 ];
 
 const colorMap: Record<string, { badge: string; border: string; dot: string }> = {
   purple: { badge: 'bg-purple-50 text-purple-700 border-purple-200', border: 'border-purple-200 hover:border-purple-300', dot: 'bg-purple-500' },
   amber: { badge: 'bg-amber-50 text-amber-700 border-amber-200', border: 'border-amber-200 hover:border-amber-300', dot: 'bg-amber-500' },
   emerald: { badge: 'bg-emerald-50 text-emerald-700 border-emerald-200', border: 'border-emerald-200 hover:border-emerald-300', dot: 'bg-emerald-500' },
-  blue: { badge: 'bg-blue-50 text-blue-700 border-blue-200', border: 'border-blue-200 hover:border-blue-300', dot: 'bg-blue-500' },
-  rose: { badge: 'bg-rose-50 text-rose-700 border-rose-200', border: 'border-rose-200 hover:border-rose-300', dot: 'bg-rose-500' },
 };
 ---
 
-<section id="ecosystem" class="py-24">
+<section id="ecosystem" class="py-24 bg-[oklch(0.85_0.04_252)] pattern-cross">
   <div class="max-w-7xl mx-auto px-6">
     <div class="text-center mb-16 reveal">
       <h2 class="text-4xl sm:text-5xl font-black tracking-tight">
@@ -78,8 +65,19 @@ const colorMap: Record<string, { badge: string; border: string; dot: string }> =
       </p>
     </div>
 
-    <div class="space-y-16">
-      {clusters.map((cluster) => {
+    <!-- Available Now -->
+    <div class="mb-6 reveal">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          Available now
+        </span>
+        <span class="text-sm text-[var(--text-3)]">— 12 packages on npm, ready to install</span>
+      </div>
+    </div>
+
+    <div class="space-y-16 mb-24">
+      {availableClusters.map((cluster) => {
         const colors = colorMap[cluster.color];
         return (
           <div class="reveal">
@@ -116,6 +114,31 @@ const colorMap: Record<string, { badge: string; border: string; dot: string }> =
           </div>
         );
       })}
+    </div>
+
+    <!-- Coming Soon -->
+    <div class="reveal">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--text-3)]">
+          <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+          Coming soon
+        </span>
+        <span class="text-sm text-[var(--text-3)]">— 8 packages in the roadmap</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {comingSoonPackages.map((pkg) => (
+          <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] opacity-70">
+            <div class="flex items-start justify-between mb-2">
+              <span class="font-mono font-semibold text-sm text-[var(--text)]">@dtoolkit/{pkg.name}</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded-full border border-[var(--border)] font-mono text-[var(--text-3)]">
+                planned
+              </span>
+            </div>
+            <p class="text-xs text-[var(--text-3)] leading-relaxed">{pkg.description}</p>
+          </div>
+        ))}
+      </div>
     </div>
   </div>
 </section>

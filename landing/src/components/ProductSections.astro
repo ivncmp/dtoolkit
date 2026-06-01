@@ -1,0 +1,246 @@
+---
+import Terminal from './Terminal.astro';
+
+const products = [
+  {
+    id: 'dbrain',
+    name: 'dbrain',
+    logo: '/logos/logo-dbrain-complete.png',
+    tagline: 'Your distributed mind',
+    npm: 'https://www.npmjs.com/package/@dtoolkit/dbrain',
+    description: 'Persistent knowledge that follows your AI agents across sessions, tools, and projects. SQLite + FTS5, REST API + MCP protocol, federation across brains, and a React dashboard.',
+    features: [
+      'Entities, facts, and conversations with automatic tiering (hot / warm / cold)',
+      'Full-text search with FTS5 across all memories',
+      'MCP server — works with Claude Code, Cursor, Windsurf',
+      'Federation — connect personal and shared team brains',
+      'React dashboard for browsing, searching, and managing',
+    ],
+    install: 'npm install -g @dtoolkit/dbrain',
+    video: '/screens/dbrain.webm',
+    code: [
+      '<span class="comment"># Create and start your brain</span>',
+      '<span class="prompt">$</span> dbrain init',
+      '<span class="prompt">$</span> dbrain start',
+      '<span class="output">✓ API on :7878 — Dashboard on :7879</span>',
+      '',
+      '<span class="comment"># Connect your coding CLI</span>',
+      '<span class="prompt">$</span> dbrain connect claude',
+      '<span class="output">✓ MCP server configured</span>',
+      '<span class="output">✓ CLAUDE.md instructions written</span>',
+      '',
+      '<span class="comment"># Your agents remember everything</span>',
+      '<span class="prompt">></span> remember <span class="string">"Deploy uses blue-green on prod"</span>',
+      '<span class="output">✓ Fact stored (entity: infrastructure)</span>',
+    ].join('\n'),
+    reverse: false,
+  },
+  {
+    id: 'dwork',
+    name: 'dwork',
+    logo: '/logos/logo-dwork-complete.png',
+    tagline: 'AI-native project manager',
+    npm: 'https://www.npmjs.com/package/@dtoolkit/dwork',
+    description: 'Markdown files are the source of truth. Tasks, docs, roadmaps — all in plain text, indexed with FTS5, served via MCP. Your agents create tasks, update status, and search across projects.',
+    features: [
+      'BACKLOG.md as kanban — parsed and indexed automatically',
+      'Numbered docs with full-text search',
+      'Code intelligence: symbol search, call graphs, impact analysis',
+      'React dashboard with kanban board, file tree, and code graph',
+      '21 MCP tools including 5 graph tools',
+    ],
+    install: 'npm install -g @dtoolkit/dwork',
+    video: '/screens/dwork.webm',
+    code: [
+      '<span class="comment"># Create and start project management</span>',
+      '<span class="prompt">$</span> dwork init',
+      '<span class="output">? Project name: my-app</span>',
+      '<span class="output">✓ BACKLOG.md scaffolded</span>',
+      '<span class="prompt">$</span> dwork start',
+      '<span class="output">✓ API on :7881 — Dashboard on :7882</span>',
+      '',
+      '<span class="comment"># Your agents manage the project</span>',
+      '<span class="prompt">></span> add_task <span class="string">"Fix login redirect bug"</span> <span class="flag">--priority</span> P0',
+      '<span class="output">✓ Task added (status: todo)</span>',
+      '',
+      '<span class="prompt">></span> what_to_do_next',
+      '<span class="output">→ 1. Fix login redirect bug (P0, todo)</span>',
+    ].join('\n'),
+    reverse: true,
+  },
+  {
+    id: 'dops',
+    name: 'dops',
+    logo: '/logos/logo-dops-complete.png',
+    tagline: 'Datadog for AI agents',
+    npm: 'https://www.npmjs.com/package/@dtoolkit/dops',
+    description: 'Agent observability platform. Ingest telemetry from Claude, Codex, Gemini, and OpenCode sessions — track tokens, costs, tool usage, and errors across your team.',
+    features: [
+      'Ingest from 4 CLI sources — scan local transcripts automatically',
+      'Cost estimation by model with built-in pricing',
+      'Tool analytics — call count, success rate, duration',
+      'MCP server for querying observability data from agents',
+      'React dashboard with overview, sessions, tools, and costs views',
+    ],
+    install: 'npm install -g @dtoolkit/dops',
+    video: '/screens/dops.webm',
+    code: [
+      '<span class="comment"># Initialize and start observability</span>',
+      '<span class="prompt">$</span> dops init && dops start',
+      '<span class="output">✓ API on :7883 — Dashboard on :7884</span>',
+      '',
+      '<span class="comment"># Ingest telemetry from local transcripts</span>',
+      '<span class="prompt">$</span> dops ingest',
+      '<span class="output">✓ 47 sessions, 3.2M tokens, 1,840 tool calls</span>',
+      '',
+      '<span class="comment"># Check costs</span>',
+      '<span class="prompt">$</span> dops costs',
+      '<span class="output">→ claude-opus-4-6    42 sessions  $186.40</span>',
+      '<span class="output">  claude-haiku-4-5    5 sessions    $0.32</span>',
+    ].join('\n'),
+    reverse: false,
+  },
+  {
+    id: 'dcontext',
+    name: 'dcontext',
+    tagline: 'Automatic context injection',
+    npm: 'https://www.npmjs.com/package/@dtoolkit/dcontext',
+    description: 'Hooks into your coding CLI to inject identity, project facts, and memory at session start. No manual setup — your agents know who you are and what you\'re working on from the first message.',
+    features: [
+      'Hooks for Claude Code, Codex, Gemini CLI, and OpenCode',
+      'Injects identity, soul, and project facts automatically',
+      'Saves conversation exchanges before context compaction',
+      'Zero-config after install — just works',
+    ],
+    install: 'npm install -g @dtoolkit/dcontext',
+    code: [
+      '<span class="comment"># Connect to dbrain and map projects</span>',
+      '<span class="prompt">$</span> dcontext init',
+      '<span class="output">? dbrain URL: http://localhost:7878</span>',
+      '<span class="output">? Map directory to entity: my-app</span>',
+      '<span class="output">✓ Connected to dbrain</span>',
+      '',
+      '<span class="comment"># Install hooks for your CLI</span>',
+      '<span class="prompt">$</span> dcontext install claude',
+      '<span class="output">✓ Hook added to .claude/settings.json</span>',
+      '',
+      '<span class="comment"># Every new session now starts with:</span>',
+      '<span class="output">## Session Context (from dbrain)</span>',
+      '<span class="output">- Identity, soul, project facts, tasks</span>',
+    ].join('\n'),
+    reverse: true,
+  },
+  {
+    id: 'dproxy',
+    name: 'dproxy',
+    tagline: 'One CLI, any model',
+    npm: 'https://www.npmjs.com/package/@dtoolkit/dproxy',
+    description: 'Universal adapter for invoking models through local CLIs. Swap between Claude, Codex, Gemini, and OpenCode with a flag. Built-in context pipeline, templates, memory, and an HTTP API.',
+    features: [
+      'Single-shot (ask) and interactive (chat) modes',
+      'HTTP API via serve command — integrate anywhere',
+      'Context pipeline: memory + workspace + day log',
+      'Template system for reusable prompts',
+      '4 providers: Claude, Codex, Gemini, OpenCode',
+    ],
+    install: 'npm install -g @dtoolkit/dproxy',
+    code: [
+      '<span class="comment"># Ask any model from the terminal</span>',
+      '<span class="prompt">$</span> dproxy <span class="string">"explain this error"</span> <span class="flag">--provider</span> claude',
+      '<span class="output">→ The error occurs because...</span>',
+      '',
+      '<span class="comment"># Pipe code for review</span>',
+      '<span class="prompt">$</span> cat src/index.ts | dproxy <span class="string">"review this"</span>',
+      '',
+      '<span class="comment"># Start as HTTP API</span>',
+      '<span class="prompt">$</span> dproxy serve <span class="flag">--port</span> 7880',
+      '<span class="output">✓ API ready on :7880</span>',
+      '',
+      '<span class="comment"># Interactive REPL</span>',
+      '<span class="prompt">$</span> dproxy chat <span class="flag">--provider</span> gemini',
+    ].join('\n'),
+    reverse: false,
+  },
+];
+---
+
+{products.map((product) => (
+  <section id={product.id} class={`py-20 ${product.reverse ? 'product-alt' : ''}`}>
+    <div class="max-w-7xl mx-auto px-6">
+      <div class={`grid grid-cols-1 ${product.reverse ? 'lg:grid-cols-[3fr_2fr]' : 'lg:grid-cols-[2fr_3fr]'} gap-16 items-center reveal`}>
+
+        <!-- Info side -->
+        <div class={product.reverse ? 'lg:order-2' : ''}>
+          <div class="flex items-center gap-4 mb-4">
+            {product.logo && (
+              <img src={product.logo} alt={product.name} class="h-24 object-contain" />
+            )}
+            {!product.logo && (
+              <span class="font-mono font-black text-2xl text-brand-purple">@dtoolkit/{product.name}</span>
+            )}
+          </div>
+
+          <h2 class="text-3xl sm:text-4xl font-black tracking-tight mb-3">
+            {product.tagline}
+          </h2>
+
+          <p class="text-[var(--text-3)] leading-relaxed mb-6">{product.description}</p>
+
+          <ul class="space-y-2.5 mb-8">
+            {product.features.map((feature) => (
+              <li class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-brand-purple mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span class="text-sm text-[var(--text-2)]">{feature}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div class="flex items-center gap-4">
+            <Terminal code={`<span class="prompt">$</span> ${product.install}`} title="install" />
+            <a href={product.npm} target="_blank" rel="noopener noreferrer" class="text-sm text-brand-purple hover:text-brand-purple-dark transition-colors font-medium flex-shrink-0">
+              npm &rarr;
+            </a>
+          </div>
+        </div>
+
+        <!-- Media side -->
+        <div class={product.reverse ? 'lg:order-1' : ''}>
+          {product.video ? (
+            <div class="video-wrap group rounded-xl overflow-hidden border border-[var(--border-subtle)] shadow-xl relative cursor-pointer">
+              <video autoplay muted loop playsinline class="w-full video-crop" src={product.video}></video>
+              <button class="video-fullscreen absolute bottom-3 right-3 p-2 rounded-lg bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm hover:bg-black/70" aria-label="Fullscreen">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"/></svg>
+              </button>
+            </div>
+          ) : (
+            <Terminal code={product.code} />
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+))}
+
+<style>
+  .product-alt {
+    background: oklch(0.95 0.008 248);
+  }
+  .video-crop {
+    margin-top: -3%;
+    margin-bottom: -3%;
+  }
+</style>
+
+<script>
+  document.querySelectorAll('.video-fullscreen').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const video = btn.parentElement?.querySelector('video');
+      if (video) {
+        if (video.requestFullscreen) video.requestFullscreen();
+        else if ((video as any).webkitEnterFullscreen) (video as any).webkitEnterFullscreen();
+      }
+    });
+  });
+</script>

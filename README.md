@@ -49,29 +49,24 @@ Each product has **one job**, works standalone, and composes with the rest via a
 | --- | --- | --- |
 | [`@dtoolkit/dproxy`](packages/dproxy/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dproxy.svg)](https://www.npmjs.com/package/@dtoolkit/dproxy) | Universal adapter for invoking models — CLI and REST API |
 
-### Team Coordination
+### Observability
 
 | Package | Version | Description |
 | --- | --- | --- |
-| [`@dtoolkit/dstream`](packages/dstream/) | — | Daily digest — what each agent learned, decided, or blocked today |
-| [`@dtoolkit/dreplay`](packages/dreplay/) | — | Session browser for the team (privacy-aware) |
-| [`@dtoolkit/dpair`](packages/dpair/) | — | Real-time pair-programming with a shared agent |
+| [`@dtoolkit/dops`](packages/dops/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/dops.svg)](https://www.npmjs.com/package/@dtoolkit/dops) | Agent observability — tokens, cost, tools, success rate, errors |
 
-### Quality & Observability
+### Coming soon
 
-| Package | Version | Description |
-| --- | --- | --- |
-| [`@dtoolkit/dops`](packages/dops/) | — | Agent observability — tokens, cost, tools, success rate, errors |
-| [`@dtoolkit/dpolicy`](packages/dpolicy/) | — | Policy-as-code for the team harness |
-| [`@dtoolkit/dguard`](packages/dguard/) | — | Pre-commit for agents — validate LLM output before applying |
-
-### Distribution & DevEx
-
-| Package | Version | Description |
-| --- | --- | --- |
-| [`@dtoolkit/dforge`](packages/dforge/) | — | Internal marketplace for skills, hooks, and slash commands |
-| [`@dtoolkit/droute`](packages/droute/) | — | Model router (Haiku/Sonnet/Opus) + cost tracking |
-| [`@dtoolkit/dcouncil`](packages/dcouncil/) | — | Multi-agent debate for architecture decisions |
+| Package | Description |
+| --- | --- |
+| [`@dtoolkit/dcouncil`](packages/dcouncil/) | Multi-agent debate for architecture decisions |
+| [`@dtoolkit/dguard`](packages/dguard/) | Pre-commit for agents — validate LLM output before applying |
+| [`@dtoolkit/dpolicy`](packages/dpolicy/) | Policy-as-code for the team harness |
+| [`@dtoolkit/droute`](packages/droute/) | Model router (Haiku/Sonnet/Opus) + cost tracking |
+| [`@dtoolkit/dpair`](packages/dpair/) | Real-time pair-programming with a shared agent |
+| [`@dtoolkit/dreplay`](packages/dreplay/) | Session browser for the team (privacy-aware) |
+| [`@dtoolkit/dstream`](packages/dstream/) | Daily digest — what each agent learned, decided, or blocked today |
+| [`@dtoolkit/dforge`](packages/dforge/) | Internal marketplace for skills, hooks, and slash commands |
 
 ## Architecture
 
@@ -133,7 +128,9 @@ The [`examples/`](examples/) directory contains ready-to-run TypeScript examples
 | [`dbrain.ts`](examples/src/dbrain.ts) | `DBrainClient` | Health, entity CRUD, facts, search, memory summary, conversations, federation |
 | [`dproxy.ts`](examples/src/dproxy.ts) | `DProxyClient` | Batch ask, streaming, system prompts, file attachments, history, memory |
 | [`dwork.ts`](examples/src/dwork.ts) | `DWorkClient` | Projects, tasks, docs, search, overview |
-| [`demo.ts`](examples/src/demo.ts) | All | Combined smoke test |
+| [`demo.ts`](examples/src/demo.ts) | All SDK clients | Combined smoke test |
+
+> `dops` is used via CLI and REST API — see [examples README](examples/README.md) for usage.
 
 ```bash
 cd examples

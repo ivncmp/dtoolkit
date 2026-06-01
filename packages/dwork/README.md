@@ -95,7 +95,7 @@ Web dashboard on port `7882` (API port + 1). Single-file React 18 app — CDN de
 
 ## MCP Tools
 
-Connect via `http://localhost:7881/mcp` with Bearer token auth.
+Connect via `http://localhost:7881/mcp` with Bearer token auth. 21 tools + 1 resource.
 
 | Tool | Description |
 |------|-------------|
@@ -115,6 +115,11 @@ Connect via `http://localhost:7881/mcp` with Bearer token auth.
 | `what_to_do_next` | Suggest next tasks by priority/deadline |
 | `sync` | Sync docs from source code via dproxy |
 | `overview` | Global summary of all projects |
+| `graph_search` | Search code symbols by name or pattern |
+| `graph_stats` | Code graph statistics (nodes, edges, languages) |
+| `graph_trace` | Trace call graph from a symbol |
+| `graph_impact` | Impact radius — what's affected by changes to a symbol |
+| `graph_context` | Full context for a symbol (ancestors, refs, types) |
 
 ## REST API
 

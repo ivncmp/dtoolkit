@@ -2,92 +2,86 @@
 import Terminal from './Terminal.astro';
 
 const step1Code = [
-  '<span class="prompt">$</span> npm install -g <span class="string">@dtoolkit/dbrain</span>',
-  '<span class="prompt">$</span> dbrain init',
-  '<span class="output">✓ Brain created at ~/.dbrain</span>',
-  '',
-  '<span class="prompt">$</span> dbrain start',
-  '<span class="output">✓ API on :7878 — Dashboard on :7879</span>',
-  '',
-  '<span class="prompt">$</span> dbrain connect claude',
-  '<span class="output">✓ MCP server configured</span>',
-  '<span class="output">✓ Permissions added</span>',
+  '<span class="prompt">$</span> npm install -g \\',
+  '    <span class="string">@dtoolkit/dbrain</span> \\',
+  '    <span class="string">@dtoolkit/dcontext</span> \\',
+  '    <span class="string">@dtoolkit/dwork</span> \\',
+  '    <span class="string">@dtoolkit/dops</span> \\',
+  '    <span class="string">@dtoolkit/dproxy</span>',
 ].join('\n');
 
 const step2Code = [
-  '<span class="prompt">$</span> npm install -g <span class="string">@dtoolkit/dcontext</span>',
-  '<span class="prompt">$</span> dcontext init',
-  '<span class="output">? dbrain URL: http://localhost:7878</span>',
-  '<span class="output">? Map this directory to entity: my-app</span>',
-  '<span class="output">✓ Connected</span>',
+  '<span class="prompt">$</span> dbrain init && dbrain start',
+  '<span class="output">✓ API on :7878 — Dashboard on :7879</span>',
   '',
-  '<span class="prompt">$</span> dcontext install claude',
-  '<span class="output">✓ Hook added to .claude/settings.json</span>',
+  '<span class="prompt">$</span> dbrain connect claude',
+  '<span class="output">✓ MCP configured — CLAUDE.md written</span>',
 ].join('\n');
 
 const step3Code = [
-  '<span class="prompt">$</span> claude',
+  '<span class="prompt">$</span> dcontext init',
+  '<span class="output">✓ Connected to dbrain</span>',
   '',
-  '<span class="comment"># Every session starts with context from dbrain:</span>',
-  '<span class="comment"># - Your identity and preferences</span>',
-  '<span class="comment"># - Project-specific facts and decisions</span>',
-  '<span class="comment"># - Access to recall/remember via MCP</span>',
-  '',
-  '<span class="output">✓ Session enriched by dbrain</span>',
+  '<span class="prompt">$</span> dcontext install claude',
+  '<span class="output">✓ Hooks installed</span>',
 ].join('\n');
 
-const extraCode = [
-  '<span class="prompt">$</span> npm install -g <span class="string">@dtoolkit/dproxy</span> <span class="string">@dtoolkit/dwork</span>',
-  '<span class="prompt">$</span> dproxy init   <span class="comment"># Multi-provider CLI</span>',
-  '<span class="prompt">$</span> dwork init    <span class="comment"># Project management</span>',
+const step4Code = [
+  '<span class="prompt">$</span> dwork init && dwork start',
+  '<span class="output">✓ API on :7881 — Dashboard on :7882</span>',
+  '',
+  '<span class="prompt">$</span> dops init && dops start',
+  '<span class="output">✓ API on :7883 — Dashboard on :7884</span>',
+  '',
+  '<span class="prompt">$</span> dproxy init',
+  '<span class="output">✓ Default provider: claude</span>',
+].join('\n');
+
+const step5Code = [
+  '<span class="prompt">$</span> claude',
+  '<span class="output">✓ Memory · Context · Tasks</span>',
+  '<span class="output">  Observability · Multi-model</span>',
 ].join('\n');
 
 const steps = [
-  { step: '1', title: 'Install & start dbrain', description: 'Install the memory server, create a brain, start the API, and connect your coding CLI.', code: step1Code },
-  { step: '2', title: 'Set up dcontext', description: 'Connect to dbrain, map your project directory, and install hooks for automatic context injection.', code: step2Code },
-  { step: '3', title: 'Start building', description: 'Open your coding CLI. Your agent now has persistent memory, knows your identity, and understands your projects.', code: step3Code },
+  { step: '1', title: 'Install', description: 'All 5 products, one command.', code: step1Code },
+  { step: '2', title: 'Memory', description: 'Create a brain, start the server, connect your CLI.', code: step2Code },
+  { step: '3', title: 'Context', description: 'Automatic identity and project facts at every session.', code: step3Code },
+  { step: '4', title: 'The rest', description: 'Project management, observability, multi-provider.', code: step4Code },
+  { step: '5', title: 'Build', description: 'Open your CLI. The full harness is active.', code: step5Code },
 ];
 ---
 
-<section id="quickstart" class="py-24">
-  <div class="max-w-4xl mx-auto px-6">
+<section id="quickstart" class="py-24 bg-[var(--surface-2)] pattern-diagonal">
+  <div class="max-w-3xl mx-auto px-6">
     <div class="text-center mb-16 reveal">
       <h2 class="text-4xl sm:text-5xl font-black tracking-tight">
-        Up and running in
-        <span class="gradient-text">3 steps</span>
+        Full environment in
+        <span class="gradient-text">5 steps</span>
       </h2>
       <p class="mt-4 text-lg text-[var(--text-3)]">
-        From zero to persistent AI memory in under two minutes.
+        From zero to a fully instrumented AI coding harness.
       </p>
     </div>
 
-    <div class="space-y-8">
+    <div class="space-y-2">
       {steps.map((step) => (
-        <div class="flex gap-6 reveal">
-          <div class="flex-shrink-0">
-            <div class="w-10 h-10 rounded-full bg-brand-purple text-white flex items-center justify-center font-bold text-sm">
+        <div class="flex gap-5 reveal">
+          <div class="flex-shrink-0 flex flex-col items-center">
+            <div class="w-9 h-9 rounded-full bg-brand-purple text-white flex items-center justify-center font-bold text-sm">
               {step.step}
             </div>
-            {step.step !== '3' && (
-              <div class="w-px h-full bg-[var(--border)] mx-auto mt-2"></div>
+            {step.step !== '5' && (
+              <div class="w-px flex-1 bg-brand-purple/20 mt-1"></div>
             )}
           </div>
-          <div class="flex-1 pb-8">
-            <h3 class="text-xl font-bold mb-1">{step.title}</h3>
-            <p class="text-[var(--text-3)] mb-4">{step.description}</p>
+          <div class="flex-1 pb-6">
+            <h3 class="text-lg font-bold mb-0.5">{step.title}</h3>
+            <p class="text-sm text-[var(--text-3)] mb-3">{step.description}</p>
             <Terminal code={step.code} />
           </div>
         </div>
       ))}
-    </div>
-
-    <div class="mt-12 text-center">
-      <p class="text-[var(--text-3)] text-sm mb-6">
-        Want the full suite? Add dproxy for multi-model support, dwork for project management.
-      </p>
-      <div class="inline-block text-left">
-        <Terminal code={extraCode} />
-      </div>
     </div>
   </div>
 </section>

@@ -2,11 +2,10 @@
 
 ---
 
-<section class="py-24 relative overflow-hidden pattern-bg">
-  <div class="hero-glow"></div>
+<section class="py-24 relative overflow-hidden">
 
-  <div class="relative z-10 max-w-4xl mx-auto px-6">
-    <div class="text-center mb-16">
+  <div class="max-w-5xl mx-auto px-6">
+    <div class="text-center mb-16 reveal">
       <h2 class="text-4xl sm:text-5xl font-black tracking-tight">
         How it all
         <span class="gradient-text">fits together</span>
@@ -16,7 +15,7 @@
       </p>
     </div>
 
-    <div class="flex flex-col items-center gap-3">
+    <div class="flex flex-col items-center gap-3 reveal">
       <!-- Your Coding CLI -->
       <div class="arch-node arch-node--wide bg-[var(--surface)]">
         <span class="text-[var(--text-2)] text-xs uppercase tracking-wider">Your Coding CLI</span>
@@ -33,34 +32,40 @@
 
       <div class="arch-line"></div>
 
-      <!-- dbrain + dwork row -->
-      <div class="flex gap-6 w-full max-w-lg justify-center">
-        <div class="arch-node flex-1 bg-[var(--surface)] border-brand-purple/30">
+      <!-- dbrain + dwork + dops row -->
+      <div class="flex gap-4 w-full max-w-2xl justify-center flex-wrap">
+        <div class="arch-node arch-node--product border-purple-300/40 bg-purple-50/60">
+          <img src="/logos/logo-dbrain.png" alt="" class="w-10 h-10" />
           <span class="font-mono font-bold text-brand-purple text-sm">dbrain</span>
           <span class="text-[var(--text-3)] text-xs">memory · MCP</span>
           <span class="font-mono text-[10px] text-[var(--text-3)]">:7878 · :7879</span>
         </div>
-        <div class="arch-node flex-1 bg-[var(--surface)] border-emerald-400/30">
+        <div class="arch-node arch-node--product border-emerald-300/40 bg-emerald-50/60">
+          <img src="/logos/logo-dwork.png" alt="" class="w-10 h-10" />
           <span class="font-mono font-bold text-emerald-600 text-sm">dwork</span>
           <span class="text-[var(--text-3)] text-xs">projects · tasks · docs</span>
           <span class="font-mono text-[10px] text-[var(--text-3)]">:7881 · :7882</span>
+        </div>
+        <div class="arch-node arch-node--product border-blue-300/40 bg-blue-50/60">
+          <img src="/logos/logo-dops.png" alt="" class="w-10 h-10" />
+          <span class="font-mono font-bold text-blue-600 text-sm">dops</span>
+          <span class="text-[var(--text-3)] text-xs">observability · costs</span>
+          <span class="font-mono text-[10px] text-[var(--text-3)]">:7883 · :7884</span>
         </div>
       </div>
 
       <div class="arch-line"></div>
 
-      <!-- sdk -->
-      <div class="arch-node bg-[var(--surface)] border-blue-400/30">
-        <span class="font-mono font-bold text-blue-600 text-sm">sdk</span>
-        <span class="text-[var(--text-3)] text-xs">DBrainClient · DWorkClient · DProxyClient</span>
-      </div>
-
-      <div class="arch-line"></div>
-
-      <!-- core -->
-      <div class="arch-node bg-[var(--surface)] border-amber-400/30">
-        <span class="font-mono font-bold text-amber-600 text-sm">core</span>
-        <span class="text-[var(--text-3)] text-xs">Entity · Fact · Tier · Zod schemas</span>
+      <!-- sdk + core row -->
+      <div class="flex gap-4 justify-center">
+        <div class="arch-node bg-[var(--surface)] border-blue-400/30">
+          <span class="font-mono font-bold text-blue-600 text-sm">sdk</span>
+          <span class="text-[var(--text-3)] text-xs">DBrainClient · DWorkClient · DProxyClient</span>
+        </div>
+        <div class="arch-node bg-[var(--surface)] border-amber-400/30">
+          <span class="font-mono font-bold text-amber-600 text-sm">core</span>
+          <span class="text-[var(--text-3)] text-xs">types · schemas · adapters</span>
+        </div>
       </div>
 
       <div class="my-6 w-px h-8 border-l border-dashed border-[var(--border)]"></div>
@@ -76,13 +81,13 @@
       <!-- Adapters row -->
       <div class="flex gap-3 flex-wrap justify-center">
         {['claude', 'codex', 'gemini', 'opencode'].map((name) => (
-          <div class="px-4 py-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)] text-center">
-            <span class="font-mono text-xs font-semibold text-blue-600">{name}</span>
+          <div class="px-4 py-2.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)] text-center hover:border-brand-purple/20 transition-colors">
+            <span class="font-mono text-xs font-semibold text-blue-600">adapter-{name}</span>
           </div>
         ))}
       </div>
 
-      <p class="text-xs text-[var(--text-3)] mt-2 italic">adapters — one interface, any provider</p>
+      <p class="text-xs text-[var(--text-3)] mt-2 italic">one interface, any provider</p>
     </div>
   </div>
 </section>
@@ -97,16 +102,25 @@
     border-radius: 12px;
     border: 1px solid var(--border-subtle);
     box-shadow: 0 2px 8px oklch(0 0 0 / 0.04);
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
   }
 
   .arch-node:hover {
     box-shadow: 0 4px 16px oklch(0 0 0 / 0.08);
+    transform: translateY(-1px);
   }
 
   .arch-node--wide {
     width: 100%;
     max-width: 28rem;
+  }
+
+  .arch-node--product {
+    flex: 1;
+    min-width: 140px;
+    max-width: 180px;
+    padding: 16px 20px;
+    gap: 4px;
   }
 
   .arch-line {

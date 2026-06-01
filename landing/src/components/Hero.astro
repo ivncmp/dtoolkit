@@ -1,56 +1,60 @@
 ---
-import Terminal from './Terminal.astro';
 
-const heroCode = [
-  '<span class="prompt">$</span> npm install -g <span class="string">@dtoolkit/dbrain</span> <span class="string">@dtoolkit/dcontext</span>',
-  '',
-  '<span class="prompt">$</span> dbrain init',
-  '<span class="output">✓ Brain initialized at ~/.dbrain</span>',
-  '<span class="output">✓ MCP server ready on :7878</span>',
-  '',
-  '<span class="prompt">$</span> dcontext install',
-  '<span class="output">✓ Hooks installed for Claude Code</span>',
-  '<span class="output">✓ Identity + project facts injected at session start</span>',
-].join('\n');
 ---
 
 <section class="relative pt-32 pb-24 pattern-bg">
+  <div class="hero-bg"></div>
   <div class="hero-glow"></div>
 
   <div class="relative z-10 max-w-5xl mx-auto px-6 text-center">
     <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-purple/5 border border-brand-purple/10 mb-8">
       <span class="w-2 h-2 rounded-full bg-brand-purple animate-pulse"></span>
-      <span class="text-sm text-brand-purple font-medium">20 packages &middot; MIT licensed</span>
+      <span class="text-sm text-brand-purple font-medium">20 packages &middot; 12 on npm &middot; MIT licensed</span>
     </div>
 
     <h1 class="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight leading-[1.05]">
-      Engineer your
+      Give your AI agents
       <br />
-      <span class="gradient-text">AI agents</span>
+      <span class="gradient-text">memory, context &amp; eyes</span>
     </h1>
 
     <p class="mt-6 text-lg sm:text-xl text-[var(--text-3)] max-w-2xl mx-auto leading-relaxed">
-      Open-source harness engineering toolkit. Memory, context, routing, observability and project management — everything your coding agents need to work smarter.
+      Open-source toolkit for AI coding agents. Persistent memory, automatic context injection, multi-provider transport, project management, and observability — everything your harness needs.
     </p>
 
     <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
       <a
         href="#quickstart"
-        class="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-brand-purple text-white font-semibold hover:bg-brand-purple-dark transition-colors shadow-lg shadow-brand-purple/25"
+        class="group inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-brand-purple text-white font-semibold hover:bg-brand-purple-dark transition-all shadow-lg shadow-brand-purple/25 hover:shadow-xl hover:shadow-brand-purple/30 hover:-translate-y-0.5"
       >
         Get Started
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+        <svg class="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
       </a>
       <a
-        href="#ecosystem"
-        class="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl border border-[var(--border)] text-[var(--text)] font-semibold hover:border-[var(--border-subtle)] hover:bg-[var(--surface)] transition-colors"
+        href="https://github.com/ivncmp/dtoolkit"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl border border-[var(--border)] text-[var(--text)] font-semibold hover:border-brand-purple/30 hover:bg-[var(--surface)] transition-all"
       >
-        Explore Ecosystem
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        View on GitHub
       </a>
     </div>
 
-    <div class="mt-16 max-w-xl mx-auto text-left">
-      <Terminal code={heroCode} />
+    <!-- Product logos strip -->
+    <div class="mt-14 flex items-center justify-center gap-10">
+      <a href="#dbrain" class="flex items-center gap-2.5 opacity-60 hover:opacity-100 transition-opacity">
+        <img src="/logos/logo-dbrain.png" alt="dbrain" class="w-9 h-9" />
+        <span class="text-xs font-mono font-semibold text-[var(--text-3)]">dbrain</span>
+      </a>
+      <a href="#dwork" class="flex items-center gap-2.5 opacity-60 hover:opacity-100 transition-opacity">
+        <img src="/logos/logo-dwork.png" alt="dwork" class="w-9 h-9" />
+        <span class="text-xs font-mono font-semibold text-[var(--text-3)]">dwork</span>
+      </a>
+      <a href="#dops" class="flex items-center gap-2.5 opacity-60 hover:opacity-100 transition-opacity">
+        <img src="/logos/logo-dops.png" alt="dops" class="w-9 h-9" />
+        <span class="text-xs font-mono font-semibold text-[var(--text-3)]">dops</span>
+      </a>
     </div>
   </div>
 </section>

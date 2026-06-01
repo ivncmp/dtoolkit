@@ -130,6 +130,7 @@ All endpoints require `Authorization: Bearer <token>` except `/health`.
 | `POST`            | `/facts/:id/share`    | Push a fact to a connected brain               |
 | `GET`             | `/me`                 | Current user/admin info                        |
 | `POST`            | `/compact`            | Run compaction (admin-only)                    |
+| `ALL`             | `/proxy/:name/*`      | Passthrough proxy to connected brains          |
 
 ## CLI commands
 

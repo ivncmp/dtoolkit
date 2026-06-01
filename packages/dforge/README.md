@@ -6,11 +6,14 @@
 <p align="center">Internal marketplace for skills, hooks, and slash commands</p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@dtoolkit/dforge"><img src="https://img.shields.io/npm/v/@dtoolkit/dforge.svg" alt="npm"></a>
   <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
 </p>
 
-> **Status:** not yet implemented
+<p align="center">
+  <img src="https://img.shields.io/badge/status-coming%20soon-yellow" alt="Coming Soon">
+</p>
+
+> This package is part of the dtoolkit roadmap and is not yet functional.
 
 ## What it does
 

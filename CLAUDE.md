@@ -64,7 +64,11 @@ packages/
 ├── dcouncil/          Multi-agent debate for architecture decisions (CLI: dcouncil)
 ├── dforge/            Internal marketplace for skills, hooks, and slash commands (CLI: dforge)
 ├── dguard/            Pre-commit for agents — validate LLM output before applying (CLI: dguard)
-├── dops/              Agent observability — tokens, cost, tools, success rate, errors (CLI: dops)
+├── dops/              Agent observability — tokens, cost, tools, success rate, errors
+│                      Fastify REST API + MCP HTTP on :7883, React dashboard on :7884
+│                      SQLite via better-sqlite3. Ingest from Claude/Codex/Gemini/OpenCode transcripts.
+│                      CLI: dops init/start/status/ingest/stats/costs
+│                      Build: tsc + copy dashboard assets + chmod bin
 ├── dpair/             Real-time pair-programming with a shared agent (CLI: dpair)
 ├── dpolicy/           Policy-as-code for the team harness (library, no CLI)
 ├── dproxy/            Universal CLI adapter for invoking models via local CLIs
@@ -89,7 +93,7 @@ tools/
 └── tsconfig/          Shared base tsconfig (ES2022, NodeNext, strict)
 ```
 
-**Dependency graph**: `core` ← `adapter-*` ← `dproxy`/`dcontext`. `core` ← `sdk` ← `dwork`. `core` ← `dbrain`. `codegraph-sdk` ← `dwork`. The remaining packages (dcouncil through dstream) are scaffolded stubs with no internal deps yet. Turbo handles build ordering via `^build`.
+**Dependency graph**: `core` ← `adapter-*` ← `dproxy`/`dcontext`. `core` ← `sdk` ← `dwork`. `core` ← `dbrain`. `codegraph-sdk` ← `dwork`. `core` + `adapter-*` ← `dops`. The remaining packages (dcouncil through dstream) are scaffolded stubs with no internal deps yet. Turbo handles build ordering via `^build`.
 
 ### dbrain internals
 
@@ -120,7 +124,7 @@ tools/
 - `src/core/` — config.ts (Zod schema + env overrides), db.ts (SQLite + FTS5 contentless), models.ts (Zod enums), parser.ts (BACKLOG.md parse/serialize), indexer.ts (MD→SQLite sync), templates.ts (scaffold)
 - `src/service/` — projects.ts (CRUD + scaffold), tasks.ts (CRUD via BACKLOG.md), docs.ts (numbered docs), search.ts (FTS5 OR), overview.ts (stats), sync.ts (via dproxy), utils.ts (genId)
 - `src/server/` — Fastify app with routes: projects, tasks, docs, search, overview, sync, keys, health, permissions
-- `src/mcp/` — 16 MCP tools + 1 resource (dwork://projects), all delegating to service layer
+- `src/mcp/` — 21 MCP tools + 1 resource (dwork://projects), all delegating to service layer. Includes 5 graph tools (graph_search, graph_stats, graph_trace, graph_impact, graph_context).
 - `src/dashboard/` — Single-file React 18 app (CDN, no build step), served on port+1. Overview (default, global kanban), project detail (kanban/tasks/docs tabs), task detail modal with MD editor, file tree docs view, mobile responsive, Light/Dark themes
 - `src/cli/` — init wizard, start (server + dashboard), status, sync, configure, keys
 - Data stored in `~/.dwork/` (config.json, dwork.db, projects/)

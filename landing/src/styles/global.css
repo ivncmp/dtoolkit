@@ -27,6 +27,7 @@
     @apply font-sans;
     background: var(--bg);
     color: var(--text);
+    overflow-x: hidden;
   }
 
   ::selection {
@@ -57,11 +58,105 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: radial-gradient(
-      ellipse 90% 70% at 50% -10%,
-      oklch(0.42 0.15 252 / 0.18) 0%,
-      var(--bg) 60%
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, oklch(0.42 0.18 252 / 0.22) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 20% 50%, oklch(0.50 0.12 280 / 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 80% 50%, oklch(0.55 0.10 40 / 0.06) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .hero-bg::before {
+    content: '';
+    position: absolute;
+    width: 150%;
+    height: 150%;
+    top: -30%;
+    left: -25%;
+    background:
+      radial-gradient(circle 600px at 30% 20%, oklch(0.58 0.18 270 / 0.12), transparent),
+      radial-gradient(circle 500px at 70% 60%, oklch(0.60 0.14 40 / 0.08), transparent),
+      radial-gradient(circle 400px at 50% 80%, oklch(0.50 0.16 200 / 0.06), transparent);
+    animation: hero-drift 20s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+
+  @keyframes hero-drift {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(3%, -2%) scale(1.02); }
+    100% { transform: translate(-2%, 3%) scale(0.98); }
+  }
+
+  .pattern-dots {
+    position: relative;
+  }
+  .pattern-dots::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .pattern-diagonal {
+    position: relative;
+  }
+  .pattern-diagonal::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      var(--border-subtle),
+      var(--border-subtle) 1px,
+      transparent 1px,
+      transparent 20px
     );
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .pattern-cross {
+    position: relative;
+  }
+  .pattern-cross::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle, var(--border) 1.5px, transparent 1.5px),
+      linear-gradient(var(--border-subtle) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  .pattern-hexgrid {
+    position: relative;
+  }
+  .pattern-hexgrid::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(30deg, var(--border-subtle) 12%, transparent 12.5%, transparent 87%, var(--border-subtle) 87.5%),
+      linear-gradient(150deg, var(--border-subtle) 12%, transparent 12.5%, transparent 87%, var(--border-subtle) 87.5%),
+      linear-gradient(30deg, var(--border-subtle) 12%, transparent 12.5%, transparent 87%, var(--border-subtle) 87.5%),
+      linear-gradient(150deg, var(--border-subtle) 12%, transparent 12.5%, transparent 87%, var(--border-subtle) 87.5%),
+      linear-gradient(60deg, var(--border) 25%, transparent 25.5%, transparent 75%, var(--border) 75%),
+      linear-gradient(60deg, var(--border) 25%, transparent 25.5%, transparent 75%, var(--border) 75%);
+    background-size: 40px 70px;
+    background-position: 0 0, 0 0, 20px 35px, 20px 35px, 0 0, 20px 35px;
+    opacity: 0.25;
     pointer-events: none;
   }
 
@@ -70,7 +165,17 @@
   }
 
   .code-block {
-    @apply bg-gray-950 text-gray-100 rounded-xl p-5 font-mono text-sm leading-relaxed overflow-x-auto;
+    @apply bg-gray-950 text-gray-100 rounded-xl p-5 font-mono text-sm leading-relaxed;
+    overflow-x: hidden;
+    word-break: break-all;
+    overflow-wrap: break-word;
+  }
+
+  @media (min-width: 769px) {
+    .code-block {
+      word-break: normal;
+      overflow-x: auto;
+    }
   }
 
   .code-block .keyword { @apply text-purple-400; }
@@ -113,4 +218,20 @@
   .reveal-stagger.visible > .reveal-item:nth-child(4) { transition-delay: 240ms; }
   .reveal-stagger.visible > .reveal-item:nth-child(5) { transition-delay: 320ms; }
   .reveal-stagger.visible > .reveal-item:nth-child(6) { transition-delay: 400ms; }
+
+  @media (max-width: 768px) {
+    .pattern-bg::before,
+    .pattern-dots::before,
+    .pattern-diagonal::before,
+    .pattern-cross::before {
+      opacity: 0.2;
+    }
+    .hero-bg::before {
+      opacity: 0.5;
+    }
+    .code-block {
+      font-size: 11px;
+      padding: 14px;
+    }
+  }
 }

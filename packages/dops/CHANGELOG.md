@@ -1,5 +1,11 @@
 # @dtoolkit/dops
 
+## 0.1.1
+
+### Patch Changes
+
+- fed8957: fix(dops): create ~/.dops directory before saving ingest state
+
 ## 0.1.0
 
 ### Minor Changes

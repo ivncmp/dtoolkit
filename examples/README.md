@@ -3,15 +3,16 @@
 </p>
 
 <h1 align="center">@dtoolkit/examples</h1>
-<p align="center">Usage examples for the <code>@dtoolkit/sdk</code> package — typed HTTP clients for <strong>dbrain</strong>, <strong>dproxy</strong>, and <strong>dwork</strong></p>
+<p align="center">Usage examples for <strong>dbrain</strong>, <strong>dproxy</strong>, <strong>dwork</strong>, and <strong>dops</strong></p>
 
 ## What's covered
 
-These examples demonstrate the three SDK clients:
+These examples demonstrate the SDK clients and REST APIs:
 
 - **`DBrainClient`** — persistent memory server: entities, facts, search, conversations, federation
 - **`DProxyClient`** — universal model proxy: ask (batch & streaming), file attachments, history, memory
 - **`DWorkClient`** — AI-native project manager: projects, tasks, docs, search, overview
+- **dops REST API** — agent observability: sessions, token usage, tool calls, errors, analytics
 
 > Other dtoolkit packages (`dcontext`, `dproxy` CLI, adapters) are CLI tools without a programmatic SDK — they're not covered here.
 
@@ -29,6 +30,7 @@ That's it. `npm start` initializes temporary servers, runs the full demo, and cl
 npm run start:dbrain       # run only dbrain examples
 npm run start:dproxy       # run only dproxy examples
 npm run start:dwork        # run only dwork examples
+npm run start:dops         # run only dops examples
 ```
 
 ### Against existing servers
@@ -41,6 +43,7 @@ npm run demo               # all clients
 npm run dbrain             # dbrain client only
 npm run dproxy             # dproxy client only
 npm run dwork              # dwork client only
+npm run dops               # dops REST API only
 ```
 
 ## Examples
@@ -79,9 +82,21 @@ Covers `DWorkClient` from `@dtoolkit/sdk`:
 - Search — FTS5 query across projects, tasks, and docs
 - Overview — global stats and what-to-do-next
 
+### dops ([src/dops.ts](src/dops.ts))
+
+Uses `fetch` against the dops REST API directly (no SDK client yet):
+
+- Health check — server status, session/event/tool counts
+- Session lifecycle — create session, ingest data, mark completed
+- Token usage — record input/output/cache tokens per model
+- Tool calls — track tool invocations with success/failure and duration
+- Event ingestion — individual events and batch ingestion
+- Error reporting — record errors linked to sessions
+- Analytics queries — sessions list, session detail, tool/model/source stats, timeseries
+
 ### Combined ([src/demo.ts](src/demo.ts))
 
-Quick end-to-end demo hitting both clients. Good for smoke-testing a full dtoolkit setup.
+Quick end-to-end demo hitting all SDK clients. Good for smoke-testing a full dtoolkit setup.
 
 ### Setup ([src/setup.ts](src/setup.ts))
 
@@ -105,6 +120,8 @@ When running against existing servers, examples read from `.env`:
 | `DPROXY_TOKEN` | *(empty)* | dproxy Bearer token (optional) |
 | `DWORK_URL` | `http://localhost:7881` | dwork server URL |
 | `DWORK_TOKEN` | `changeme` | dwork Bearer token |
+| `DOPS_URL` | `http://localhost:7883` | dops server URL |
+| `DOPS_TOKEN` | `changeme` | dops Bearer token |
 
 When using `npm start`, configuration is automatic — a temporary brain with a test token is created and cleaned up after the run.
 

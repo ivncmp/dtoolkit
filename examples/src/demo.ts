@@ -1,8 +1,8 @@
 /**
- * @dtoolkit/sdk — Full demo
+ * @dtoolkit — Full demo
  *
- * Runs both dbrain and dproxy examples end-to-end.
- * Use the individual scripts (dbrain.ts, dproxy.ts) to run them separately.
+ * Runs dbrain, dproxy, dwork, and dops examples end-to-end.
+ * Use the individual scripts to run them separately.
  *
  * Usage:
  *   cp .env.example .env   # edit with your values
@@ -233,6 +233,81 @@ try {
   await test("Cleanup project", async () => {
     await dwork.deleteProject(dworkSlug);
     console.log(`        Deleted: ${dworkSlug}`);
+  });
+
+  // ── dops ──────────────────────────────────────────────────────
+
+  section("dops");
+
+  const DOPS_URL = process.env.DOPS_URL ?? "http://localhost:7883";
+  const DOPS_TOKEN = process.env.DOPS_TOKEN ?? "changeme";
+  const dopsHeaders: Record<string, string> = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${DOPS_TOKEN}`,
+  };
+
+  async function dopsApi<T>(method: string, path: string, body?: unknown): Promise<T> {
+    const res = await fetch(`${DOPS_URL}${path}`, {
+      method,
+      headers: dopsHeaders,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status} on ${method} ${path}`);
+    return res.json() as Promise<T>;
+  }
+
+  await test("Health check", async () => {
+    const h = await dopsApi<{ version: string; stats: { sessions: number } }>("GET", "/health");
+    console.log(`        v${h.version} — ${h.stats.sessions} sessions`);
+  });
+
+  let dopsSessionId = "";
+
+  await test("Create session + ingest data", async () => {
+    const { id } = await dopsApi<{ id: string }>("POST", "/sessions", {
+      source: "demo",
+      model: "claude-sonnet-4-6",
+    });
+    dopsSessionId = id;
+    console.log(`        Session: ${id}`);
+
+    await dopsApi("POST", "/token-usage", {
+      session_id: id,
+      model: "claude-sonnet-4-6",
+      input_tokens: 1000,
+      output_tokens: 400,
+      cache_read: 500,
+    });
+
+    await dopsApi("POST", "/tool-calls", {
+      session_id: id,
+      tool_name: "Read",
+      success: true,
+      duration_ms: 15,
+    });
+
+    await dopsApi("PATCH", `/sessions/${id}`, { status: "completed" });
+    console.log(`        Ingested tokens + tool call, session completed`);
+  });
+
+  await test("Query stats", async () => {
+    const tools = await dopsApi<Array<{ tool_name: string; total: number }>>("GET", "/stats/tools");
+    console.log(`        ${tools.length} tool(s) tracked`);
+    const models = await dopsApi<Array<{ model: string; input_tokens: number }>>(
+      "GET",
+      "/stats/models",
+    );
+    console.log(`        ${models.length} model(s) tracked`);
+  });
+
+  await test("Session detail", async () => {
+    const d = await dopsApi<{
+      token_usage: unknown[];
+      tool_calls: unknown[];
+    }>("GET", `/sessions/${dopsSessionId}`);
+    console.log(
+      `        ${d.token_usage.length} token record(s), ${d.tool_calls.length} tool call(s)`,
+    );
   });
 
   // ── summary ────────────────────────────────────────────────────

@@ -27,15 +27,19 @@ const ROOT = resolve(EXAMPLES_DIR, "..");
 const DBRAIN_BIN = resolve(ROOT, "packages/dbrain/dist/cli/index.js");
 const DPROXY_BIN = resolve(ROOT, "packages/dproxy/dist/index.js");
 const DWORK_BIN = resolve(ROOT, "packages/dwork/dist/cli/index.js");
+const DOPS_BIN = resolve(ROOT, "packages/dops/dist/cli/index.js");
 
 const DBRAIN_PORT = 7878;
 const DPROXY_PORT = 7880;
 const DWORK_PORT = 7881;
+const DOPS_PORT = 7883;
 const DBRAIN_TOKEN = "test-token";
 const DWORK_TOKEN = "test-token";
+const DOPS_TOKEN = "test-token";
 const DBRAIN_URL = `http://localhost:${DBRAIN_PORT}`;
 const DPROXY_URL = `http://localhost:${DPROXY_PORT}`;
 const DWORK_URL = `http://localhost:${DWORK_PORT}`;
+const DOPS_URL = `http://localhost:${DOPS_PORT}`;
 
 const children: ChildProcess[] = [];
 let tempDir: string | undefined;
@@ -65,7 +69,8 @@ function ensureBuilt(): void {
   if (
     !existsSync(DBRAIN_BIN) ||
     !existsSync(DPROXY_BIN) ||
-    !existsSync(DWORK_BIN)
+    !existsSync(DWORK_BIN) ||
+    !existsSync(DOPS_BIN)
   ) {
     console.log("Building packages...\n");
     execSync("pnpm build", { cwd: ROOT, stdio: "inherit" });
@@ -154,6 +159,8 @@ async function runExample(script: string): Promise<void> {
         DPROXY_TOKEN: "",
         DWORK_URL,
         DWORK_TOKEN,
+        DOPS_URL,
+        DOPS_TOKEN,
       },
     });
     child.on("close", (code) => {
@@ -205,6 +212,25 @@ async function main(): Promise<void> {
   startProcess("dwork", DWORK_BIN, ["start", dworkDir]);
   await waitForHealth("dwork", DWORK_URL);
   console.log("  dwork ready\n");
+
+  console.log("Initializing dops...");
+  const dopsDir = mkdtempSync(join(tmpdir(), "dtoolkit-dops-"));
+  execSync(`node ${DOPS_BIN} init --non-interactive ${dopsDir}`, {
+    cwd: ROOT,
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      DOPS_PORT: String(DOPS_PORT),
+      DOPS_HOST: "127.0.0.1",
+      DOPS_TOKEN,
+    },
+  });
+  console.log(`  dops data at ${dopsDir}\n`);
+
+  console.log("Starting dops...");
+  startProcess("dops", DOPS_BIN, ["start", dopsDir]);
+  await waitForHealth("dops", DOPS_URL);
+  console.log("  dops ready\n");
 
   console.log(`--- Running ${script} ---\n`);
 

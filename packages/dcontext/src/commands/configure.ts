@@ -14,17 +14,15 @@ import {
 } from './helpers.js';
 
 export function createConfigureCommand(): Command {
-  return new Command('config')
-    .description('Modify dcontext configuration')
-    .action(async () => {
-      try {
-        await runConfigure();
-      } catch (err) {
-        if ((err as Error).message?.includes('cancelled')) process.exit(0);
-        console.error(pc.red((err as Error).message));
-        process.exit(1);
-      }
-    });
+  return new Command('config').description('Modify dcontext configuration').action(async () => {
+    try {
+      await runConfigure();
+    } catch (err) {
+      if ((err as Error).message?.includes('cancelled')) process.exit(0);
+      console.error(pc.red((err as Error).message));
+      process.exit(1);
+    }
+  });
 }
 
 async function runConfigure() {

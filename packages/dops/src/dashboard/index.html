@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>dops — Agent Observability</title>
+  <link rel="icon" type="image/png" href="/logo-dops.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:oklch(0.965 0.008 248);--sidebar-bg:oklch(0.99 0.003 250);--surface:oklch(1 0 0);--surface-2:oklch(0.95 0.01 248);--border:oklch(0.87 0.018 248);--border-subtle:oklch(0.92 0.01 248);--text:oklch(0.20 0.06 252);--text-2:oklch(0.42 0.05 250);--text-3:oklch(0.60 0.04 248);--accent:oklch(0.50 0.22 252);--accent-light:oklch(0.94 0.06 252);--green:oklch(0.55 0.18 148);--green-bg:oklch(0.92 0.06 148);--yellow:oklch(0.60 0.18 80);--yellow-bg:oklch(0.93 0.06 80);--red:oklch(0.55 0.18 25);--red-bg:oklch(0.93 0.06 25);--blue:oklch(0.50 0.18 252);--blue-bg:oklch(0.92 0.06 252);--orange:oklch(0.58 0.16 55);--orange-bg:oklch(0.93 0.06 55);--font:'DM Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;--sb:220px;--r:8px}
+    html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+    .shell{display:flex;min-height:100vh}
+    .sidebar{width:var(--sb);flex-shrink:0;position:fixed;top:0;left:0;bottom:0;background:var(--sidebar-bg);border-right:1px solid var(--border-subtle);display:flex;flex-direction:column;overflow:hidden;z-index:50}
+    .sb-logo{padding:24px 20px 8px;display:flex;flex-direction:column;align-items:center;gap:8px}
+    .sb-logo img{width:100px;height:auto;display:block}
+    .sb-logo-info{display:flex;flex-direction:column;align-items:center;gap:4px}
+    .sb-logo-text{font-size:18px;font-weight:700;letter-spacing:-.03em;color:var(--text)}
+    .sb-version{font-size:10px;font-family:var(--mono);font-weight:500;color:var(--text-3);background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:4px;padding:2px 7px;display:inline-block}
+    .sb-nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:2px}
+    .sb-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r);cursor:pointer;border:none;background:none;font-family:var(--font);font-size:13.5px;font-weight:500;color:var(--text-2);width:100%;text-align:left;transition:background .12s,color .12s}
+    .sb-link:hover{background:var(--surface-2);color:var(--text)}.sb-link.active{background:var(--accent-light);color:var(--accent);font-weight:600}
+    .sb-link svg{flex-shrink:0;opacity:.7}.sb-link.active svg{opacity:1}
+    .sb-divider{height:1px;background:var(--border-subtle);margin:10px 12px}
+    .sb-footer{padding:16px;display:flex;flex-direction:column;gap:10px}
+    .palette-toggle{display:flex;align-items:center;justify-content:space-between;background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:var(--r);padding:8px 12px}
+    .palette-toggle-label{font-size:12px;font-weight:500;color:var(--text-2)}
+    .palette-toggle-switch{display:flex;gap:2px;background:var(--bg);border:1px solid var(--border-subtle);border-radius:6px;padding:2px}
+    .palette-toggle-opt{padding:3px 9px;border-radius:4px;font-size:11px;font-weight:600;border:none;background:none;font-family:var(--font);cursor:pointer;color:var(--text-3);transition:all .12s}
+    .palette-toggle-opt.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px oklch(0 0 0/.1)}
+    .sb-user{display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:8px}
+    .sb-user-info{flex:1;min-width:0}.sb-user-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+    .sb-user-role{font-size:10px;color:var(--text-3);font-family:var(--mono)}
+    .sb-logout{padding:3px 8px;border:1px solid var(--border);border-radius:5px;background:none;color:var(--text-3);font-size:10px;cursor:pointer;flex-shrink:0;transition:all .15s}
+    .sb-logout:hover{border-color:#ef4444;color:#ef4444;background:oklch(0.95 0.05 25)}
+    .main{margin-left:var(--sb);flex:1;min-width:0;overflow-x:hidden}
+    .topbar{position:sticky;top:0;z-index:40;background:oklch(from var(--bg) l c h / .92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;padding:0 32px;height:52px}
+    .topbar-title{font-size:14px;font-weight:600;color:var(--text);flex:none}
+    .topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+    .topbar-right select,.filter-select{padding:5px 10px;border:1px solid var(--border);border-radius:var(--r);font-family:var(--font);font-size:12px;background:var(--surface);color:var(--text)}
+    .page{padding:28px 32px 80px}
+    .page-title{font-size:24px;font-weight:700;letter-spacing:-.03em;margin-bottom:20px}
+    .login-bg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse 90% 70% at 50% -10%,oklch(.42 .15 252/.18) 0%,var(--bg) 60%);position:relative}
+    .login-bg::before{content:'';position:absolute;inset:0;background-image:linear-gradient(var(--border-subtle) 1px,transparent 1px),linear-gradient(90deg,var(--border-subtle) 1px,transparent 1px);background-size:36px 36px;opacity:.5}
+    .login-card{position:relative;z-index:1;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 44px;width:400px;max-width:calc(100vw - 32px);text-align:center;box-shadow:0 20px 60px oklch(0 0 0/.12),0 0 0 1px oklch(from var(--accent) l c h /.08)}
+    .login-logo{width:280px;max-width:100%;height:auto;margin:0 auto 28px;display:block}
+    .login-token-label{font-size:13px;color:var(--text-2);margin-bottom:10px;text-align:left}
+    .login-input{width:100%;padding:11px 14px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:13.5px;color:var(--text);outline:none;transition:border-color .15s;margin-bottom:10px}
+    .login-input:focus{border-color:var(--accent)}.login-input.err{border-color:#e53e3e}
+    .login-hint{font-size:12px;color:var(--text-3);margin-bottom:14px}
+    .login-err{font-size:12px;color:#e53e3e;margin-bottom:14px}
+    .login-btn{width:100%;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:opacity .12s}
+    .login-btn:hover{opacity:.9}
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+    .stat-card{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r);padding:18px 16px 14px;transition:border-color .15s,box-shadow .15s}
+    .stat-card:hover{border-color:var(--border);box-shadow:0 2px 12px oklch(0 0 0/.06)}
+    .stat-card.clickable{cursor:pointer}.stat-card.clickable:hover{border-color:var(--accent)}
+    .stat-num{font-size:26px;font-weight:700;letter-spacing:-.04em;line-height:1;margin-bottom:5px;color:var(--accent);font-family:var(--mono)}
+    .stat-lbl{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3)}
+    .stat-sub{font-size:11px;color:var(--text-3);margin-top:4px;font-family:var(--mono)}
+    .chart-box{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r);padding:20px;margin-bottom:16px}
+    .chart-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;color:var(--text-3);display:flex;align-items:center;gap:8px}
+    .chart-svg{width:100%;display:block}
+    .bar{transition:opacity .15s}.bar:hover{opacity:.8}
+    .table-wrap{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{text-align:left;padding:10px 14px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);border-bottom:1px solid var(--border);background:var(--surface-2)}
+    td{padding:10px 14px;border-bottom:1px solid var(--border-subtle)}
+    tr:last-child td{border-bottom:none}tr:hover td{background:var(--surface-2)}
+    tfoot td{border-top:1px solid var(--border);font-weight:700;background:var(--surface-2)}
+    .mono{font-family:var(--mono);font-size:12px}
+    .stat-badge{display:inline-flex;align-items:center;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.04em;text-transform:uppercase;font-family:var(--mono);background:var(--surface-2);color:var(--text-2)}
+    .stat-badge.green{background:var(--green-bg);color:var(--green)}.stat-badge.red{background:var(--red-bg);color:var(--red)}.stat-badge.blue{background:var(--blue-bg);color:var(--blue)}.stat-badge.orange{background:var(--orange-bg);color:var(--orange)}
+    .rate-bar{display:inline-flex;flex:1;height:6px;border-radius:3px;overflow:hidden;background:var(--red-bg);vertical-align:middle}
+    .rate-cell{display:flex;align-items:center;gap:8px;white-space:nowrap}
+    .rate-pct{font-family:var(--mono);font-size:12px;width:40px;text-align:right;flex-shrink:0}
+    .rate-fill{height:100%;background:var(--green);border-radius:3px}
+    .section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;color:var(--text-3);display:flex;align-items:center;gap:8px}
+    .section-count{font-size:11px;font-weight:500;color:var(--text-3);font-family:var(--mono);background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:10px;padding:1px 8px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+    .filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+    .filter-bar .spacer{flex:1}
+    .pagination{display:flex;align-items:center;gap:8px;justify-content:center;padding:16px 0}
+    .pagination button{padding:6px 14px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);font-family:var(--font);font-size:12px;cursor:pointer;color:var(--text-2);transition:all .12s}
+    .pagination button:hover:not(:disabled){background:var(--accent-light);color:var(--accent);border-color:var(--accent)}
+    .pagination button:disabled{opacity:.4;cursor:default}
+    .pagination span{font-size:12px;color:var(--text-3);font-family:var(--mono)}
+    .hbar-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:12px}
+    .hbar-label{width:200px;text-align:right;font-family:var(--mono);color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+    .hbar-track{flex:1;height:18px;background:var(--surface-2);border-radius:4px;overflow:hidden;position:relative}
+    .hbar-fill{height:100%;border-radius:4px;transition:width .3s}
+    .hbar-value{width:60px;font-family:var(--mono);font-size:11px;color:var(--text-3)}
+    .donut-wrap{display:flex;align-items:center;gap:20px}
+    .donut-legend{display:flex;flex-direction:column;gap:6px}
+    .donut-legend-item{display:flex;align-items:center;gap:8px;font-size:12px}
+    .donut-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .donut-legend-label{color:var(--text-2)}.donut-legend-value{font-family:var(--mono);font-weight:600;color:var(--text);margin-left:auto}
+    .sparkline{display:inline-block;vertical-align:middle}
+    .tooltip{position:fixed;z-index:100;background:var(--text);color:var(--bg);font-size:11px;font-family:var(--mono);padding:6px 10px;border-radius:6px;pointer-events:none;white-space:pre-line;max-width:260px;box-shadow:0 4px 12px oklch(0 0 0/.2);line-height:1.5;transform:translate(-50%,-100%);margin-top:-10px}
+    .mobile-toggle{display:none;position:fixed;top:14px;left:14px;z-index:60;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px;cursor:pointer;color:var(--text)}
+    .sidebar-overlay{display:none}
+    @media(max-width:768px){.sidebar{transform:translateX(-100%);transition:transform .2s}.sidebar.open{transform:translateX(0)}.sidebar-overlay{display:block;position:fixed;inset:0;z-index:45;background:oklch(0 0 0/.3);opacity:0;pointer-events:none;transition:opacity .2s}.sidebar-overlay.open{opacity:1;pointer-events:all}.mobile-toggle{display:flex}.main{margin-left:0}.stats-row{grid-template-columns:repeat(2,1fr)}.grid-2,.grid-3{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, createContext, useContext } = React;
+
+    const TooltipCtx = createContext({ show: () => {}, hide: () => {} });
+    function TooltipProvider({ children }) {
+      const [tip, setTip] = useState(null);
+      const show = (e, text) => setTip({ x: e.clientX, y: e.clientY, text });
+      const hide = () => setTip(null);
+      return <TooltipCtx.Provider value={{ show, hide }}>
+        {children}
+        {tip && <div className="tooltip" style={{ left: tip.x, top: tip.y }}>{tip.text}</div>}
+      </TooltipCtx.Provider>;
+    }
+    const TOKEN_KEY = 'dops_token', THEME_KEY = 'dops_theme';
+    const API_BASE = `http://${window.location.hostname}:${Number(window.location.port) - 1}`;
+    const PALETTES = {
+      cloud: {'--bg':'oklch(0.965 0.008 248)','--sidebar-bg':'oklch(0.99 0.003 250)','--surface':'oklch(1 0 0)','--surface-2':'oklch(0.95 0.010 248)','--border':'oklch(0.87 0.018 248)','--border-subtle':'oklch(0.92 0.010 248)','--text':'oklch(0.20 0.06 252)','--text-2':'oklch(0.42 0.05 250)','--text-3':'oklch(0.60 0.04 248)','--accent':'oklch(0.50 0.22 252)','--accent-light':'oklch(0.94 0.06 252)'},
+      ocean: {'--bg':'oklch(0.11 0.04 254)','--sidebar-bg':'oklch(0.13 0.046 254)','--surface':'oklch(0.16 0.04 252)','--surface-2':'oklch(0.20 0.04 250)','--border':'oklch(0.26 0.05 250)','--border-subtle':'oklch(0.19 0.04 252)','--text':'oklch(0.93 0.015 245)','--text-2':'oklch(0.65 0.06 245)','--text-3':'oklch(0.47 0.05 248)','--accent':'oklch(0.68 0.20 245)','--accent-light':'oklch(0.68 0.20 245 /.15)'},
+    };
+    function applyPalette(n){const p=PALETTES[n]||PALETTES.cloud;Object.entries(p).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));document.documentElement.setAttribute('data-palette',n)}
+    function api(path){const t=localStorage.getItem(TOKEN_KEY)||'';return fetch(`${API_BASE}${path}`,{headers:{'Authorization':`Bearer ${t}`}}).then(r=>{if(!r.ok)throw new Error(`${r.status}`);return r.json()})}
+
+    function useRouter(){
+      const[hash,setHash]=useState(window.location.hash||'#/overview');
+      useEffect(()=>{const h=()=>setHash(window.location.hash||'#/overview');window.addEventListener('hashchange',h);return()=>window.removeEventListener('hashchange',h)},[]);
+      const view=(hash.replace('#/',''))||'overview';
+      const nav=(v)=>{window.location.hash=`#/${v}`};
+      return{view,nav};
+    }
+    function fmt(n){return(n||0).toLocaleString('en-US')}
+    function fmtK(n){if(!n)return'0';if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return String(n)}
+    function daysAgo(n){const d=new Date();d.setDate(d.getDate()-n);return d.toISOString()}
+    const COLORS=['var(--accent)','var(--green)','var(--orange)','var(--red)','var(--blue)','var(--yellow)'];
+    let PRICING={};
+    function calcCost(m,s){const p=PRICING[m];if(!p)return 0;return(s.input_tokens/1e6)*p.input+(s.output_tokens/1e6)*p.output+((s.cache_read||0)/1e6)*p.cache_read+((s.cache_write||0)/1e6)*p.cache_write}
+    const Icon={
+      overview:()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>,
+      sessions:()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>,
+      tools:()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>,
+      costs:()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>,
+    };
+
+    /* ── BAR CHART ─────────────────────────── */
+    function BarChart({data,xKey,yKey,color='var(--accent)',height=180,label}){
+      const{show,hide}=useContext(TooltipCtx);
+      const ref=React.useRef(null);
+      const[w,setW]=useState(600);
+      useEffect(()=>{if(ref.current){setW(ref.current.clientWidth);const ro=new ResizeObserver(e=>setW(e[0].contentRect.width));ro.observe(ref.current);return()=>ro.disconnect()}},[]);
+      if(!data||data.length===0)return<div ref={ref} style={{color:'var(--text-3)',fontSize:12,padding:20}}>No data</div>;
+      const max=Math.max(...data.map(d=>d[yKey]||0),1);
+      const padL=48,padB=32,chartW=w-padL-8,chartH=height-padB;
+      const gap=Math.max(1,Math.min(4,chartW/data.length*0.15));
+      const bw=Math.max(2,(chartW-gap*data.length)/data.length);
+      const ticks=4;
+      const xStep=Math.max(1,Math.ceil(data.length/10));
+      return<div ref={ref}><svg width={w} height={height}>
+        {Array.from({length:ticks+1}).map((_,ti)=>{const v=max/ticks*ti;const y=padB/2+chartH-(v/max)*chartH;return<g key={ti}>
+          <line x1={padL} x2={w-8} y1={y} y2={y} stroke="var(--border-subtle)" strokeWidth=".5"/>
+          <text x={padL-6} y={y+3} textAnchor="end" style={{fontSize:9,fill:'var(--text-3)',fontFamily:'var(--mono)'}}>{fmtK(Math.round(v))}</text>
+        </g>})}
+        {data.map((d,i)=>{const h=((d[yKey]||0)/max)*chartH;const x=padL+i*(bw+gap);const y=padB/2+chartH-h;const tip=`${d[xKey]}\n${fmt(d[yKey])}${label?' '+label:''}`;return<g key={i}>
+          <rect className="bar" x={x} y={y} width={bw} height={h} rx={Math.min(3,bw/2)} fill={color} onMouseMove={e=>show(e,tip)} onMouseLeave={hide}/>
+          {i%xStep===0&&<text x={x+bw/2} y={height-4} textAnchor="middle" style={{fontSize:9,fill:'var(--text-3)',fontFamily:'var(--mono)'}}>{(d[xKey]||'').slice(-5)}</text>}
+        </g>})}
+      </svg></div>;
+    }
+
+    /* ── HORIZONTAL BAR ────────────────────── */
+    function HBarChart({data,labelKey,valueKey,color='var(--accent)',max:maxOverride}){
+      const{show,hide}=useContext(TooltipCtx);
+      if(!data||data.length===0)return null;
+      const max=maxOverride||Math.max(...data.map(d=>d[valueKey]||0),1);
+      return<div>{data.map((d,i)=>{const pct=((d[valueKey]||0)/max*100).toFixed(1);return<div key={i} className="hbar-row" onMouseMove={e=>show(e,`${d[labelKey]}\n${fmt(d[valueKey])} (${pct}%)`)} onMouseLeave={hide}>
+        <div className="hbar-label">{d[labelKey]}</div>
+        <div className="hbar-track"><div className="hbar-fill" style={{width:`${pct}%`,background:COLORS[i%COLORS.length]}}></div></div>
+        <div className="hbar-value">{fmtK(d[valueKey])}</div>
+      </div>})}</div>;
+    }
+
+    /* ── DONUT ──────────────────────────────── */
+    function Donut({data,labelKey,valueKey,size=120}){
+      const{show,hide}=useContext(TooltipCtx);
+      if(!data||data.length===0)return null;
+      const total=data.reduce((s,d)=>s+(d[valueKey]||0),0);
+      if(total===0)return null;
+      const r=size/2-8,c=2*Math.PI*r;
+      let offset=0;
+      return<div className="donut-wrap">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          {data.map((d,i)=>{const pct=(d[valueKey]||0)/total;const dash=c*pct;const tip=`${d[labelKey]}\n${fmt(d[valueKey])} (${(pct*100).toFixed(1)}%)`;const el=<circle key={i} cx={size/2} cy={size/2} r={r} fill="none" stroke={COLORS[i%COLORS.length]} strokeWidth="14" strokeDasharray={`${dash} ${c-dash}`} strokeDashoffset={-offset} transform={`rotate(-90 ${size/2} ${size/2})`} style={{cursor:'pointer',transition:'stroke-dashoffset .3s'}} onMouseMove={e=>show(e,tip)} onMouseLeave={hide}/>;offset+=dash;return el})}
+          <text x={size/2} y={size/2} textAnchor="middle" dy=".35em" style={{fontSize:16,fontWeight:700,fontFamily:'var(--mono)',fill:'var(--text)'}}>{fmtK(total)}</text>
+        </svg>
+        <div className="donut-legend">
+          {data.map((d,i)=><div key={i} className="donut-legend-item"><div className="donut-legend-dot" style={{background:COLORS[i%COLORS.length]}}></div><span className="donut-legend-label">{d[labelKey]}</span><span className="donut-legend-value">{fmtK(d[valueKey])}</span></div>)}
+        </div>
+      </div>;
+    }
+
+    /* ── SPARKLINE ──────────────────────────── */
+    function Sparkline({data,valueKey,width=80,height=24,color='var(--accent)'}){
+      if(!data||data.length<2)return null;
+      const vals=data.map(d=>d[valueKey]||0);
+      const max=Math.max(...vals,1),min=Math.min(...vals);
+      const pts=vals.map((v,i)=>`${(i/(vals.length-1))*width},${height-((v-min)/(max-min||1))*(height-4)-2}`).join(' ');
+      return<svg className="sparkline" width={width} height={height}><polyline points={pts} fill="none" stroke={color} strokeWidth="1.5"/></svg>;
+    }
+
+    /* ── LOGIN ─────────────────────────────── */
+    function LoginScreen({onAuth}){
+      const[token,setToken]=useState('');const[error,setError]=useState('');
+      const handleSubmit=async(e)=>{e.preventDefault();try{localStorage.setItem(TOKEN_KEY,token);await api('/sessions?limit=1');onAuth()}catch{setError('Invalid token or server not running');localStorage.removeItem(TOKEN_KEY)}};
+      return<div className="login-bg"><form className="login-card" onSubmit={handleSubmit}>
+        <img className="login-logo" src="/logo-dops-complete.png" alt="dops"/>
+        <div className="login-token-label">Access token</div>
+        <input className={`login-input ${error?'err':''}`} type="password" placeholder="sk-dop_..." value={token} onChange={e=>{setToken(e.target.value);setError('')}} autoFocus/>
+        {error?<div className="login-err">{error}</div>:<div className="login-hint">Find your token in ~/.dops/config.json</div>}
+        <button className="login-btn" type="submit">Connect</button>
+      </form></div>;
+    }
+
+    /* ── OVERVIEW ──────────────────────────── */
+    function OverviewView({days}){
+      const[sessions,setSessions]=useState([]);const[models,setModels]=useState([]);const[sources,setSources]=useState([]);
+      const[timeseries,setTimeseries]=useState([]);const[tools,setTools]=useState([]);
+      const from=useMemo(()=>daysAgo(days),[days]);
+      useEffect(()=>{
+        api(`/sessions?from=${from}&limit=10000`).then(setSessions).catch(()=>{});
+        api(`/stats/models?from=${from}`).then(setModels).catch(()=>{});
+        api(`/stats/sources?from=${from}`).then(setSources).catch(()=>{});
+        api(`/stats/timeseries?from=${from}`).then(setTimeseries).catch(()=>{});
+        api(`/stats/tools?from=${from}`).then(setTools).catch(()=>{});
+      },[from]);
+      const totalOutput=sessions.reduce((s,r)=>s+(r.total_output||0),0);
+      const totalCacheRead=sessions.reduce((s,r)=>s+(r.total_cache_read||0),0);
+      const totalTools=sessions.reduce((s,r)=>s+(r.tool_count||0),0);
+      const totalErrors=sessions.reduce((s,r)=>s+(r.error_count||0),0);
+      const totalCost=models.reduce((s,m)=>s+calcCost(m.model,m),0);
+      const avgOutput=sessions.length?Math.round(totalOutput/sessions.length):0;
+      const successRate=tools.length?Math.round(tools.reduce((s,t)=>s+t.success,0)/Math.max(tools.reduce((s,t)=>s+t.total,0),1)*100):0;
+
+      // daily aggregation for sessions-per-day chart
+      const daily=useMemo(()=>{
+        const map={};sessions.forEach(s=>{const d=(s.started_at||'').slice(0,10);if(d){map[d]=(map[d]||0)+1}});
+        return Object.entries(map).sort().map(([d,c])=>({day:d,count:c}));
+      },[sessions]);
+
+      return<div className="page">
+        <div className="page-title">Overview</div>
+        <div className="stats-row">
+          <div className="stat-card"><div className="stat-num">{fmt(sessions.length)}</div><div className="stat-lbl">Sessions</div><div className="stat-sub"><Sparkline data={daily} valueKey="count"/></div></div>
+          <div className="stat-card"><div className="stat-num">{fmtK(totalOutput)}</div><div className="stat-lbl">Output Tokens</div><div className="stat-sub">avg {fmtK(avgOutput)}/session</div></div>
+          <div className="stat-card"><div className="stat-num">{fmtK(totalCacheRead)}</div><div className="stat-lbl">Cache Read</div></div>
+          <div className="stat-card"><div className="stat-num">{fmt(totalTools)}</div><div className="stat-lbl">Tool Calls</div><div className="stat-sub">{successRate}% success</div></div>
+          <div className="stat-card"><div className="stat-num" style={{color:totalErrors>0?'var(--red)':undefined}}>{fmt(totalErrors)}</div><div className="stat-lbl">Errors</div></div>
+          <div className="stat-card"><div className="stat-num">${totalCost.toFixed(2)}</div><div className="stat-lbl">Est. Cost</div><div className="stat-sub">${sessions.length?(totalCost/sessions.length).toFixed(2):0}/session</div></div>
+        </div>
+
+        <div className="grid-2" style={{marginBottom:16}}>
+          <div className="chart-box"><div className="chart-title">Output tokens per hour</div><BarChart data={timeseries} xKey="bucket" yKey="output_tokens" label="tokens"/></div>
+          <div className="chart-box"><div className="chart-title">Sessions per day</div><BarChart data={daily} xKey="day" yKey="count" color="var(--green)" label="sessions"/></div>
+        </div>
+
+        <div className="grid-3" style={{marginBottom:16}}>
+          <div className="chart-box">
+            <div className="chart-title">Sources <span className="section-count">{sources.length}</span></div>
+            <Donut data={sources} labelKey="source" valueKey="sessions"/>
+          </div>
+          <div className="chart-box">
+            <div className="chart-title">Models <span className="section-count">{models.length}</span></div>
+            <Donut data={models.filter(m=>m.output_tokens>0)} labelKey="model" valueKey="output_tokens"/>
+          </div>
+          <div className="chart-box">
+            <div className="chart-title">Cost by model</div>
+            <Donut data={models.filter(m=>calcCost(m.model,m)>0).map(m=>({model:m.model,cost:Math.round(calcCost(m.model,m)*100)/100}))} labelKey="model" valueKey="cost"/>
+          </div>
+        </div>
+
+        <div className="grid-2">
+          <div className="chart-box">
+            <div className="chart-title">Top tools <span className="section-count">{tools.length}</span></div>
+            <HBarChart data={tools.slice(0,10)} labelKey="tool_name" valueKey="total"/>
+          </div>
+          <div className="chart-box" style={{padding:0,overflow:'hidden'}}>
+            <div className="chart-title" style={{padding:'16px 18px 0'}}>Models <span className="section-count">{models.length}</span></div>
+            <table style={{fontSize:13}}>
+              <thead><tr><th>Model</th><th style={{textAlign:'right'}}>Sessions</th><th style={{textAlign:'right'}}>Output</th><th style={{textAlign:'right'}}>Cost</th></tr></thead>
+              <tbody>{models.map(m=><tr key={m.model}><td className="mono">{m.model}</td><td style={{textAlign:'right'}}>{fmt(m.sessions)}</td><td style={{textAlign:'right'}} className="mono">{fmtK(m.output_tokens)}</td><td style={{textAlign:'right'}} className="mono">{calcCost(m.model,m)>0?'$'+calcCost(m.model,m).toFixed(2):<span style={{color:'var(--text-3)'}}>—</span>}</td></tr>)}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>;
+    }
+
+    /* ── SESSIONS ──────────────────────────── */
+    function SessionsView({days}){
+      const[allSessions,setAllSessions]=useState([]);const[source,setSource]=useState('');const[model,setModel]=useState('');const[status,setStatus]=useState('');const[search,setSearch]=useState('');
+      const[pg,setPg]=useState(0);const PER=50;
+      const from=useMemo(()=>daysAgo(days),[days]);
+      useEffect(()=>{
+        api(`/sessions?from=${from}&limit=10000`).then(d=>{setAllSessions(d);setPg(0)}).catch(()=>{});
+      },[from]);
+      const sessions=useMemo(()=>{
+        let f=allSessions;
+        if(source)f=f.filter(s=>(s.source||'').startsWith(source));
+        if(model)f=f.filter(s=>s.model===model);
+        if(status)f=f.filter(s=>s.status===status);
+        if(search)f=f.filter(s=>(s.id||'').toLowerCase().includes(search.toLowerCase())||(s.model||'').toLowerCase().includes(search.toLowerCase()));
+        return f;
+      },[allSessions,source,model,status,search]);
+      const totalOutput=sessions.reduce((s,r)=>s+(r.total_output||0),0);
+      const totalTools=sessions.reduce((s,r)=>s+(r.tool_count||0),0);
+      const totalErrors=sessions.reduce((s,r)=>s+(r.error_count||0),0);
+      const models=[...new Set(allSessions.map(s=>s.model).filter(Boolean))];
+      const sourceList=[...new Set(allSessions.map(s=>(s.source||'').split('@')[0]).filter(Boolean))];
+      const machines=[...new Set(allSessions.map(s=>{const p=(s.source||'').split('@');return p[1]||''}).filter(Boolean))];
+      const paged=sessions.slice(pg*PER,(pg+1)*PER);const pages=Math.ceil(sessions.length/PER);
+
+      return<div className="page">
+        <div className="page-title">Sessions</div>
+        <div className="stats-row" style={{gridTemplateColumns:'repeat(4,1fr)'}}>
+          <div className="stat-card"><div className="stat-num">{fmt(sessions.length)}</div><div className="stat-lbl">Total Sessions</div></div>
+          <div className="stat-card"><div className="stat-num">{fmtK(totalOutput)}</div><div className="stat-lbl">Output Tokens</div></div>
+          <div className="stat-card"><div className="stat-num">{fmt(totalTools)}</div><div className="stat-lbl">Tool Calls</div></div>
+          <div className="stat-card"><div className="stat-num" style={{color:totalErrors>0?'var(--red)':undefined}}>{fmt(totalErrors)}</div><div className="stat-lbl">Errors</div></div>
+        </div>
+        <div className="filter-bar">
+          <select className="filter-select" value={source} onChange={e=>setSource(e.target.value)}><option value="">All sources</option>{sourceList.map(s=><option key={s} value={s}>{s}</option>)}</select>
+          <select className="filter-select" value={model} onChange={e=>setModel(e.target.value)}><option value="">All models</option>{models.map(m=><option key={m} value={m}>{m}</option>)}</select>
+          <select className="filter-select" value={status} onChange={e=>setStatus(e.target.value)}><option value="">All status</option><option value="active">Active</option><option value="completed">Completed</option></select>
+          <input className="filter-select" placeholder="Search..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:180}}/>
+          <div className="spacer"/>
+          <span style={{fontSize:12,color:'var(--text-3)',fontFamily:'var(--mono)'}}>{fmt(sessions.length)} results</span>
+        </div>
+        <div className="table-wrap"><table>
+          <thead><tr><th>Session</th><th>Source</th><th>Model</th><th style={{textAlign:'right'}}>Output</th><th style={{textAlign:'right'}}>Tools</th><th style={{textAlign:'right'}}>Errors</th><th>Started</th></tr></thead>
+          <tbody>{paged.map(s=><tr key={s.id}>
+            <td className="mono" style={{fontSize:11,maxWidth:200,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.id}</td>
+            <td><span className="stat-badge blue">{(s.source||'').split('@')[0]}</span></td>
+            <td className="mono" style={{fontSize:11}}>{s.model||'—'}</td>
+            <td style={{textAlign:'right'}} className="mono">{fmtK(s.total_output)}</td>
+            <td style={{textAlign:'right'}}>{s.tool_count}</td>
+            <td style={{textAlign:'right'}}>{s.error_count>0?<span className="stat-badge red">{s.error_count}</span>:'—'}</td>
+            <td style={{fontSize:12,color:'var(--text-3)'}}>{(s.started_at||'').slice(0,16).replace('T',' ')}</td>
+          </tr>)}</tbody>
+        </table></div>
+        {pages>1&&<div className="pagination">
+          <button disabled={pg===0} onClick={()=>setPg(pg-1)}>Prev</button>
+          <span>{pg+1} / {pages}</span>
+          <button disabled={pg>=pages-1} onClick={()=>setPg(pg+1)}>Next</button>
+        </div>}
+      </div>;
+    }
+
+    /* ── TOOLS ─────────────────────────────── */
+    function ToolsView({days}){
+      const[allTools,setAllTools]=useState([]);const[source,setSource]=useState('');const[search,setSearch]=useState('');const[showFailed,setShowFailed]=useState(false);
+      const from=useMemo(()=>daysAgo(days),[days]);
+      useEffect(()=>{api(`/stats/tools?from=${from}${source?'&source='+source:''}`).then(setAllTools).catch(()=>{});},[from,source]);
+      const tools=useMemo(()=>{
+        let f=allTools;
+        if(search)f=f.filter(t=>t.tool_name.toLowerCase().includes(search.toLowerCase()));
+        if(showFailed)f=f.filter(t=>t.failed>0);
+        return f;
+      },[allTools,search,showFailed]);
+      const totalCalls=tools.reduce((s,t)=>s+t.total,0);
+      const totalSuccess=tools.reduce((s,t)=>s+t.success,0);
+      const totalFailed=tools.reduce((s,t)=>s+t.failed,0);
+      const globalRate=totalCalls?Math.round(totalSuccess/totalCalls*100):0;
+
+      return<div className="page">
+        <div className="page-title">Tool Analytics</div>
+        <div className="stats-row" style={{gridTemplateColumns:'repeat(4,1fr)'}}>
+          <div className="stat-card"><div className="stat-num">{fmt(tools.length)}</div><div className="stat-lbl">Unique Tools</div></div>
+          <div className="stat-card"><div className="stat-num">{fmt(totalCalls)}</div><div className="stat-lbl">Total Calls</div></div>
+          <div className="stat-card"><div className="stat-num" style={{color:'var(--green)'}}>{globalRate}%</div><div className="stat-lbl">Success Rate</div></div>
+          <div className="stat-card clickable" onClick={()=>setShowFailed(!showFailed)} style={{borderColor:showFailed?'var(--red)':undefined}}><div className="stat-num" style={{color:totalFailed>0?'var(--red)':undefined}}>{fmt(totalFailed)}</div><div className="stat-lbl">{showFailed?'Showing failed only':'Failed'}</div></div>
+        </div>
+        <div className="filter-bar">
+          <select className="filter-select" value={source} onChange={e=>setSource(e.target.value)}><option value="">All sources</option>{['claude','codex','gemini','opencode'].map(s=><option key={s} value={s}>{s}</option>)}</select>
+          <input className="filter-select" placeholder="Search tool..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:180}}/>
+          <div className="spacer"/>
+          <span style={{fontSize:12,color:'var(--text-3)',fontFamily:'var(--mono)'}}>{fmt(tools.length)} tools</span>
+        </div>
+        <div className="grid-2" style={{marginBottom:16}}>
+          <div className="chart-box"><div className="chart-title">Top 10 by calls</div><HBarChart data={tools.slice(0,10)} labelKey="tool_name" valueKey="total"/></div>
+          <div className="chart-box"><div className="chart-title">Top 10 by failures</div><HBarChart data={[...tools].sort((a,b)=>b.failed-a.failed).filter(t=>t.failed>0).slice(0,10)} labelKey="tool_name" valueKey="failed" color="var(--red)"/></div>
+        </div>
+        <div className="table-wrap"><table>
+          <thead><tr><th>Tool</th><th style={{textAlign:'right'}}>Total</th><th style={{textAlign:'right'}}>Success</th><th style={{textAlign:'right'}}>Failed</th><th style={{width:280}}>Rate</th></tr></thead>
+          <tbody>{tools.map(t=>{const rate=t.total>0?Math.round((t.success/t.total)*100):0;return<tr key={t.tool_name}>
+            <td className="mono">{t.tool_name}</td>
+            <td style={{textAlign:'right'}} className="mono">{fmt(t.total)}</td>
+            <td style={{textAlign:'right'}}><span style={{color:'var(--green)'}}>{fmt(t.success)}</span></td>
+            <td style={{textAlign:'right'}}>{t.failed>0?<span style={{color:'var(--red)'}}>{fmt(t.failed)}</span>:<span style={{color:'var(--text-3)'}}>—</span>}</td>
+            <td><div className="rate-cell"><span className="rate-bar"><span className="rate-fill" style={{width:rate+'%'}}></span></span><span className="rate-pct">{rate}%</span></div></td>
+          </tr>})}</tbody>
+        </table></div>
+      </div>;
+    }
+
+    /* ── COSTS ─────────────────────────────── */
+    function CostsView({days}){
+      const[models,setModels]=useState([]);const[timeseries,setTimeseries]=useState([]);const[sources,setSources]=useState([]);
+      const from=useMemo(()=>daysAgo(days),[days]);
+      useEffect(()=>{
+        api(`/stats/models?from=${from}`).then(setModels).catch(()=>{});
+        api(`/stats/timeseries?from=${from}`).then(setTimeseries).catch(()=>{});
+        api(`/stats/sources?from=${from}`).then(setSources).catch(()=>{});
+      },[from]);
+      const totalCost=models.reduce((s,m)=>s+calcCost(m.model,m),0);
+      const totalOutput=models.reduce((s,m)=>s+m.output_tokens,0);
+      const totalInput=models.reduce((s,m)=>s+m.input_tokens,0);
+      const totalCacheRead=models.reduce((s,m)=>s+(m.cache_read||0),0);
+      const totalCacheWrite=models.reduce((s,m)=>s+(m.cache_write||0),0);
+      const totalSessions=models.reduce((s,m)=>s+m.sessions,0);
+      const costPerSession=totalSessions?totalCost/totalSessions:0;
+
+      // daily cost approximation from timeseries
+      const dailyCost=useMemo(()=>{
+        const map={};timeseries.forEach(t=>{const d=(t.bucket||'').slice(0,10);if(!d)return;if(!map[d])map[d]={day:d,output:0,cache_read:0};map[d].output+=(t.output_tokens||0);map[d].cache_read+=(t.cache_read||0)});
+        return Object.values(map).map(d=>({...d,cost:((d.output/1e6)*75+(d.cache_read/1e6)*1.5)}));
+      },[timeseries]);
+
+      const modelCosts=models.map(m=>({model:m.model,cost:Math.round(calcCost(m.model,m)*100)/100})).filter(m=>m.cost>0).sort((a,b)=>b.cost-a.cost);
+
+      return<div className="page">
+        <div className="page-title">Cost Estimation</div>
+        <div className="stats-row" style={{gridTemplateColumns:'repeat(5,1fr)'}}>
+          <div className="stat-card"><div className="stat-num">${totalCost.toFixed(2)}</div><div className="stat-lbl">Total Cost</div></div>
+          <div className="stat-card"><div className="stat-num">${costPerSession.toFixed(2)}</div><div className="stat-lbl">Cost / Session</div></div>
+          <div className="stat-card"><div className="stat-num">{fmtK(totalOutput)}</div><div className="stat-lbl">Output Tokens</div></div>
+          <div className="stat-card"><div className="stat-num">{fmtK(totalCacheRead)}</div><div className="stat-lbl">Cache Read</div></div>
+          <div className="stat-card"><div className="stat-num">{fmt(totalSessions)}</div><div className="stat-lbl">Sessions</div></div>
+        </div>
+        <div className="grid-2" style={{marginBottom:16}}>
+          <div className="chart-box"><div className="chart-title">Estimated cost per day</div><BarChart data={dailyCost} xKey="day" yKey="cost" color="var(--orange)" label="USD" height={140}/></div>
+          <div className="chart-box"><div className="chart-title">Output tokens per day</div><BarChart data={dailyCost} xKey="day" yKey="output" color="var(--accent)" label="tokens" height={140}/></div>
+        </div>
+        <div className="grid-2" style={{marginBottom:16}}>
+          <div className="chart-box">
+            <div className="chart-title">Cost by model</div>
+            <Donut data={modelCosts} labelKey="model" valueKey="cost"/>
+          </div>
+          <div className="chart-box">
+            <div className="chart-title">Token breakdown</div>
+            <Donut data={[{label:'Output',value:totalOutput},{label:'Cache Read',value:totalCacheRead},{label:'Cache Write',value:totalCacheWrite},{label:'Input',value:totalInput}].filter(d=>d.value>0)} labelKey="label" valueKey="value"/>
+          </div>
+        </div>
+        <div className="table-wrap"><table>
+          <thead><tr><th>Model</th><th style={{textAlign:'right'}}>Sessions</th><th style={{textAlign:'right'}}>Input</th><th style={{textAlign:'right'}}>Output</th><th style={{textAlign:'right'}}>Cache Read</th><th style={{textAlign:'right'}}>Cache Write</th><th style={{textAlign:'right'}}>Est. Cost</th></tr></thead>
+          <tbody>{models.map(m=>{const cost=calcCost(m.model,m);return<tr key={m.model}>
+            <td className="mono">{m.model}</td>
+            <td style={{textAlign:'right'}}>{fmt(m.sessions)}</td>
+            <td style={{textAlign:'right'}} className="mono">{fmtK(m.input_tokens)}</td>
+            <td style={{textAlign:'right'}} className="mono">{fmtK(m.output_tokens)}</td>
+            <td style={{textAlign:'right'}} className="mono">{fmtK(m.cache_read)}</td>
+            <td style={{textAlign:'right'}} className="mono">{fmtK(m.cache_write)}</td>
+            <td style={{textAlign:'right'}} className="mono">{cost>0?'$'+cost.toFixed(2):<span style={{color:'var(--text-3)'}}>—</span>}</td>
+          </tr>})}</tbody>
+          <tfoot><tr>
+            <td>Total</td><td style={{textAlign:'right'}}>{fmt(totalSessions)}</td>
+            <td style={{textAlign:'right'}} className="mono">{fmtK(totalInput)}</td><td style={{textAlign:'right'}} className="mono">{fmtK(totalOutput)}</td>
+            <td style={{textAlign:'right'}} className="mono">{fmtK(totalCacheRead)}</td><td style={{textAlign:'right'}} className="mono">{fmtK(totalCacheWrite)}</td>
+            <td style={{textAlign:'right'}} className="mono">${totalCost.toFixed(2)}</td>
+          </tr></tfoot>
+        </table></div>
+        <div style={{fontSize:12,color:'var(--text-3)'}}>Pricing: per 1M tokens. Models without pricing data show "—". Daily cost is approximated using Opus pricing.</div>
+      </div>;
+    }
+
+    /* ── SIDEBAR ────────────────────────────── */
+    function Sidebar({view,nav,onLogout,sidebarOpen,version}){
+      const[palette,setPalette]=useState(localStorage.getItem(THEME_KEY)||'cloud');
+      useEffect(()=>{applyPalette(palette)},[palette]);
+      const togglePalette=(n)=>{setPalette(n);localStorage.setItem(THEME_KEY,n)};
+      return<div className={`sidebar ${sidebarOpen?'open':''}`}>
+        <div className="sb-logo"><img src="/logo-dops.png" alt="dops"/><div className="sb-logo-info"><span className="sb-logo-text">dops</span><span className="sb-version">{version?`v${version}`:'agent observability'}</span></div></div>
+        <div className="sb-nav">
+          <button className={`sb-link ${view==='overview'?'active':''}`} onClick={()=>nav('overview')}><Icon.overview/> Overview</button>
+          <button className={`sb-link ${view==='sessions'?'active':''}`} onClick={()=>nav('sessions')}><Icon.sessions/> Sessions</button>
+          <button className={`sb-link ${view==='tools'?'active':''}`} onClick={()=>nav('tools')}><Icon.tools/> Tools</button>
+          <div className="sb-divider"/>
+          <button className={`sb-link ${view==='costs'?'active':''}`} onClick={()=>nav('costs')}><Icon.costs/> Costs</button>
+        </div>
+        <div className="sb-footer">
+          <div className="palette-toggle"><span className="palette-toggle-label">Theme</span><div className="palette-toggle-switch">
+            <button className={`palette-toggle-opt ${palette==='cloud'?'active':''}`} onClick={()=>togglePalette('cloud')}>&#9788; Light</button>
+            <button className={`palette-toggle-opt ${palette==='ocean'?'active':''}`} onClick={()=>togglePalette('ocean')}>&#9679; Dark</button>
+          </div></div>
+          <div className="sb-user"><div className="sb-user-info"><span className="sb-user-name">Admin</span><span className="sb-user-role">dops</span></div><button className="sb-logout" onClick={onLogout}>Logout</button></div>
+        </div>
+      </div>;
+    }
+
+    /* ── APP ────────────────────────────────── */
+    function App(){
+      const[authed,setAuthed]=useState(!!localStorage.getItem(TOKEN_KEY));
+      const{view,nav}=useRouter();
+      const[days,setDays]=useState(7);
+      const[sidebarOpen,setSidebarOpen]=useState(false);const[version,setVersion]=useState('');
+      useEffect(()=>{fetch(`${API_BASE}/health`).then(r=>r.json()).then(d=>{setVersion(d.version||'');if(d.pricing)PRICING=d.pricing}).catch(()=>{})},[]);
+      const handleLogout=()=>{localStorage.removeItem(TOKEN_KEY);setAuthed(false)};
+      const mobileNav=(v)=>{nav(v);setSidebarOpen(false)};
+      if(!authed)return<LoginScreen onAuth={()=>setAuthed(true)}/>;
+      const titles={overview:'Overview',sessions:'Sessions',tools:'Tool Analytics',costs:'Cost Estimation'};
+      return<div className="shell">
+        <button className="mobile-toggle" onClick={()=>setSidebarOpen(!sidebarOpen)}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>
+        <div className={`sidebar-overlay ${sidebarOpen?'open':''}`} onClick={()=>setSidebarOpen(false)}/>
+        <Sidebar view={view} nav={mobileNav} onLogout={handleLogout} sidebarOpen={sidebarOpen} version={version}/>
+        <div className="main">
+          <div className="topbar"><span className="topbar-title">{titles[view]||''}</span><div className="topbar-right">
+            <select value={days} onChange={e=>setDays(Number(e.target.value))}><option value={1}>Last 24h</option><option value={3}>Last 3 days</option><option value={7}>Last 7 days</option><option value={14}>Last 14 days</option><option value={30}>Last 30 days</option><option value={90}>Last 90 days</option></select>
+          </div></div>
+          {view==='overview'&&<OverviewView days={days}/>}
+          {view==='sessions'&&<SessionsView days={days}/>}
+          {view==='tools'&&<ToolsView days={days}/>}
+          {view==='costs'&&<CostsView days={days}/>}
+        </div>
+      </div>;
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<TooltipProvider><App/></TooltipProvider>);
+  </script>
+</body>
+</html>

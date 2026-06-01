@@ -24,6 +24,14 @@ export type { HistoryEntry, SessionInfo } from './history.js';
 export type { TemplateDefinition, TemplateVariable } from './template.js';
 
 export type { Target, TranscriptEntry } from './transcript.js';
+
+export type {
+  TelemetryExtractor,
+  ParsedSession,
+  ParsedTokenUsage,
+  ParsedToolCall,
+  IngestState,
+} from './telemetry.js';
 export {
   DBRAIN_START,
   DBRAIN_END,

@@ -4,10 +4,10 @@
   "description": "Model router (Haiku/Sonnet/Opus) with cost tracking and per-project policies",
   "type": "module",
   "license": "MIT",
-  "author": "Iv\u00e1n Campillo <ivncmp@gmail.com>",
+  "author": "Iván Campillo <ivncmp@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "url": "git+https://github.com/ivncmp/dtoolkit.git",
     "directory": "packages/droute"
   },
   "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/droute",
@@ -15,7 +15,7 @@
     "access": "public"
   },
   "bin": {
-    "droute": "./dist/index.js"
+    "droute": "dist/index.js"
   },
   "exports": {
     ".": {

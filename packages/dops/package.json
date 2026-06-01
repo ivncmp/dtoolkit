@@ -7,7 +7,7 @@
   "author": "Iván Campillo <ivncmp@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "url": "git+https://github.com/ivncmp/dtoolkit.git",
     "directory": "packages/dops"
   },
   "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dops",
@@ -15,7 +15,7 @@
     "access": "public"
   },
   "bin": {
-    "dops": "./dist/cli/index.js"
+    "dops": "dist/cli/index.js"
   },
   "files": [
     "dist"

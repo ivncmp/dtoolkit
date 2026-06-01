@@ -5,7 +5,7 @@
   "homepage": "https://github.com/colbymchenry/codegraph",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ivncmp/dtoolkit",
+    "url": "git+https://github.com/ivncmp/dtoolkit.git",
     "directory": "packages/codegraph-sdk"
   },
   "main": "dist/index.js",

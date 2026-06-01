@@ -4,10 +4,10 @@
   "description": "Internal marketplace for skills, hooks, and slash commands",
   "type": "module",
   "license": "MIT",
-  "author": "Iv\u00e1n Campillo <ivncmp@gmail.com>",
+  "author": "Iván Campillo <ivncmp@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "url": "git+https://github.com/ivncmp/dtoolkit.git",
     "directory": "packages/dforge"
   },
   "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dforge",
@@ -15,7 +15,7 @@
     "access": "public"
   },
   "bin": {
-    "dforge": "./dist/index.js"
+    "dforge": "dist/index.js"
   },
   "exports": {
     ".": {

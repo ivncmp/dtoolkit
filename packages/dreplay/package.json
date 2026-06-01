@@ -7,7 +7,7 @@
   "author": "Iván Campillo <ivncmp@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "url": "git+https://github.com/ivncmp/dtoolkit.git",
     "directory": "packages/dreplay"
   },
   "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dreplay",
@@ -15,7 +15,7 @@
     "access": "public"
   },
   "bin": {
-    "dreplay": "./dist/index.js"
+    "dreplay": "dist/index.js"
   },
   "exports": {
     ".": {

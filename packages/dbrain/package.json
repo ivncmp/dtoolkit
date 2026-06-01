@@ -7,7 +7,7 @@
   "author": "Iván Campillo <ivncmp@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "url": "git+https://github.com/ivncmp/dtoolkit.git",
     "directory": "packages/dbrain"
   },
   "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dbrain",
@@ -15,7 +15,7 @@
     "access": "public"
   },
   "bin": {
-    "dbrain": "./dist/cli/index.js"
+    "dbrain": "dist/cli/index.js"
   },
   "files": [
     "dist"

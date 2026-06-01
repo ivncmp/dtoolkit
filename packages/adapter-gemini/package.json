@@ -7,7 +7,7 @@
   "author": "Iván Campillo <ivncmp@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "url": "git+https://github.com/ivncmp/dtoolkit.git",
     "directory": "packages/adapter-gemini"
   },
   "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/adapter-gemini",

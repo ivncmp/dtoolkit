@@ -7,7 +7,7 @@
   "author": "Iván Campillo <ivncmp@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "url": "git+https://github.com/ivncmp/dtoolkit.git",
     "directory": "packages/dwork"
   },
   "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dwork",
@@ -15,7 +15,7 @@
     "access": "public"
   },
   "bin": {
-    "dwork": "./dist/cli/index.js"
+    "dwork": "dist/cli/index.js"
   },
   "files": [
     "dist"

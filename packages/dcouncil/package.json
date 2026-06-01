@@ -1,13 +1,13 @@
 {
   "name": "@dtoolkit/dcouncil",
   "version": "0.0.6",
-  "description": "Multi-agent debate for architecture decisions \u2014 security, performance, simplicity",
+  "description": "Multi-agent debate for architecture decisions — security, performance, simplicity",
   "type": "module",
   "license": "MIT",
-  "author": "Iv\u00e1n Campillo <ivncmp@gmail.com>",
+  "author": "Iván Campillo <ivncmp@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "url": "git+https://github.com/ivncmp/dtoolkit.git",
     "directory": "packages/dcouncil"
   },
   "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dcouncil",
@@ -15,7 +15,7 @@
     "access": "public"
   },
   "bin": {
-    "dcouncil": "./dist/index.js"
+    "dcouncil": "dist/index.js"
   },
   "exports": {
     ".": {

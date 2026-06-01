@@ -1,13 +1,13 @@
 {
   "name": "@dtoolkit/dpolicy",
   "version": "0.0.6",
-  "description": "Policy-as-code for the team harness \u2014 centralized rules, versioned, repo-synced",
+  "description": "Policy-as-code for the team harness — centralized rules, versioned, repo-synced",
   "type": "module",
   "license": "MIT",
-  "author": "Iv\u00e1n Campillo <ivncmp@gmail.com>",
+  "author": "Iván Campillo <ivncmp@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "url": "git+https://github.com/ivncmp/dtoolkit.git",
     "directory": "packages/dpolicy"
   },
   "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dpolicy",

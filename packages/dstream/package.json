@@ -7,7 +7,7 @@
   "author": "Iván Campillo <ivncmp@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ivncmp/dtoolkit.git",
+    "url": "git+https://github.com/ivncmp/dtoolkit.git",
     "directory": "packages/dstream"
   },
   "homepage": "https://github.com/ivncmp/dtoolkit/tree/main/packages/dstream",
@@ -15,7 +15,7 @@
     "access": "public"
   },
   "bin": {
-    "dstream": "./dist/index.js"
+    "dstream": "dist/index.js"
   },
   "exports": {
     ".": {

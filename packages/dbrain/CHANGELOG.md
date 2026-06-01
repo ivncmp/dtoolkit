@@ -1,5 +1,13 @@
 # @dtoolkit/dbrain
 
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [7c98ca3]
+  - @dtoolkit/core@0.6.0
+  - @dtoolkit/sdk@0.6.1
+
 ## 0.6.0
 
 ### Minor Changes

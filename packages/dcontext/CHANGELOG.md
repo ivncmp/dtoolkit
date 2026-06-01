@@ -1,5 +1,21 @@
 # @dtoolkit/dcontext
 
+## 0.4.0
+
+### Minor Changes
+
+- ba4454f: Simplify CLI: init is now first-time only per directory, new config command for modifications. Add dops service support. Extract shared helpers with generic connectToService pattern.
+
+### Patch Changes
+
+- Updated dependencies [7c98ca3]
+  - @dtoolkit/core@0.6.0
+  - @dtoolkit/adapter-claude@1.4.0
+  - @dtoolkit/adapter-codex@1.4.0
+  - @dtoolkit/adapter-gemini@1.4.0
+  - @dtoolkit/adapter-opencode@1.4.0
+  - @dtoolkit/sdk@0.6.1
+
 ## 0.3.0
 
 ### Minor Changes

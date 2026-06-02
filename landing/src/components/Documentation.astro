@@ -1,0 +1,90 @@
+---
+const guides = [
+  {
+    title: 'Getting Started',
+    description: 'Install dtoolkit and store your first memory in under 5 minutes.',
+    href: '/docs/guides/getting-started/',
+    icon: 'rocket',
+  },
+  {
+    title: 'Core Concepts',
+    description: 'Architecture overview, package relationships, and design principles.',
+    href: '/docs/guides/core-concepts/',
+    icon: 'blocks',
+  },
+  {
+    title: 'Configuration',
+    description: 'Config files, ports, environment variables, and authentication.',
+    href: '/docs/guides/configuration/',
+    icon: 'gear',
+  },
+];
+
+const products = [
+  { title: 'dbrain', description: 'Memory server', href: '/docs/products/dbrain/', logo: '/logos/logo-dbrain.png' },
+  { title: 'dcontext', description: 'Context injection', href: '/docs/products/dcontext/', logo: '/logos/logo-dtoolkit.png' },
+  { title: 'dwork', description: 'Project management', href: '/docs/products/dwork/', logo: '/logos/logo-dwork.png' },
+  { title: 'dproxy', description: 'Multi-provider transport', href: '/docs/products/dproxy/', logo: '/logos/logo-dtoolkit.png' },
+  { title: 'dops', description: 'Observability', href: '/docs/products/dops/', logo: '/logos/logo-dops.png' },
+];
+
+const reference = [
+  { title: 'MCP Tools', href: '/docs/reference/mcp-tools/' },
+  { title: 'CLI Commands', href: '/docs/reference/cli/' },
+  { title: 'REST API', href: '/docs/reference/rest-api/' },
+  { title: 'SDK', href: '/docs/reference/sdk/' },
+];
+---
+
+<section id="documentation" class="py-24 pattern-bg">
+  <div class="hero-glow"></div>
+  <div class="relative z-10 max-w-7xl mx-auto px-6">
+    <div class="text-center mb-16 reveal">
+      <h2 class="text-4xl sm:text-5xl font-black tracking-tight">
+        <span class="gradient-text">Documentation</span>
+      </h2>
+      <p class="mt-4 text-lg text-[var(--text-3)] max-w-2xl mx-auto">
+        Everything you need to set up, configure, and master the dtoolkit ecosystem.
+      </p>
+    </div>
+
+    <!-- Guides -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10 reveal-stagger">
+      {guides.map((guide) => (
+        <a href={guide.href} class="reveal-item group block p-6 rounded-xl bg-[var(--surface)] border border-[var(--border-subtle)] hover:border-brand-purple/30 hover:shadow-lg hover:shadow-brand-purple/5 transition-all hover:-translate-y-0.5">
+          <h3 class="text-lg font-bold group-hover:text-brand-purple transition-colors">{guide.title}</h3>
+          <p class="mt-2 text-sm text-[var(--text-3)] leading-relaxed">{guide.description}</p>
+        </a>
+      ))}
+    </div>
+
+    <!-- Products -->
+    <div class="mb-10 reveal">
+      <h3 class="text-sm font-bold uppercase tracking-wider text-[var(--text-3)] mb-4 px-1">Product guides</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+        {products.map((product) => (
+          <a href={product.href} class="group flex items-center gap-3 p-4 rounded-xl bg-[var(--surface)] border border-[var(--border-subtle)] hover:border-brand-purple/30 transition-all hover:-translate-y-0.5">
+            <img src={product.logo} alt="" class="w-8 h-8 flex-shrink-0" />
+            <div class="min-w-0">
+              <div class="font-mono font-bold text-sm group-hover:text-brand-purple transition-colors">{product.title}</div>
+              <div class="text-xs text-[var(--text-3)] truncate">{product.description}</div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <!-- Reference -->
+    <div class="reveal">
+      <h3 class="text-sm font-bold uppercase tracking-wider text-[var(--text-3)] mb-4 px-1">Reference</h3>
+      <div class="flex flex-wrap gap-3">
+        {reference.map((ref) => (
+          <a href={ref.href} class="group px-5 py-2.5 rounded-lg bg-[var(--surface)] border border-[var(--border-subtle)] text-sm font-medium text-[var(--text-2)] hover:border-brand-purple/30 hover:text-brand-purple transition-all">
+            {ref.title}
+            <span class="inline-block ml-1 transition-transform group-hover:translate-x-0.5">&rarr;</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

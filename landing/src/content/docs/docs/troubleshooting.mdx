@@ -1,0 +1,350 @@
+---
+title: Troubleshooting
+description: Common issues and how to fix them
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+This page covers the most common issues you may encounter when running dtoolkit and how to resolve them.
+
+## Port already in use
+
+**Symptom:** A service fails to start with `EADDRINUSE` or a "port already in use" error.
+
+**Cause:** Another instance of the service (or a different process) is already bound to that port.
+
+| Service | REST / MCP port | Dashboard port |
+|---------|----------------|----------------|
+| dbrain  | 7878           | 7879           |
+| dwork   | 7881           | 7882           |
+| dops    | 7883           | 7884           |
+| dproxy  | 7880           | —              |
+
+**Fix:**
+
+1. Check whether the service is already running:
+
+```bash title="terminal"
+dbrain status
+dwork status
+dops status
+```
+
+2. If a stale process is occupying the port, find and stop it:
+
+```bash title="terminal"
+lsof -i :7878
+kill <PID>
+```
+
+3. Alternatively, change the port in the service config file (`~/.dbrain/config.json`, `~/.dwork/config.json`, or `~/.dops/config.json`).
+
+<Aside type="tip">
+Each dtoolkit service exposes REST and MCP on the same port. The dashboard always runs on `port + 1`. Changing the main port automatically shifts the dashboard port.
+</Aside>
+
+## Unauthorized (401)
+
+**Symptom:** API requests return `401 Unauthorized`.
+
+**Cause:** The bearer token is missing, incorrect, or not configured.
+
+**Fix:**
+
+1. Check the token stored in the service config:
+
+```bash title="terminal"
+cat ~/.dbrain/config.json | grep token
+cat ~/.dwork/config.json | grep token
+```
+
+2. Ensure your requests include the `Authorization` header:
+
+```bash title="terminal"
+curl -H "Authorization: Bearer <your-token>" http://localhost:7878/health
+```
+
+3. If you are using `@dtoolkit/sdk`, pass the token when constructing the client:
+
+```typescript
+import { DBrainClient } from '@dtoolkit/sdk';
+
+const client = new DBrainClient({
+  baseUrl: 'http://localhost:7878',
+  token: 'your-token',
+});
+```
+
+<Aside type="tip">
+For local single-user setups, dbrain and dwork generate a token during `init`. You can view or rotate it with the `keys` CLI subcommand.
+</Aside>
+
+## MCP tools not showing up
+
+**Symptom:** Your AI coding CLI (Claude Code, Gemini CLI, etc.) does not list dtoolkit MCP tools like `recall`, `remember`, or `get_entity`.
+
+**Cause:** The CLI has not been connected to the dtoolkit MCP server.
+
+**Fix:**
+
+1. For dbrain, run the connect command for your CLI:
+
+```bash title="terminal"
+dbrain connect claude
+dbrain connect gemini
+dbrain connect codex
+```
+
+2. For dcontext hooks (which bridge dbrain and dwork into your CLI), install them:
+
+```bash title="terminal"
+dcontext install
+```
+
+3. Restart your AI coding CLI after connecting. Most CLIs do not hot-reload MCP server configurations.
+
+4. Verify the connection is registered:
+
+```bash title="terminal"
+dbrain status
+dcontext status
+```
+
+<Aside type="caution">
+After running `dbrain connect` or `dcontext install`, you **must** restart your AI coding CLI for the changes to take effect.
+</Aside>
+
+## recall returns no results
+
+**Symptom:** Calling the `recall` MCP tool or the `/search` REST endpoint returns an empty result set.
+
+**Cause:** The brain has no stored facts yet, or the search query does not match any indexed content.
+
+**Fix:**
+
+1. Verify the brain has content:
+
+```bash title="terminal"
+curl -H "Authorization: Bearer <token>" http://localhost:7878/entities
+```
+
+2. If the brain is empty, store some facts first:
+
+```bash title="terminal"
+curl -X POST http://localhost:7878/facts \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"entityId": "<id>", "content": "Prefers TypeScript over JavaScript"}'
+```
+
+3. If the brain has content but search returns nothing, try broader search terms. FTS5 uses OR-based matching by default — single keywords work better than long phrases.
+
+<Aside type="tip">
+Use the dbrain dashboard at `http://localhost:7879` to browse entities and facts visually and confirm data is present before debugging search queries.
+</Aside>
+
+## Federation not working
+
+**Symptom:** `recall` does not return results from a connected shared brain, or `share` fails.
+
+**Cause:** The shared brain is unreachable, the connection is misconfigured, or API keys are not enabled on the shared brain.
+
+**Fix:**
+
+1. Check your connections:
+
+```bash title="terminal"
+dbrain connections
+```
+
+2. Verify the shared brain is running and reachable:
+
+```bash title="terminal"
+curl http://<shared-brain-host>:7878/health
+```
+
+3. Ensure the shared brain has API keys enabled. Shared brains require explicit key configuration:
+
+```bash title="terminal"
+dbrain keys list   # run on the shared brain
+```
+
+4. If the connection details have changed, remove and re-add:
+
+```bash title="terminal"
+dbrain unlink <connection-name>
+dbrain link <shared-brain-url> --token <key>
+```
+
+## Dashboard not loading
+
+**Symptom:** Opening the dashboard URL in a browser shows a connection error or blank page.
+
+**Cause:** The underlying server is not running. The dashboard is served as a static page by the same Fastify instance — if the server is down, the dashboard is down.
+
+**Fix:**
+
+1. Start the service:
+
+```bash title="terminal"
+dbrain start
+# or
+dwork start
+# or
+dops start
+```
+
+2. Confirm the server is healthy:
+
+```bash title="terminal"
+curl http://localhost:7878/health   # dbrain
+curl http://localhost:7881/health   # dwork
+curl http://localhost:7883/health   # dops
+```
+
+3. Open the dashboard on port + 1:
+
+| Service | Dashboard URL                  |
+|---------|-------------------------------|
+| dbrain  | `http://localhost:7879`        |
+| dwork   | `http://localhost:7882`        |
+| dops    | `http://localhost:7884`        |
+
+<Aside type="caution">
+Do not open the REST/MCP port in a browser expecting the dashboard. The dashboard is always served on the next port (e.g., `7879` for dbrain, not `7878`).
+</Aside>
+
+## dcontext hooks not firing
+
+**Symptom:** Session context is not injected at startup, or transcripts are not saved before compaction.
+
+**Cause:** The hooks were never installed, or the AI coding CLI version is incompatible.
+
+**Fix:**
+
+1. Check hook installation status:
+
+```bash title="terminal"
+dcontext status
+```
+
+2. If hooks are not installed, run:
+
+```bash title="terminal"
+dcontext install
+```
+
+3. Verify dcontext can reach dbrain:
+
+```bash title="terminal"
+dbrain status
+```
+
+4. If hooks still do not fire, check that your AI coding CLI supports the hook system dcontext targets. Supported CLIs and their hook mechanisms:
+
+| CLI          | Hook mechanism              |
+|--------------|-----------------------------|
+| Claude Code  | `settings.json` hooks       |
+| Gemini CLI   | `settings.json` hooks       |
+| Codex CLI    | `config.toml` hooks         |
+| OpenCode     | npm plugin hooks            |
+
+5. After reinstalling hooks, restart your CLI.
+
+<Aside type="tip">
+Run `dcontext explore` to interactively inspect what context would be injected into the current project, without actually modifying any CLI configuration.
+</Aside>
+
+## Build errors with pnpm
+
+**Symptom:** `pnpm install` or `pnpm build` fails with compilation or dependency errors.
+
+**Cause:** Incorrect Node.js version, outdated pnpm, or stale lockfile.
+
+**Fix:**
+
+1. Verify Node.js version (must be 22 or higher):
+
+```bash title="terminal"
+node --version
+```
+
+2. Verify pnpm is up to date:
+
+```bash title="terminal"
+pnpm --version
+```
+
+3. Clean and reinstall:
+
+```bash title="terminal"
+rm -rf node_modules packages/*/node_modules
+pnpm install
+```
+
+4. If the lockfile is out of sync (common after switching branches):
+
+```bash title="terminal"
+pnpm install --no-frozen-lockfile
+```
+
+5. Run the full build:
+
+```bash title="terminal"
+pnpm build
+```
+
+<Aside type="caution">
+dtoolkit requires **Node.js 22 or higher**. Earlier versions will cause build failures due to missing runtime features.
+</Aside>
+
+## SQLite errors
+
+**Symptom:** A service crashes with SQLite-related errors such as `SQLITE_CORRUPT`, `database disk image is malformed`, or `SQLITE_BUSY`.
+
+**Cause:** The database file may be corrupted (e.g., from an unclean shutdown) or locked by another process.
+
+**Fix:**
+
+1. Try running the compact command, which rebuilds indexes and deduplicates data:
+
+```bash title="terminal"
+dbrain compact
+```
+
+2. If compact fails, back up the current database and re-initialize:
+
+```bash title="terminal"
+cp ~/.dbrain/dbrain.db ~/.dbrain/dbrain.db.bak
+dbrain init
+```
+
+The same approach applies to dwork and dops:
+
+```bash title="terminal"
+# dwork
+cp ~/.dwork/dwork.db ~/.dwork/dwork.db.bak
+dwork init
+
+# dops
+cp ~/.dops/dops.db ~/.dops/dops.db.bak
+dops init
+```
+
+3. For `SQLITE_BUSY` errors, ensure only one instance of the service is running:
+
+```bash title="terminal"
+dbrain status
+```
+
+<Aside type="tip">
+SQLite databases are stored in `~/.dbrain/`, `~/.dwork/`, and `~/.dops/`. Regular backups of these directories protect against data loss.
+</Aside>
+
+## Getting more help
+
+If your issue is not listed here:
+
+1. Check the product-specific documentation: [dbrain](/docs/products/dbrain/), [dwork](/docs/products/dwork/), [dops](/docs/products/dops/), [dproxy](/docs/products/dproxy/), [dcontext](/docs/products/dcontext/).
+2. Review the [CLI reference](/docs/reference/cli/) and [MCP tools reference](/docs/reference/mcp-tools/) for correct usage.
+3. Open an issue on the [dtoolkit GitHub repository](https://github.com/ivncmp/dtoolkit/issues) with your error output, service status, and Node.js/pnpm versions.

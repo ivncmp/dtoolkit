@@ -1,0 +1,148 @@
+---
+import config from 'virtual:starlight/user-config';
+import Search from 'virtual:starlight/components/Search';
+
+const shouldRenderSearch =
+  config.pagefind || config.components.Search !== '@astrojs/starlight/components/Search.astro';
+
+const products = [
+  { label: 'dbrain', href: '/#dbrain' },
+  { label: 'dwork', href: '/#dwork' },
+  { label: 'dops', href: '/#dops' },
+  { label: 'dcontext', href: '/#dcontext' },
+  { label: 'dproxy', href: '/#dproxy' },
+];
+const sections = [
+  { label: 'ecosystem', href: '/#ecosystem' },
+  { label: 'quick start', href: '/#quickstart' },
+  { label: 'documentation', href: '/docs/guides/introduction/' },
+];
+---
+
+<div class="docs-header">
+  <a href="/" class="logo-link">
+    <img src="/logos/logo-dtoolkit.png" alt="" class="logo-img" />
+    <span class="logo-text">dtoolkit</span>
+  </a>
+
+  <div class="nav-center">
+    <div class="product-pills">
+      {products.map(({ label, href }) => (
+        <a href={href} class="pill-link">{label}</a>
+      ))}
+    </div>
+
+    <span class="divider"></span>
+
+    {sections.map(({ label, href }) => (
+      <a href={href} class:list={[label === 'documentation' ? 'docs-active' : 'section-link']}>{label}</a>
+    ))}
+  </div>
+
+  <div class="right-group">
+    {shouldRenderSearch && (
+      <div class="search-wrapper">
+        <Search />
+      </div>
+    )}
+  </div>
+</div>
+
+<style>
+  .docs-header {
+    max-width: 80rem;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    padding: 0 1.5rem;
+    gap: 1rem;
+  }
+
+  .logo-link {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+  .logo-link:hover .logo-img { transform: scale(1.05); }
+  .logo-img {
+    height: 2.25rem;
+    width: 2.25rem;
+    transition: transform 0.15s;
+  }
+  .logo-text {
+    font-weight: 900;
+    font-size: 1.125rem;
+    letter-spacing: -0.02em;
+    color: oklch(0.20 0.06 252);
+  }
+
+  .nav-center {
+    display: none;
+    align-items: center;
+  }
+  @media (min-width: 64rem) {
+    .nav-center { display: flex; }
+  }
+
+  .product-pills {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    background: oklch(0.95 0.01 248 / 0.6);
+  }
+  .pill-link {
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-weight: 600;
+    color: oklch(0.42 0.05 250);
+    text-decoration: none;
+    transition: color 0.15s, background 0.15s;
+  }
+  .pill-link:hover {
+    color: oklch(0.50 0.22 252);
+    background: oklch(1 0 0);
+  }
+
+  .divider {
+    width: 1px;
+    height: 1rem;
+    background: oklch(0.87 0.018 248);
+    margin: 0 1rem;
+  }
+
+  .section-link {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: oklch(0.60 0.04 248);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .section-link:hover { color: oklch(0.20 0.06 252); }
+
+  .docs-active {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: oklch(0.50 0.22 252);
+    background: oklch(0.50 0.22 252 / 0.08);
+    border-radius: 0.375rem;
+    text-decoration: none;
+  }
+
+  .right-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+  }
+  .search-wrapper { display: contents; }
+</style>

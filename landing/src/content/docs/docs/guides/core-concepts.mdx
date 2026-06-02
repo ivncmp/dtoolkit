@@ -1,0 +1,151 @@
+---
+title: Core Concepts
+description: Architecture overview, package relationships, and design principles behind dtoolkit.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Philosophy
+
+> The frontier isn't the model — it's the **harness**: loop, context, tools, hooks, memory, observability.
+
+AI coding agents are only as good as the infrastructure around them. dtoolkit is a family of composable products that make your agents smarter, faster, and observable — without vendor lock-in.
+
+**Three principles:**
+1. **One package, one job.** Each product does exactly one thing and does it well.
+2. **Works standalone, composes with the rest.** Install just dbrain, or the full stack — your choice.
+3. **No vendor lock-in.** Everything communicates via `ContextBlock[]`, MCP, and REST. Works with Claude Code, Gemini CLI, Codex, OpenCode, or anything that speaks these protocols.
+
+## Architecture
+
+```
+┌──────────────────────────────────────────────────┐
+│  Your Agent                                      │
+│  Claude Code / Gemini / Codex / OpenCode         │
+└──────┬──────────┬──────────┬──────────┬──────────┘
+       │          │          │          │
+  ContextBlock[]  │     MCP / REST MCP / REST
+       │          │          │          │
+       ▼          ▼          ▼          ▼
+  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
+  │dcontext │ │ dproxy  │ │ dbrain  │ │  dwork  │
+  │hooks +  │ │transport│ │ memory  │ │projects │
+  │briefing │ │         │ │         │ │+ kanban │
+  └────┬────┘ └────┬────┘ └────┬────┘ └─────────┘
+       │           │           │
+       │      ┌────┴────┐      │          ┌─────────┐
+       │      │adapters │      ▼          │  dops   │
+       │      │claude   │  ┌────────┐     │observe  │
+       └─────►│codex    │  │ shared │     │tokens + │
+  search/save │gemini   │  │ brain  │     │costs    │
+              │opencode │  │ (team) │     └─────────┘
+              └─────────┘  └────────┘
+```
+
+Your coding CLI sits at the top. It connects to dtoolkit services via MCP (tool calls inside the conversation) and REST (programmatic access). Each layer is independent — you can use dbrain without dwork, or dops without dcontext.
+
+## The five products
+
+### dbrain — Persistent memory
+
+The brain of the system. A SQLite + FTS5 database exposed via MCP and REST, with a React dashboard.
+
+- **Entities** — people, projects, concepts, anything worth remembering
+- **Facts** — atomic pieces of knowledge attached to entities ("prefers TypeScript", "owns the auth module")
+- **Memory tiers** — hot, warm, cold. Facts decay based on access patterns, just like a real brain
+- **Federation** — connect personal brains to a shared team brain. `recall` auto-federates; `share` pushes facts upstream
+- **MCP tools** — `remember`, `recall`, `get_entity`, `list_entities`, `create_entity`, `bump`, `log`, `overview`, `share`, `compact`
+
+**Ports:** API on `:7878`, dashboard on `:7879`
+
+### dcontext — Context injection
+
+The bridge between dbrain and your coding CLI. Hooks into the CLI's native lifecycle:
+
+- **Session start** — injects your identity, personality, project facts, and relevant memories into the system prompt
+- **Pre-compaction** — saves the conversation transcript to dbrain before the context window compresses
+- **Zero config** — `dbrain connect claude` does everything
+
+Supports Claude Code, Gemini CLI, Codex CLI, and OpenCode via their native hook systems.
+
+### dwork — Project management
+
+An AI-native project manager. Markdown files (`BACKLOG.md`) are the source of truth; SQLite + FTS5 is just an index.
+
+- **Projects** — each gets a directory with a BACKLOG.md, docs/, and metadata
+- **Tasks** — inline in BACKLOG.md with `[type|status|priority|estimate]` metadata
+- **Docs** — numbered Markdown files for specs, decisions, notes
+- **Search** — full-text search across all tasks and docs
+- **MCP tools** — 21 tools including CRUD for projects, tasks, docs, plus search and overview
+
+**Ports:** API on `:7881`, dashboard on `:7882`
+
+### dproxy — Multi-provider transport
+
+A universal CLI adapter for invoking AI models through local CLIs. One interface, multiple providers.
+
+- **`dproxy ask`** — single-shot prompt with context injection
+- **`dproxy chat`** — interactive REPL session
+- **`dproxy serve`** — REST API with SSE streaming
+- **Providers** — Claude Code, Codex CLI, Gemini CLI, OpenCode (via `--provider` flag)
+- **Context pipeline** — assembles prompts from memory, workspace, templates, and chat history
+
+### dops — Observability
+
+Agent observability: what your AIs are doing, how much it costs, and where they fail.
+
+- **Token tracking** — input, output, cache reads/writes per session
+- **Cost estimation** — model-aware pricing for Claude, GPT, Gemini families
+- **Tool analytics** — which tools get called, success rates, error patterns
+- **Transcript ingestion** — reads native transcript formats from Claude Code, Codex, Gemini, OpenCode
+- **MCP tools** — `log_session`, `get_stats`, `get_costs`, `get_sessions`, `health`
+
+**Ports:** API on `:7883`, dashboard on `:7884`
+
+## Package dependency graph
+
+```
+@dtoolkit/core          ← Foundation: shared types + Zod schemas
+  ├── adapter-claude
+  ├── adapter-codex
+  ├── adapter-gemini    ← Provider adapters (one per CLI)
+  ├── adapter-opencode
+  ├── sdk               ← Typed HTTP clients (dbrain + dproxy + dwork)
+  │     └── dwork       ← Uses SDK for sync features
+  ├── dbrain            ← Standalone memory server
+  └── dops              ← Also depends on adapter-* for transcript parsing
+
+@dtoolkit/codegraph-sdk ← Code intelligence (used by dwork for graph features)
+  └── dwork
+
+dcontext                ← Depends on core + adapters for hook integration
+dproxy                  ← Depends on core + adapters for multi-provider CLI
+```
+
+<Aside type="note">
+  `core` is the only hard dependency. Everything else is optional. The adapters are thin shells — each one knows how to invoke and parse output from one CLI.
+</Aside>
+
+## The ContextBlock contract
+
+`ContextBlock[]` is the glue between packages. Defined in `@dtoolkit/core`, it's a simple typed array of content blocks:
+
+```typescript
+interface ContextBlock {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+  source?: string;
+  priority?: number;
+}
+```
+
+When dcontext injects context, it builds `ContextBlock[]`. When dproxy sends a prompt, it assembles `ContextBlock[]`. When adapters format a request, they consume `ContextBlock[]`. This neutral contract means no package needs to know about any other package's internals.
+
+## Design principles
+
+1. **One layer, one responsibility.** If two products need to sync to function, the design is wrong.
+2. **CLI-first, dashboard as bonus.** Every feature works from the terminal. Dashboards are for visibility, not required.
+3. **SQLite everywhere.** Zero external dependencies. No Postgres, no Redis, no Docker required.
+4. **MCP + REST on the same port.** One server, two protocols. MCP for AI tool calls, REST for programmatic access.
+5. **Bearer token auth.** Simple, friends-grade security. Good enough for local and small-team use.
+6. **Markdown as source of truth.** Where humans need to read and edit data (tasks, docs), Markdown wins. SQLite is just an index.

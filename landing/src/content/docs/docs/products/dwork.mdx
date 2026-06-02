@@ -1,0 +1,378 @@
+---
+title: "dwork — Projects"
+description: "AI-native project management with Markdown as source of truth"
+---
+
+import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+<img src="/logos/logo-dwork-complete.png" alt="dwork" width="320" style="margin-bottom: 1.5rem;" />
+
+dwork is an AI-native, Markdown-driven project manager built for teams that work with AI coding agents. Instead of locking your project data into a proprietary database, dwork uses plain Markdown files — specifically `BACKLOG.md` — as the single source of truth. A SQLite + FTS5 index runs alongside for fast search, and both a REST API and MCP server expose everything to your agents and tools.
+
+## How it works
+
+dwork follows dtoolkit's core design principles:
+
+- **Markdown is the source of truth.** Every project lives in a directory with a `BACKLOG.md` file and a `docs/` folder. You can read and edit these files with any text editor, and dwork keeps its SQLite index in sync.
+- **SQLite + FTS5 is just an index.** The database is disposable — `dwork sync` rebuilds it from your Markdown files at any time.
+- **MCP + REST on the same port.** The API server runs on port 7881, and the MCP server shares the same port. The web dashboard runs on 7882 (port + 1).
+- **Bearer token auth.** All API access is authenticated via API keys managed through the CLI.
+
+## Getting started
+
+<Steps>
+
+1. Install dwork globally or as a project dependency:
+
+   ```bash title="install"
+   pnpm add -g @dtoolkit/dwork
+   ```
+
+2. Initialize a new dwork workspace:
+
+   ```bash title="terminal"
+   dwork init
+   ```
+
+   The interactive wizard creates `~/.dwork/` with a `config.json` and `dwork.db`, then scaffolds your first project.
+
+3. Start the server and dashboard:
+
+   ```bash title="terminal"
+   dwork start
+   ```
+
+   This launches the REST + MCP API on port 7881 and the dashboard on port 7882.
+
+   <video src="/screens/dwork.webm" autoplay loop muted playsinline style="border-radius: 0.75rem; border: 1px solid oklch(0.92 0.01 248); margin-top: 1rem;" />
+
+4. Check that everything is running:
+
+   ```bash title="terminal"
+   dwork status
+   ```
+
+</Steps>
+
+<Aside type="tip">
+  dwork works standalone, but it composes naturally with the rest of dtoolkit. Connect it to [dbrain](/docs/products/dbrain/) for persistent memory, or use [dcontext](/docs/products/dcontext/) to inject project context into your AI coding sessions automatically.
+</Aside>
+
+## Projects
+
+Each project gets its own directory under `~/.dwork/projects/` containing:
+
+```
+my-project/
+├── BACKLOG.md      # Tasks — the source of truth
+├── docs/           # Numbered Markdown documents
+│   ├── 001-architecture.md
+│   ├── 002-api-design.md
+│   └── 003-deployment-notes.md
+└── metadata.json   # Project config (name, description, created date)
+```
+
+Create a new project through the MCP `create_project` tool, the REST API, or the dashboard. dwork scaffolds the directory structure and creates an empty `BACKLOG.md` ready for tasks.
+
+### Project metadata
+
+Each project tracks:
+
+| Field | Description |
+|-------|-------------|
+| `id` | Auto-generated short ID |
+| `name` | Human-readable project name |
+| `description` | One-line summary |
+| `status` | `active`, `paused`, or `archived` |
+| `created` | ISO timestamp |
+| `updated` | ISO timestamp (last modification) |
+
+## Tasks
+
+Tasks live inline in `BACKLOG.md` as Markdown list items with structured metadata in square brackets. This format is both human-readable and machine-parseable.
+
+### Task format
+
+```markdown
+- [ ] Implement user authentication [feature|todo|P1|3h]
+- [x] Fix login redirect loop [bug|done|P0|1h]
+- [ ] Refactor database connection pool [chore|doing|P2|2h]
+- [ ] Add rate limiting to API endpoints [task|todo|P1|4h]
+- [ ] Remove deprecated v1 endpoints [chore|cancelled|P3|1h]
+```
+
+The metadata block follows the pattern `[type|status|priority|estimate]`:
+
+### Task types
+
+| Type | Use for |
+|------|---------|
+| `feature` | New functionality or capabilities |
+| `task` | General work items, research, or spikes |
+| `bug` | Defects and regressions |
+| `chore` | Maintenance, cleanup, dependency updates |
+
+### Task statuses
+
+| Status | Description |
+|--------|-------------|
+| `todo` | Not started |
+| `doing` | Currently in progress |
+| `done` | Completed |
+| `cancelled` | Dropped or no longer needed |
+
+### Task priorities
+
+| Priority | Meaning |
+|----------|---------|
+| `P0` | Critical — drop everything |
+| `P1` | High — do this sprint |
+| `P2` | Medium — next sprint |
+| `P3` | Low — backlog |
+
+### Estimates
+
+Estimates use shorthand notation: `1h`, `3h`, `1d`, `3d`, `1w`. These are optional but help with planning and the dashboard's workload views.
+
+<Aside type="caution">
+  Always edit `BACKLOG.md` as the source of truth. If you modify tasks through the API or MCP tools, dwork writes the changes back to the Markdown file. Avoid editing both simultaneously — the last write wins.
+</Aside>
+
+## Docs
+
+Each project supports numbered Markdown documents stored in the `docs/` directory. These are intended for specs, architecture decisions, meeting notes, investigation logs, and anything else that supports the project but is not a task.
+
+Documents are auto-numbered (001, 002, 003...) and indexed by FTS5 for full-text search. You can create, read, update, and list docs through the MCP tools, the REST API, or by directly adding Markdown files to the `docs/` directory and running `dwork sync`.
+
+```bash title="terminal"
+# Sync Markdown files into the SQLite index
+dwork sync
+```
+
+## Search
+
+dwork uses SQLite FTS5 (contentless) to provide full-text search across all tasks and documents in all projects. The search supports:
+
+- Boolean operators (`AND`, `OR`, `NOT`)
+- Phrase matching with quotes
+- Prefix matching with `*`
+- Column filtering
+
+Search is exposed through the MCP `search` tool, the REST `GET /search` endpoint, and the dashboard's search bar.
+
+```bash title="terminal"
+# Example: search via the REST API
+curl -H "Authorization: Bearer $DWORK_KEY" \
+  "http://localhost:7881/search?q=authentication+rate+limiting"
+```
+
+## Dashboard
+
+The dwork dashboard is a single-file React application served on port 7882 (one above the API port). It requires no build step — it loads React and dependencies from CDN and is served as a static asset by Fastify.
+
+### Features
+
+| View | Description |
+|------|-------------|
+| **Overview** | Global kanban board showing tasks across all projects, grouped by status |
+| **Project detail** | Per-project view with tabs for kanban, task list, and docs |
+| **Task detail** | Modal with full task info and a Markdown editor for notes |
+| **File tree** | Docs browser with directory tree navigation |
+| **Search** | Global full-text search with instant results |
+
+The dashboard supports light and dark themes and is fully responsive for mobile use.
+
+<Aside type="tip">
+  The dashboard is read-write. You can create tasks, update statuses (drag-and-drop on the kanban), and edit docs directly in the browser. Changes are written back to the Markdown files.
+</Aside>
+
+## Code graph
+
+dwork integrates with `@dtoolkit/codegraph-sdk` to provide semantic code intelligence features. The code graph builds a knowledge graph from your codebase using tree-sitter WASM parsers, then exposes it through five dedicated MCP tools.
+
+### Graph tools
+
+| Tool | Description |
+|------|-------------|
+| `graph_search` | Search for symbols, functions, classes, or patterns across the codebase |
+| `graph_stats` | Get statistics about the code graph — file count, symbol count, language breakdown |
+| `graph_trace` | Trace the call chain for a specific function or method |
+| `graph_impact` | Analyze the impact of changing a specific symbol — what depends on it |
+| `graph_context` | Get the full context around a symbol — its definition, references, and related code |
+
+These tools allow AI agents to reason about code structure when working on tasks. For example, an agent can use `graph_impact` before refactoring a function to understand what will break, or `graph_trace` to follow a bug through the call chain.
+
+## MCP tools
+
+dwork exposes 21 MCP tools (plus 5 graph tools) and 1 MCP resource. All tools delegate to the service layer and are available when the MCP server is running on port 7881.
+
+### Project tools
+
+| Tool | Description |
+|------|-------------|
+| `create_project` | Create a new project with scaffolded directory structure |
+| `get_project` | Get project details by ID |
+| `list_projects` | List all projects with optional status filter |
+| `update_project` | Update project metadata (name, description, status) |
+
+### Task tools
+
+| Tool | Description |
+|------|-------------|
+| `add_task` | Add a task to a project's BACKLOG.md |
+| `get_tasks` | List tasks for a project, with optional filters (status, type, priority) |
+| `update_task` | Update task fields (status, priority, estimate, description) |
+
+### Doc tools
+
+| Tool | Description |
+|------|-------------|
+| `add_doc` | Create a new numbered document in a project |
+| `get_doc` | Read a specific document by number |
+| `get_docs` | List all documents in a project |
+| `update_doc` | Update the contents of a document |
+
+### Search and navigation
+
+| Tool | Description |
+|------|-------------|
+| `search` | Full-text search across all tasks and docs |
+| `overview` | Global statistics — project count, task breakdown by status, recent activity |
+| `what_to_do_next` | AI-powered suggestion of the highest-impact next task |
+
+### Sync and operations
+
+| Tool | Description |
+|------|-------------|
+| `sync` | Re-index all Markdown files into the SQLite FTS5 database |
+
+### Graph tools
+
+| Tool | Description |
+|------|-------------|
+| `graph_search` | Search for symbols across the codebase |
+| `graph_stats` | Code graph statistics and language breakdown |
+| `graph_trace` | Trace call chains for a function |
+| `graph_impact` | Impact analysis for a symbol change |
+| `graph_context` | Full context for a symbol (definition, references, related) |
+
+### MCP resource
+
+| Resource | Description |
+|----------|-------------|
+| `dwork://projects` | Read-only resource listing all projects and their metadata |
+
+<Aside type="tip">
+  When using dwork with [dcontext](/docs/products/dcontext/), MCP tools are automatically available in your AI coding sessions. The agent can create tasks, search docs, and check the project overview without leaving the conversation.
+</Aside>
+
+## REST API
+
+The REST API runs on port 7881 and mirrors the MCP tools. All endpoints require a Bearer token.
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Health check |
+| `GET` | `/overview` | Global stats |
+| `POST` | `/projects` | Create project |
+| `GET` | `/projects` | List projects |
+| `GET` | `/projects/:id` | Get project |
+| `PATCH` | `/projects/:id` | Update project |
+| `POST` | `/projects/:id/tasks` | Add task |
+| `GET` | `/projects/:id/tasks` | List tasks |
+| `PATCH` | `/projects/:id/tasks/:taskId` | Update task |
+| `POST` | `/projects/:id/docs` | Add doc |
+| `GET` | `/projects/:id/docs` | List docs |
+| `GET` | `/projects/:id/docs/:num` | Get doc |
+| `PATCH` | `/projects/:id/docs/:num` | Update doc |
+| `GET` | `/search` | Full-text search |
+| `POST` | `/sync` | Re-index Markdown files |
+| `GET` | `/keys` | List API keys |
+| `POST` | `/keys` | Create API key |
+| `DELETE` | `/keys/:id` | Revoke API key |
+
+## CLI commands
+
+| Command | Description |
+|---------|-------------|
+| `dwork init` | Interactive setup wizard — creates `~/.dwork/`, configures database, scaffolds first project |
+| `dwork start` | Start the REST + MCP server (port 7881) and the dashboard (port 7882) |
+| `dwork status` | Show server status, project count, and database stats |
+| `dwork sync` | Re-index all Markdown files into the SQLite database |
+| `dwork configure` | Update configuration interactively (ports, data directory, auth) |
+| `dwork keys` | Manage API keys — list, create, revoke |
+
+<Tabs>
+  <TabItem label="Quick start">
+    ```bash title="terminal"
+    pnpm add -g @dtoolkit/dwork
+    dwork init
+    dwork start
+    ```
+  </TabItem>
+  <TabItem label="With dbrain">
+    ```bash title="terminal"
+    pnpm add -g @dtoolkit/dwork @dtoolkit/dbrain @dtoolkit/dcontext
+    dbrain init
+    dwork init
+    dcontext install
+    dbrain start
+    dwork start
+    ```
+  </TabItem>
+</Tabs>
+
+## Configuration
+
+dwork stores its configuration in `~/.dwork/config.json`. You can edit it directly or use `dwork configure` for an interactive experience.
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `port` | `7881` | REST + MCP API port |
+| `dataDir` | `~/.dwork` | Data directory for database and projects |
+| `auth.enabled` | `true` | Require Bearer token authentication |
+| `auth.keys` | `[]` | API keys (managed via CLI or API) |
+
+Environment variables override config file values:
+
+| Variable | Overrides |
+|----------|-----------|
+| `DWORK_PORT` | `port` |
+| `DWORK_DATA_DIR` | `dataDir` |
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│                   Dashboard                      │
+│              React SPA (:7882)                   │
+└──────────────────────┬──────────────────────────┘
+                       │ HTTP
+┌──────────────────────▼──────────────────────────┐
+│              Fastify Server (:7881)              │
+│         REST routes  +  MCP server              │
+│                Bearer token auth                 │
+└──────────────────────┬──────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────┐
+│               Service Layer                      │
+│  projects / tasks / docs / search / sync         │
+└────────┬─────────────────────────┬──────────────┘
+         │                         │
+┌────────▼────────┐    ┌──────────▼──────────┐
+│   BACKLOG.md    │    │   SQLite + FTS5     │
+│   docs/*.md     │    │   (index only)      │
+│ (source of      │    │                     │
+│  truth)         │◄───│   dwork sync        │
+└─────────────────┘    └─────────────────────┘
+```
+
+## Further reading
+
+- [dbrain — Memory](/docs/products/dbrain/) — persistent memory for your agents
+- [dcontext — Hooks](/docs/products/dcontext/) — inject project context into AI coding sessions
+- [dops — Observability](/docs/products/dops/) — track agent performance and costs
+- [MCP Tools Reference](/docs/reference/mcp-tools/) — full schema reference for all MCP tools
+- [CLI Reference](/docs/reference/cli/) — complete CLI command reference

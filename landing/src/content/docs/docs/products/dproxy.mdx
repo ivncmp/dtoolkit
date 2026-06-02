@@ -1,0 +1,368 @@
+---
+title: "dproxy — Transport"
+description: "Universal multi-provider adapter for AI coding CLIs"
+---
+
+import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+dproxy is the universal CLI adapter in dtoolkit. It provides a single interface for invoking AI coding agents across multiple providers — Claude Code, Codex CLI, Gemini CLI, and OpenCode — without changing your workflow. Whether you need a one-shot prompt, an interactive REPL, or a REST API for programmatic access, dproxy handles provider differences behind a unified abstraction.
+
+## Overview
+
+AI coding CLIs each have their own invocation patterns, streaming formats, and context conventions. dproxy normalizes all of this into one tool:
+
+- **One CLI, four providers** — switch between Claude Code, Codex, Gemini, and OpenCode with a single `--provider` flag
+- **Context pipeline** — automatically assembles prompts from chat history, workspace context, memory, and life/PARA data
+- **REST API** — expose the same capabilities over HTTP with SSE streaming for real-time output
+- **Template system** — define reusable prompt templates for common tasks
+- **History and memory** — persistent conversation logs and memory snippets across sessions
+
+Data is stored in `~/.dproxy/` (config.json, history.jsonl, memory/, templates/).
+
+## Installation
+
+```bash title="install"
+pnpm add @dtoolkit/dproxy
+```
+
+Or install globally:
+
+```bash title="install"
+pnpm add -g @dtoolkit/dproxy
+```
+
+Then initialize your configuration:
+
+```bash title="terminal"
+dproxy init
+```
+
+## Providers
+
+dproxy supports four AI coding CLI providers. Each provider has a corresponding adapter package that handles the specifics of invocation, streaming format, and output parsing.
+
+| Provider | Adapter Package | Streaming Format | Default |
+|----------|----------------|-----------------|---------|
+| Claude Code | `@dtoolkit/adapter-claude` | stream-json + deltas | Yes |
+| Codex CLI | `@dtoolkit/adapter-codex` | JSONL streaming | No |
+| Gemini CLI | `@dtoolkit/adapter-gemini` | stream-json | No |
+| OpenCode | `@dtoolkit/adapter-opencode` | JSONL streaming | No |
+
+Switch providers with the `--provider` flag on any command:
+
+```bash title="terminal"
+dproxy ask "Explain this function" --provider claude
+dproxy ask "Explain this function" --provider codex
+dproxy ask "Explain this function" --provider gemini
+dproxy ask "Explain this function" --provider opencode
+```
+
+<Aside type="tip">
+Claude Code is the default provider. You can change the default in your `~/.dproxy/config.json` file so you do not need to pass `--provider` every time.
+</Aside>
+
+<Aside type="caution">
+Each provider requires its respective CLI to be installed and authenticated independently. dproxy does not manage provider credentials — it shells out to the underlying CLI.
+</Aside>
+
+## CLI Commands
+
+### `dproxy ask` — Single-shot prompt
+
+Send a one-shot prompt and get a response. This is the most common command for scripting and quick questions.
+
+```bash title="terminal"
+dproxy ask "What does this regex do: ^(?=.*[A-Z])(?=.*\d).{8,}$"
+```
+
+Pipe input from other commands:
+
+```bash title="terminal"
+cat src/lib/runner.ts | dproxy ask "Review this file for bugs"
+```
+
+With a specific provider:
+
+```bash title="terminal"
+dproxy ask "Generate unit tests for this module" --provider gemini
+```
+
+### `dproxy chat` — Interactive REPL
+
+Start a conversational REPL session with persistent context across turns:
+
+```bash title="terminal"
+dproxy chat
+```
+
+```bash title="terminal"
+dproxy chat --provider codex
+```
+
+The REPL maintains conversation state for the duration of the session. History is persisted to `~/.dproxy/history.jsonl`.
+
+### `dproxy serve` — REST API server
+
+Launch a Fastify HTTP server that exposes the full CLI functionality over REST:
+
+```bash title="terminal"
+dproxy serve
+```
+
+```bash title="terminal"
+dproxy serve --port 7880
+```
+
+The default port is **7880**. See the [REST API](#rest-api) section for endpoint details.
+
+### `dproxy history` — View past interactions
+
+Browse and search conversation history:
+
+```bash title="terminal"
+dproxy history
+```
+
+### `dproxy memory` — Manage memory snippets
+
+View and manage memory snippets that are injected into the context pipeline:
+
+```bash title="terminal"
+dproxy memory
+```
+
+### `dproxy template` — Manage prompt templates
+
+Create, list, and use reusable prompt templates:
+
+```bash title="terminal"
+dproxy template
+```
+
+See the [Templates](#templates) section for details.
+
+### `dproxy init` — Initialize configuration
+
+Set up the `~/.dproxy/` directory and default configuration:
+
+```bash title="terminal"
+dproxy init
+```
+
+### Command summary
+
+| Command | Purpose | Key Flags |
+|---------|---------|-----------|
+| `ask` | Single-shot prompt execution | `--provider`, piped stdin |
+| `chat` | Interactive REPL session | `--provider` |
+| `serve` | Launch REST API server | `--port` |
+| `history` | Browse conversation history | — |
+| `memory` | Manage memory snippets | — |
+| `template` | Manage prompt templates | — |
+| `init` | Initialize configuration | — |
+
+## Context Pipeline
+
+One of dproxy's most valuable features is its automatic context assembly. Before every prompt is sent to a provider, dproxy builds a rich context from multiple sources in priority order:
+
+<Steps>
+1. **Day chat log** — Recent conversation history from the current day, providing continuity across interactions.
+
+2. **Workspace bootstrap** — Project-level context gathered from the current working directory (README, CLAUDE.md, package.json, etc.).
+
+3. **Memory snippets** — Persistent memory fragments stored in `~/.dproxy/memory/`, surfaced by relevance to the current prompt.
+
+4. **Life/PARA context** — Broader personal and organizational context following the PARA method (Projects, Areas, Resources, Archives).
+</Steps>
+
+This pipeline means your prompts carry relevant context without you needing to manually paste files or repeat background information. The context builder (`src/lib/context-builder.ts`) assembles everything into a unified prompt before handing it to the resolved adapter.
+
+<Aside type="tip">
+The context pipeline uses the same `ContextBlock[]` contract that flows through the entire dtoolkit ecosystem. Each block has a type, source, and content — making it easy to inspect, filter, or extend the pipeline.
+</Aside>
+
+### How it connects to dbrain and dcontext
+
+While dproxy has its own local memory system (`~/.dproxy/memory/`), it integrates with the broader dtoolkit memory layer:
+
+- [**dbrain**](/docs/products/dbrain/) provides persistent, searchable memory with tiers and federation
+- [**dcontext**](/docs/products/dcontext/) injects dbrain facts into AI CLI sessions at startup
+- dproxy can pull memory from dbrain via the [**SDK**](/docs/reference/sdk/) when both are running
+
+## REST API
+
+The `dproxy serve` command launches a Fastify REST API that mirrors the full CLI functionality. This is useful for integrating dproxy into other tools, dashboards, or automated workflows.
+
+### Configuration
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Port | `7880` | Configurable via `--port` flag |
+| Auth | Bearer token | Set in `~/.dproxy/config.json` |
+| Streaming | SSE | Enabled via `stream: true` in request body |
+
+### Authentication
+
+All API requests require a Bearer token in the `Authorization` header:
+
+```bash title="terminal"
+curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:7880/ask \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Explain dependency injection"}'
+```
+
+<Aside type="caution">
+Set a strong token in your configuration before exposing the server on any network. The default configuration is intended for local development only.
+</Aside>
+
+### Streaming with SSE
+
+To receive streaming responses, set `stream: true` in your request body. The server responds with Server-Sent Events:
+
+```bash title="terminal"
+curl -N -H "Authorization: Bearer YOUR_TOKEN" http://localhost:7880/ask \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Write a haiku about TypeScript", "stream": true}'
+```
+
+Each SSE event contains an `AdapterStreamEvent` — the same typed event structure used internally by all adapters.
+
+### Selecting a provider
+
+Pass the `provider` field in your request body:
+
+```bash title="terminal"
+curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:7880/ask \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "List files in this directory", "provider": "gemini"}'
+```
+
+## Templates
+
+Templates let you define reusable prompt patterns for common tasks. They are stored in `~/.dproxy/templates/` and can include variable placeholders.
+
+### Managing templates
+
+```bash title="terminal"
+# List available templates
+dproxy template
+
+# Use a template
+dproxy ask --template code-review
+```
+
+### Template structure
+
+Templates are simple files with placeholder syntax that gets resolved at invocation time. This avoids repeating long system prompts or detailed instructions for tasks you run frequently — code reviews, test generation, documentation, and similar workflows.
+
+## Adapter Architecture
+
+Under the hood, dproxy delegates all provider interaction to adapter packages. Understanding this architecture is useful if you want to extend dproxy or debug provider-specific behavior.
+
+### The adapter contract
+
+Every adapter implements two core methods:
+
+| Method | Purpose | Return Type |
+|--------|---------|-------------|
+| `stream()` | Stream tokens as they arrive | `AsyncGenerator<AdapterStreamEvent>` |
+| `execute()` | Run to completion, return full result | `Promise<string>` |
+
+The `resolveAdapter()` function in `src/lib/adapter.ts` maps a provider name string to the corresponding adapter instance.
+
+### Execution flow
+
+<Steps>
+1. **Context building** — The context builder assembles `ContextBlock[]` from all sources (history, workspace, memory, PARA).
+
+2. **Adapter resolution** — `resolveAdapter()` maps the `--provider` flag to the correct adapter package.
+
+3. **Execution** — The adapter's `stream()` or `execute()` method is called, shelling out to the underlying CLI.
+
+4. **Persistence** — Results are written to `history.jsonl` for future reference.
+</Steps>
+
+### ContextBlock contract
+
+The `ContextBlock` type from `@dtoolkit/core` is the universal currency for context in dtoolkit:
+
+```typescript
+interface ContextBlock {
+  type: string;    // e.g., "workspace", "memory", "history"
+  source: string;  // origin identifier
+  content: string; // the actual context text
+}
+```
+
+Every component in dtoolkit that produces or consumes context speaks this contract — from dproxy's context builder to dcontext's session injection to dbrain's memory retrieval. This shared type is what makes the tools composable without tight coupling.
+
+### AdapterStreamEvent
+
+Streaming responses use the `AdapterStreamEvent` type, also defined in `@dtoolkit/core`. This provides a consistent event structure regardless of whether the underlying provider uses JSON streaming, JSONL, or another format. The adapter handles the translation.
+
+## Relationship to Other Products
+
+dproxy sits at the transport layer of the dtoolkit stack:
+
+| Product | Role | Relationship to dproxy |
+|---------|------|----------------------|
+| [dbrain](/docs/products/dbrain/) | Memory | dproxy reads memory for context pipeline |
+| [dcontext](/docs/products/dcontext/) | Hooks | Uses the same adapters for CLI integration |
+| [dwork](/docs/products/dwork/) | Project management | Can invoke dproxy for AI-assisted sync |
+| [dops](/docs/products/dops/) | Observability | Ingests transcripts from dproxy sessions |
+| [@dtoolkit/sdk](/docs/reference/sdk/) | HTTP clients | `DProxyClient` provides typed access to the REST API |
+
+## Configuration Reference
+
+All configuration lives in `~/.dproxy/config.json`:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `defaultProvider` | `string` | Default provider when `--provider` is omitted |
+| `port` | `number` | Default port for `dproxy serve` |
+| `token` | `string` | Bearer token for REST API authentication |
+
+## Quick Start
+
+<Steps>
+1. Install dproxy:
+
+   ```bash title="install"
+   pnpm add -g @dtoolkit/dproxy
+   ```
+
+2. Initialize configuration:
+
+   ```bash title="terminal"
+   dproxy init
+   ```
+
+3. Send your first prompt:
+
+   ```bash title="terminal"
+   dproxy ask "What is the ContextBlock contract in dtoolkit?"
+   ```
+
+4. Start an interactive session:
+
+   ```bash title="terminal"
+   dproxy chat
+   ```
+
+5. Launch the REST API:
+
+   ```bash title="terminal"
+   dproxy serve
+   ```
+</Steps>
+
+## Further Reading
+
+- [Getting Started guide](/docs/guides/getting-started/) — install the full dtoolkit suite
+- [CLI Reference](/docs/reference/cli/) — complete flag and option reference for all dtoolkit CLIs
+- [MCP Tools Reference](/docs/reference/mcp-tools/) — MCP tool documentation across all products
+- [dbrain product guide](/docs/products/dbrain/) — persistent memory that feeds into dproxy's context pipeline
+- [dcontext product guide](/docs/products/dcontext/) — hooks that use the same adapter layer as dproxy

@@ -1,0 +1,540 @@
+---
+title: CLI Commands
+description: Reference for all CLI commands across dtoolkit products
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+All dtoolkit CLIs follow the same conventions: `commander` for argument parsing, `picocolors` for output, and `@clack/prompts` for interactive wizards. Install any CLI globally with `npm install -g @dtoolkit/<package>` or run directly via `npx`.
+
+<Aside type="tip">
+Every CLI supports `--help` for detailed usage and `--version` to check the installed version.
+</Aside>
+
+## dbrain
+
+Persistent memory server. Manages brain initialization, server lifecycle, federation, and API keys.
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `dbrain init [path]` | Initialize a new brain (database, config, identity) |
+| `dbrain start [path]` | Start the API server (REST + MCP on `:7878`) and dashboard (`:7879`) |
+| `dbrain connect <client> [url]` | Connect a client CLI to a running brain |
+| `dbrain status [path]` | Check brain health and status |
+| `dbrain compact` | Compact the brain (deduplicate facts, recalculate tiers) |
+| `dbrain configure [path]` | Reconfigure the brain interactively |
+| `dbrain link <url>` | Link to a shared brain (federation) |
+| `dbrain unlink <name>` | Remove a connection to a shared brain |
+| `dbrain connections` | List connected brains with health status |
+| `dbrain keys <action>` | Manage API keys for shared brains (`create`, `list`, `revoke`) |
+
+### init
+
+Interactive wizard that creates a new brain. Sets up the SQLite database, config file, identity documents, and initial entities.
+
+```bash title="terminal"
+dbrain init
+dbrain init /custom/data/path
+dbrain init --non-interactive
+```
+
+| Flag | Description |
+|------|-------------|
+| `[path]` | Data path (default: `~/.dbrain`) |
+| `--non-interactive` | Skip prompts, use environment variables (for Docker/CI) |
+
+Environment variables for non-interactive mode:
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `DBRAIN_DATA` | `~/.dbrain` | Data path |
+| `DBRAIN_PORT` | `7878` | API port |
+| `DBRAIN_HOST` | `0.0.0.0` | Bind address |
+| `DBRAIN_TOKEN` | Auto-generated | Access token |
+| `DBRAIN_AGENT_NAME` | `dBrain` | AI identity name |
+| `DBRAIN_OWNER_NAME` | `Human` | Owner name |
+| `DBRAIN_BRAIN_TYPE` | `personal` | `personal` or `shared` |
+
+### connect
+
+Configures a client CLI to connect to a running brain. Fetches connection details from the brain's `/connect` endpoint and writes the client's native config files.
+
+```bash title="terminal"
+dbrain connect claude http://localhost:7878
+dbrain connect gemini http://your-server:7878 --token sk-dbr_abc123
+```
+
+| Flag | Description |
+|------|-------------|
+| `<client>` | Target CLI: `claude`, `codex`, `gemini`, `opencode` |
+| `[url]` | Brain URL (prompted if omitted) |
+| `--token <token>` | Access token |
+
+### compact
+
+Runs brain maintenance: deduplicates cold facts, recalculates memory tiers, and optionally extracts entities from unprocessed conversations.
+
+```bash title="terminal"
+dbrain compact
+dbrain compact --process --dry-run
+dbrain compact --dedup --threshold 0.9
+```
+
+| Flag | Description |
+|------|-------------|
+| `--path <path>` | Data path |
+| `--process` | Extract entities and facts from unprocessed conversations via LLM |
+| `--dedup` | Deduplicate cold facts only |
+| `--tiers` | Recalculate tiers only |
+| `--dry-run` | Preview changes without writing |
+| `--threshold <n>` | Similarity threshold, 0-1 (default: `0.85`) |
+| `--limit <n>` | Max facts per batch (default: `1000`) |
+
+### link / unlink / connections
+
+Manage federation between personal and shared brains.
+
+```bash title="terminal"
+dbrain link http://team-brain:7878 --token sk-dbr_team123
+dbrain unlink team-brain
+dbrain connections
+```
+
+| Flag | Description |
+|------|-------------|
+| `--token <token>` | Access token for the shared brain |
+| `--name <name>` | Connection name (defaults to remote brain name) |
+| `--path <path>` | Local brain data path |
+
+### keys
+
+Manage per-user API keys for shared brains.
+
+```bash title="terminal"
+dbrain keys create --user-id dev1 --user-name "Developer One"
+dbrain keys list
+dbrain keys revoke --key-id abc123
+```
+
+| Flag | Description |
+|------|-------------|
+| `<action>` | `create`, `list`, or `revoke` |
+| `--url <url>` | Brain URL (or `DBRAIN_URL` env) |
+| `--token <token>` | Admin token (or `DBRAIN_TOKEN` env) |
+| `--user-id <id>` | User ID (for `create`) |
+| `--user-name <name>` | Display name (for `create`) |
+| `--permissions <perms>` | `read`, `write`, or `read+write` (default: `read+write`) |
+| `--key-id <id>` | Key ID (for `revoke`) |
+
+---
+
+## dcontext
+
+Hooks for AI coding CLIs. Injects identity and project context at session start, saves transcripts before compaction.
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `dcontext init` | Initialize dcontext for the current directory |
+| `dcontext install <target>` | Install hooks for a target CLI |
+| `dcontext uninstall <target>` | Remove hooks for a target CLI |
+| `dcontext status` | Show configuration, context, and stats |
+| `dcontext config` | Modify dcontext configuration interactively |
+| `dcontext explore [path]` | Preview the context that would be injected for a directory |
+| `dcontext sync` | Sync project code graph |
+| `dcontext hook <event>` | Handle hook events (internal, called by CLI hooks) |
+
+### init
+
+Interactive wizard that connects dcontext to dbrain (and optionally dwork and dops), maps the current directory to an entity, and saves configuration.
+
+```bash title="terminal"
+dcontext init
+```
+
+The wizard will prompt to connect to an existing dbrain or start a local one, then optionally connect to dwork and dops servers.
+
+### install / uninstall
+
+Register or remove dcontext hooks in a target CLI's configuration. After installation, the target CLI will automatically receive identity and project context at session start.
+
+```bash title="terminal"
+dcontext install claude
+dcontext install gemini
+dcontext install opencode
+dcontext uninstall claude
+```
+
+| Flag | Description |
+|------|-------------|
+| `<target>` | Target CLI: `claude`, `gemini`, `opencode` |
+
+### explore
+
+Preview the full context block that dcontext would inject for a given directory, without actually modifying any files. Useful for debugging context injection.
+
+```bash title="terminal"
+dcontext explore
+dcontext explore /path/to/project
+```
+
+### status
+
+Displays current configuration including connected services (dbrain, dwork, dops), installed targets, entity mappings, and injection statistics.
+
+```bash title="terminal"
+dcontext status
+```
+
+---
+
+## dwork
+
+AI-native, Markdown-driven project manager. Tasks live in `BACKLOG.md`, documentation in numbered files. SQLite FTS5 provides search.
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `dwork init [path]` | Initialize dwork (config, database, optional first project) |
+| `dwork start [path]` | Start the server (REST + MCP on `:7881`, dashboard on `:7882`) |
+| `dwork status [path]` | Check dwork health and status |
+| `dwork sync <project>` | Sync project docs from source code via dproxy |
+| `dwork connect [client] [url]` | Connect a client CLI to a running dwork server |
+| `dwork configure [path]` | Reconfigure dwork interactively |
+| `dwork keys <action>` | Manage API keys (`create`, `list`, `revoke`) |
+
+### init
+
+Interactive wizard that creates the config file, SQLite database, and optionally scaffolds a first project with the four mandatory Markdown files (`README.md`, `TECH.md`, `ROADMAP.md`, `BACKLOG.md`).
+
+```bash title="terminal"
+dwork init
+dwork init /custom/data/path
+dwork init --non-interactive
+```
+
+| Flag | Description |
+|------|-------------|
+| `[path]` | Data path (default: `~/.dwork`) |
+| `--non-interactive` | Skip prompts (for Docker/CI) |
+
+### sync
+
+Syncs project documentation from the source code directory by analyzing it via dproxy. Requires dproxy to be configured in `config.json`.
+
+```bash title="terminal"
+dwork sync my-project
+dwork sync my-project --path /custom/data
+```
+
+| Flag | Description |
+|------|-------------|
+| `<project>` | Project slug |
+| `--path <path>` | Data path |
+
+### connect
+
+Configures a client CLI to use a running dwork server via MCP.
+
+```bash title="terminal"
+dwork connect claude
+dwork connect gemini http://team-server:7881 --token sk-dwk_abc123
+```
+
+| Flag | Description |
+|------|-------------|
+| `[client]` | Target CLI: `claude`, `codex`, `gemini`, `opencode` |
+| `[url]` | dwork URL (prompted if omitted) |
+| `--token <token>` | Access token |
+
+### keys
+
+Manage API keys for the dwork server.
+
+```bash title="terminal"
+dwork keys create --user-id dev1 --user-name "Alice"
+dwork keys list
+dwork keys revoke --key-id abc123
+```
+
+| Flag | Description |
+|------|-------------|
+| `<action>` | `create`, `list`, or `revoke` |
+| `--url <url>` | dwork URL (or `DWORK_URL` env) |
+| `--token <token>` | Admin token (or `DWORK_TOKEN` env) |
+| `--user-id <id>` | User ID (for `create`) |
+| `--user-name <name>` | Display name (for `create`) |
+| `--permissions <perms>` | `read`, `write`, or `read+write` (default: `read+write`) |
+| `--key-id <id>` | Key ID (for `revoke`) |
+
+---
+
+## dproxy
+
+Universal CLI adapter for invoking AI models via local CLIs. Supports four providers with persistent memory, conversation history, and prompt templates.
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `dproxy init` | Interactive setup wizard (required before first use) |
+| `dproxy ask [prompt...]` | Send a single-shot prompt to an AI model |
+| `dproxy chat` | Start an interactive conversation (REPL) |
+| `dproxy serve` | Start the dproxy HTTP API server |
+| `dproxy history <subcommand>` | Manage query history (`list`, `show`, `search`, `clear`) |
+| `dproxy memory <subcommand>` | Manage persistent memory snippets (`set`, `get`, `list`, `search`, `delete`) |
+| `dproxy template <subcommand>` | Manage YAML prompt templates (`list`, `show`, `add`, `run`, `delete`) |
+| `dproxy config [set\|get]` | View or modify configuration |
+
+<Aside type="tip">
+You can skip the `ask` subcommand entirely. Running `dproxy "your question"` is a shorthand for `dproxy ask "your question"`.
+</Aside>
+
+### ask
+
+Send a prompt and receive a response. Supports file attachments, streaming, session continuation, and context injection.
+
+```bash title="terminal"
+dproxy ask "Explain this error" -p claude
+dproxy ask "Review this code" --file src/main.ts --stream
+echo "data here" | dproxy ask "Summarize this"
+dproxy ask "Continue from before" --continue
+```
+
+| Flag | Description |
+|------|-------------|
+| `-p, --provider <name>` | Provider: `claude`, `codex`, `gemini`, `opencode` |
+| `-m, --model <model>` | Model override |
+| `--stream` | Stream response text as it arrives |
+| `--system-prompt <text>` | System prompt override |
+| `-f, --file <paths...>` | Attach one or more files to the prompt |
+| `-o, --output-format <fmt>` | Output format: `text`, `json`, `stream-json` |
+| `--max-turns <n>` | Max agent turns |
+| `--max-budget-usd <n>` | Max budget in USD |
+| `--no-memory` | Skip memory injection |
+| `--memory <keys>` | Inject only specific memory keys (comma-separated) |
+| `--no-life` | Skip life/PARA context injection |
+| `--no-history` | Do not save to history |
+| `--raw` | Print raw JSON response |
+| `--token-footer` | Append token usage footer |
+| `--max-session-tokens <n>` | Reset session if context exceeds this token count |
+| `-c, --continue` | Continue last conversation |
+| `-r, --resume <id>` | Resume a specific session |
+
+### chat
+
+Interactive REPL for multi-turn conversations. Shares the same context injection pipeline as `ask`.
+
+```bash title="terminal"
+dproxy chat
+dproxy chat -p gemini --continue
+dproxy chat --resume abc123 -m claude-sonnet-4-20250514
+```
+
+| Flag | Description |
+|------|-------------|
+| `-p, --provider <name>` | Provider: `claude`, `codex`, `gemini`, `opencode` |
+| `-m, --model <model>` | Model override |
+| `-c, --continue` | Continue last conversation |
+| `-r, --resume <id>` | Resume a specific session |
+| `--max-turns <n>` | Max agent turns per message |
+| `--no-memory` | Skip memory injection |
+| `--no-life` | Skip life/PARA context injection |
+
+### serve
+
+Start a Fastify HTTP API server that provides full CLI parity via REST endpoints with Bearer token auth and SSE streaming.
+
+```bash title="terminal"
+dproxy serve
+dproxy serve --port 8080 --host 0.0.0.0
+```
+
+| Flag | Description |
+|------|-------------|
+| `--port <port>` | Port to listen on (default from config) |
+| `--host <host>` | Host to bind to |
+
+### history
+
+Manage the append-only JSONL query history.
+
+```bash title="terminal"
+dproxy history list
+dproxy history list --limit 50
+dproxy history show abc12345
+dproxy history search "react hooks"
+dproxy history clear
+```
+
+| Subcommand | Description |
+|------------|-------------|
+| `list` | List recent queries (`--limit <n>`, default 20) |
+| `show <id>` | Show full prompt, response, cost, and duration |
+| `search <query>` | Search history entries |
+| `clear` | Delete all history |
+
+### memory
+
+CRUD for named memory snippets stored as Markdown files. Memory is automatically injected into prompts unless `--no-memory` is used.
+
+```bash title="terminal"
+dproxy memory set project-conventions "Always use TypeScript strict mode"
+dproxy memory get project-conventions
+dproxy memory list
+dproxy memory search "typescript"
+dproxy memory delete project-conventions
+```
+
+| Subcommand | Description |
+|------------|-------------|
+| `set <key> <value...>` | Create or update a memory entry |
+| `get <key>` | Read a memory entry |
+| `list` | List all memory keys |
+| `search <query>` | Search memory contents |
+| `delete <key>` | Remove a memory entry |
+
+### template
+
+CRUD for YAML prompt templates with `{{variable}}` interpolation.
+
+```bash title="terminal"
+dproxy template list
+dproxy template show code-review
+dproxy template add code-review --file review.yaml
+dproxy template run code-review --var file=src/main.ts
+dproxy template delete code-review
+```
+
+| Subcommand | Description |
+|------------|-------------|
+| `list` | List all templates |
+| `show <name>` | Show template details |
+| `add <name>` | Create a template (from file or stdin) |
+| `run <name>` | Execute a template with variable substitution |
+| `delete <name>` | Remove a template |
+
+---
+
+## dops
+
+Agent observability. Ingests telemetry from AI CLI transcripts and provides usage statistics, cost breakdowns, and error tracking.
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `dops init [path]` | Initialize dops (config and database) |
+| `dops start [path]` | Start the server (REST + MCP on `:7883`, dashboard on `:7884`) |
+| `dops status [path]` | Check dops health and status |
+| `dops ingest` | Scan local CLI transcripts and push telemetry to the server |
+| `dops stats` | Show agent usage statistics |
+| `dops costs` | Show estimated costs by model |
+
+### init
+
+Creates the config file and SQLite database for storing telemetry data.
+
+```bash title="terminal"
+dops init
+dops init /custom/data/path
+dops init --non-interactive
+```
+
+| Flag | Description |
+|------|-------------|
+| `[path]` | Data path (default: `~/.dops`) |
+| `--non-interactive` | Skip prompts (for Docker/CI) |
+
+### ingest
+
+Scans local transcript directories for Claude Code, Codex, Gemini, and OpenCode sessions, then pushes the extracted telemetry to a running dops server.
+
+```bash title="terminal"
+dops ingest --url http://localhost:7883 --token sk-dops_abc123
+dops ingest --url http://localhost:7883 --token sk-dops_abc123 --days 7 --source claude gemini
+dops ingest --url http://localhost:7883 --token sk-dops_abc123 --dry-run
+```
+
+| Flag | Description |
+|------|-------------|
+| `--url <url>` | dops server URL (required) |
+| `--token <token>` | dops access token (required) |
+| `--days <n>` | Scan last N days (default: `30`) |
+| `--dry-run` | Scan and report without pushing data |
+| `--source <names...>` | Filter sources: `claude`, `codex`, `gemini`, `opencode` |
+
+### stats
+
+Display aggregated usage statistics including tokens, tool calls, and errors.
+
+```bash title="terminal"
+dops stats --url http://localhost:7883 --token sk-dops_abc123
+dops stats --url http://localhost:7883 --token sk-dops_abc123 --days 7 --source claude
+```
+
+| Flag | Description |
+|------|-------------|
+| `--url <url>` | dops server URL (required) |
+| `--token <token>` | dops access token (required) |
+| `--days <n>` | Last N days (default: `30`) |
+| `--source <name>` | Filter by source: `claude`, `codex`, `gemini`, `opencode` |
+
+### costs
+
+Show estimated costs broken down by model, calculated from token usage and published pricing.
+
+```bash title="terminal"
+dops costs --url http://localhost:7883 --token sk-dops_abc123
+dops costs --url http://localhost:7883 --token sk-dops_abc123 --days 7
+```
+
+| Flag | Description |
+|------|-------------|
+| `--url <url>` | dops server URL (required) |
+| `--token <token>` | dops access token (required) |
+| `--days <n>` | Last N days (default: `30`) |
+
+---
+
+## Quick reference
+
+A summary of all CLI entry points and the default ports for server products.
+
+| Product | Install | Default port(s) |
+|---------|---------|-----------------|
+| dbrain | `npm install -g @dtoolkit/dbrain` | `:7878` (API + MCP), `:7879` (Dashboard) |
+| dcontext | `npm install -g @dtoolkit/dcontext` | N/A (hooks only) |
+| dwork | `npm install -g @dtoolkit/dwork` | `:7881` (API + MCP), `:7882` (Dashboard) |
+| dproxy | `npm install -g @dtoolkit/dproxy` | `:7880` (HTTP API via `serve`) |
+| dops | `npm install -g @dtoolkit/dops` | `:7883` (API + MCP), `:7884` (Dashboard) |
+
+<Aside type="caution">
+All server products (dbrain, dwork, dops) require initialization via their `init` command before the first `start`. Running `start` without `init` will fail.
+</Aside>
+
+### Typical setup flow
+
+```bash title="terminal"
+# 1. Initialize and start the brain
+dbrain init && dbrain start
+
+# 2. Initialize and start the project manager
+dwork init && dwork start
+
+# 3. Initialize and start observability
+dops init && dops start
+
+# 4. Set up context hooks for your AI CLI
+dcontext init
+dcontext install claude
+
+# 5. Initialize the proxy (optional, for multi-provider access)
+dproxy init
+```
+
+For detailed product guides, see the individual product pages: [dbrain](/docs/products/dbrain/), [dcontext](/docs/products/dcontext/), [dwork](/docs/products/dwork/), [dproxy](/docs/products/dproxy/), and [dops](/docs/products/dops/).

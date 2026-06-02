@@ -9,6 +9,7 @@ const products = [
 const sections = [
   { label: 'ecosystem', href: '#ecosystem', section: 'ecosystem' },
   { label: 'quick start', href: '#quickstart', section: 'quickstart' },
+  { label: 'documentation', href: '#documentation', section: 'documentation' },
 ];
 ---
 
@@ -31,7 +32,7 @@ const sections = [
       <span class="mx-4 w-px h-4 bg-[var(--border)]"></span>
 
       {sections.map(({ label, href, section }) => (
-        <a href={href} class="nav-link px-3 py-1.5 text-sm text-[var(--text-3)] hover:text-[var(--text)] transition-colors font-medium" data-section={section}>
+        <a href={href} class="nav-link px-3 py-1.5 text-sm text-[var(--text-3)] hover:text-[var(--text)] transition-colors font-medium" data-section={section} {...(href.startsWith('http') && { target: '_blank', rel: 'noopener noreferrer' })}>
           {label}
         </a>
       ))}
@@ -74,7 +75,7 @@ const sections = [
     </div>
     <div class="flex gap-4 pt-2 border-t border-[var(--border-subtle)]">
       {sections.map(({ label, href }) => (
-        <a href={href} class="mobile-nav-link text-sm text-[var(--text-3)] hover:text-[var(--text)] transition-colors font-medium">
+        <a href={href} class="mobile-nav-link text-sm text-[var(--text-3)] hover:text-[var(--text)] transition-colors font-medium" {...(href.startsWith('http') && { target: '_blank', rel: 'noopener noreferrer' })}>
           {label}
         </a>
       ))}

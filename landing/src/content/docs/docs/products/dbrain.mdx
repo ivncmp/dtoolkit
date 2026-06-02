@@ -1,0 +1,415 @@
+---
+title: "dbrain — Memory"
+description: "Persistent memory server for AI coding agents"
+---
+
+import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+<img src="/logos/logo-dbrain-complete.png" alt="dbrain" width="320" style="margin-bottom: 1.5rem;" />
+
+## Overview
+
+dbrain is a persistent memory server that gives AI coding agents a long-term brain. Every fact, decision, preference, and conversation is stored in a local SQLite database with FTS5 full-text search, then exposed over both MCP and REST on a single port.
+
+The core idea is the **distributed mind**: each developer runs a personal brain that accumulates knowledge across sessions, projects, and tools. Personal brains can federate with shared team brains, so institutional knowledge flows naturally without centralized infrastructure.
+
+dbrain runs entirely on your machine. There are no cloud dependencies, no subscriptions, and no data leaves your network unless you explicitly connect to a shared brain.
+
+### Key capabilities
+
+- **Entities** — people, projects, concepts, and any other knowledge object
+- **Facts** — atomic pieces of knowledge attached to entities, with automatic memory tier decay
+- **Full-text search** — FTS5-powered search across all facts and entities
+- **Federation** — connect personal brains to shared team brains for knowledge sharing
+- **MCP + REST** — both protocols on port 7878, same auth, same data
+- **Dashboard** — web UI on port 7879 for browsing entities, facts, and conversations
+- **Bearer token auth** — API keys for shared brains, optional for personal brains
+
+## Entities
+
+Entities are the top-level knowledge objects in dbrain. They represent anything worth remembering: a person, a project, a concept, a tool, a decision pattern. Each entity has a name, a category, and an optional type for finer classification.
+
+### Creating entities
+
+<Tabs>
+  <TabItem label="MCP">
+    Use the `create_entity` tool from any connected AI coding agent:
+
+    ```json
+    {
+      "tool": "create_entity",
+      "arguments": {
+        "name": "dtoolkit",
+        "category": "project",
+        "type": "monorepo"
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="REST API">
+    ```bash title="terminal"
+    curl -X POST http://localhost:7878/entities \
+      -H "Content-Type: application/json" \
+      -d '{"name": "dtoolkit", "category": "project", "type": "monorepo"}'
+    ```
+  </TabItem>
+</Tabs>
+
+### Entity categories
+
+Entities are flexible, but common categories include:
+
+| Category | Examples |
+|----------|----------|
+| `person` | Team members, collaborators, stakeholders |
+| `project` | Repositories, applications, services |
+| `concept` | Architecture patterns, design decisions, conventions |
+| `tool` | Libraries, frameworks, CLI tools |
+| `organization` | Companies, teams, open-source groups |
+
+<Aside type="tip">
+Keep entity names specific and consistent. Use "React Query" not "that caching library" — agents will search by name, so precision matters.
+</Aside>
+
+### Retrieving entities
+
+Use `get_entity` for full context about a single entity (including all its facts), or `list_entities` to browse by category or type.
+
+```bash title="terminal"
+# Get full entity details
+curl http://localhost:7878/entities/dtoolkit
+
+# List all project entities
+curl http://localhost:7878/entities?category=project
+```
+
+## Facts
+
+Facts are atomic pieces of knowledge attached to entities. Each fact is a single, specific statement: "Favorite editor is Neovim", "Deploy target is Vercel", "Prefers functional components over class components".
+
+The key rule: **one fact, one idea**. Store "Uses pnpm for package management" and "Prefers strict TypeScript" as two separate facts, not a combined paragraph. This makes search more precise and tier decay more meaningful.
+
+### Storing facts
+
+<Tabs>
+  <TabItem label="MCP">
+    Use the `remember` tool:
+
+    ```json
+    {
+      "tool": "remember",
+      "arguments": {
+        "entity": "dtoolkit",
+        "fact": "Uses pnpm workspaces with turbo for build orchestration"
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="REST API">
+    ```bash title="terminal"
+    curl -X POST http://localhost:7878/facts \
+      -H "Content-Type: application/json" \
+      -d '{"entity": "dtoolkit", "fact": "Uses pnpm workspaces with turbo for build orchestration"}'
+    ```
+  </TabItem>
+</Tabs>
+
+### Memory tiers
+
+Every fact has a tier that reflects how recently and frequently it has been accessed. Tiers decay automatically over time:
+
+| Tier | Description | Behavior |
+|------|-------------|----------|
+| **Hot** | Recently created or accessed | Included in context injection by default |
+| **Warm** | Accessed in the past but not recently | Available via search, may be included in broader context |
+| **Cold** | Old and rarely accessed | Available via search only, excluded from automatic injection |
+
+Tier decay is based on a combination of time since last access and total access count. A fact that was accessed once a month ago decays faster than one accessed ten times last week.
+
+### Bumping facts
+
+When a fact becomes relevant again, use `bump` to push it back to hot tier. This resets the decay clock without duplicating the fact.
+
+```json
+{
+  "tool": "bump",
+  "arguments": {
+    "entity": "dtoolkit",
+    "fact_id": "f_abc123"
+  }
+}
+```
+
+### Compaction
+
+Over time, a brain accumulates redundant or outdated facts. The `compact` operation deduplicates facts, merges near-duplicates, and recalculates tiers across the entire database.
+
+```bash title="terminal"
+dbrain compact
+```
+
+<Aside type="caution">
+Compaction modifies facts in place. It is safe to run regularly, but avoid running it while an agent session is actively writing to the brain.
+</Aside>
+
+## Search
+
+dbrain uses SQLite FTS5 for full-text search across all facts and entities. Queries support standard FTS5 syntax including prefix matching, phrase queries, and boolean operators.
+
+<Tabs>
+  <TabItem label="MCP">
+    Use the `recall` tool:
+
+    ```json
+    {
+      "tool": "recall",
+      "arguments": {
+        "query": "deployment configuration"
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="REST API">
+    ```bash title="terminal"
+    curl "http://localhost:7878/search?q=deployment+configuration"
+    ```
+  </TabItem>
+</Tabs>
+
+Search results include relevance ranking from FTS5 and are filtered by memory tier — hot facts rank higher than cold ones at equal text relevance.
+
+<Aside type="tip">
+When connected to shared brains, `recall` automatically federates — results include matches from both your personal brain and all connected shared brains. No extra configuration needed.
+</Aside>
+
+## Federation
+
+Federation is dbrain's mechanism for knowledge sharing across brains. The model is simple: each developer runs a personal brain, and one or more shared brains serve as team knowledge bases.
+
+### Architecture
+
+```
+┌─────────────┐     ┌─────────────┐
+│  Personal    │────>│   Shared    │
+│  Brain (A)   │     │   Brain     │
+└─────────────┘     │  (team)     │
+                    │             │
+┌─────────────┐     │             │
+│  Personal    │────>│             │
+│  Brain (B)   │     └─────────────┘
+└─────────────┘
+```
+
+### Connecting to a shared brain
+
+<Steps>
+1. The shared brain operator provides a URL and API key.
+
+2. Run the connect command from your machine:
+
+   ```bash title="terminal"
+   dbrain connect --url https://team-brain.example.com --key sk_abc123
+   ```
+
+3. Verify the connection:
+
+   ```bash title="terminal"
+   dbrain status
+   ```
+</Steps>
+
+### How federation works
+
+| Operation | Behavior |
+|-----------|----------|
+| `recall` | Searches your personal brain **and** all connected shared brains. Results are merged and ranked. |
+| `remember` | Stores facts in your personal brain only. |
+| `share` | Explicitly pushes a fact from your personal brain to a connected shared brain. |
+| `get_entity` | Reads from your personal brain. Use the shared brain's API directly for shared entities. |
+
+<Aside type="tip">
+Federation is read-heavy by design. Your personal brain automatically pulls knowledge from shared brains during search, but writing to the shared brain requires an explicit `share` call. This prevents accidental leakage of personal notes into team knowledge.
+</Aside>
+
+### Managing connections
+
+```bash title="terminal"
+# List all connections
+dbrain connections
+
+# Remove a connection
+dbrain unlink --url https://team-brain.example.com
+```
+
+### API keys for shared brains
+
+Shared brains use bearer token authentication. The brain operator manages keys through the CLI or REST API:
+
+```bash title="terminal"
+# Generate a new API key
+dbrain keys create --name "developer-a"
+
+# List all keys
+dbrain keys list
+
+# Revoke a key
+dbrain keys revoke --id key_abc123
+```
+
+## Dashboard
+
+dbrain serves a web dashboard on port 7879 (one port above the API). It provides a visual interface for browsing and searching the brain without needing to use the CLI or MCP tools.
+
+### Features
+
+- **Entity grid** — browse all entities with category and type filters
+- **Entity detail** — view all facts for an entity, sorted by tier
+- **Search** — full-text search with instant results
+- **Conversations** — browse stored conversation logs from agent sessions
+- **Light/Dark themes** — respects system preference, toggleable
+- **Mobile responsive** — usable on phones and tablets
+
+Access the dashboard at [http://localhost:7879](http://localhost:7879) after starting dbrain.
+
+<video src="/screens/dbrain.webm" autoplay loop muted playsinline style="border-radius: 0.75rem; border: 1px solid oklch(0.92 0.01 248); margin-top: 1rem;" />
+
+```bash title="terminal"
+dbrain start
+# API available at http://localhost:7878
+# Dashboard available at http://localhost:7879
+```
+
+<Aside type="tip">
+The dashboard is a single-file React app with CDN dependencies — no build step required. It is served as a static asset by the same Fastify instance that runs the API.
+</Aside>
+
+## MCP Tools
+
+dbrain exposes 11 MCP tools on the same port as the REST API (7878). Any MCP-compatible client can connect to them.
+
+| Tool | Description |
+|------|-------------|
+| `recall` | Search the brain for facts matching a query. Auto-federates across connected brains. |
+| `remember` | Store a new atomic fact attached to an entity. Creates the entity if it does not exist. |
+| `get_entity` | Retrieve full details and all facts for a specific entity. |
+| `list_entities` | List entities, optionally filtered by category or type. |
+| `create_entity` | Create a new entity with name, category, and optional type. |
+| `bump` | Touch a fact to reset its tier decay clock, pushing it back toward hot. |
+| `log` | Store a conversation message or exchange for later review. |
+| `overview` | Return brain statistics: entity count, fact count, tier distribution, connections. |
+| `share` | Push a fact from the personal brain to a connected shared brain. |
+| `compact` | Trigger compaction: deduplicate facts, merge near-duplicates, recalculate tiers. Admin-only on shared brains. |
+| `wake_up` | Initial handshake used by dcontext at session start. Returns identity and project context. |
+
+<Aside type="caution">
+The `compact` tool is admin-only on shared brains. On personal brains, any connected client can trigger it.
+</Aside>
+
+## CLI Commands
+
+The `dbrain` CLI manages the full lifecycle of a brain instance.
+
+### Installation
+
+```bash title="install"
+pnpm add -g @dtoolkit/dbrain
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `dbrain init` | Interactive wizard to create a new brain. Prompts for brain type (personal/shared), name, and port. |
+| `dbrain start` | Start the brain server (REST + MCP on :7878, dashboard on :7879). |
+| `dbrain connect` | Configure a client-side connection to a remote shared brain. |
+| `dbrain status` | Show brain status: running/stopped, port, entity count, connections. |
+| `dbrain compact` | Run compaction: deduplicate, merge, and recalculate tiers. |
+| `dbrain configure` | Update brain configuration (port, name, auth settings). |
+| `dbrain link` | Add a connection to a shared brain. |
+| `dbrain unlink` | Remove a connection to a shared brain. |
+| `dbrain connections` | List all configured connections to shared brains. |
+| `dbrain keys` | Manage API keys for shared brains (create, list, revoke). |
+
+### Quick start
+
+<Steps>
+1. Initialize a new personal brain:
+
+   ```bash title="terminal"
+   dbrain init
+   ```
+
+2. Start the server:
+
+   ```bash title="terminal"
+   dbrain start
+   ```
+
+3. Verify it is running:
+
+   ```bash title="terminal"
+   dbrain status
+   ```
+
+4. Connect your AI coding agent via [dcontext](/docs/products/dcontext/) or configure MCP directly.
+</Steps>
+
+## REST API
+
+The REST API is available on port 7878 by default. All endpoints accept and return JSON. Shared brains require a `Authorization: Bearer <key>` header.
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/entities` | List entities with optional `category` and `type` query filters |
+| `POST` | `/entities` | Create a new entity |
+| `GET` | `/entities/:id` | Get entity details including all facts |
+| `PUT` | `/entities/:id` | Update entity metadata |
+| `DELETE` | `/entities/:id` | Delete an entity and all its facts |
+| `GET` | `/facts` | List facts with optional entity filter |
+| `POST` | `/facts` | Create a new fact attached to an entity |
+| `PUT` | `/facts/:id` | Update a fact |
+| `DELETE` | `/facts/:id` | Delete a fact |
+| `GET` | `/conversations` | List stored conversation logs |
+| `POST` | `/conversations` | Store a conversation exchange |
+| `GET` | `/search` | Full-text search across entities and facts |
+| `GET` | `/workspace` | Get workspace context (used by dcontext) |
+| `GET` | `/health` | Health check — returns status and version |
+| `POST` | `/keys` | Create an API key (shared brains only) |
+| `GET` | `/keys` | List API keys (shared brains only) |
+| `DELETE` | `/keys/:id` | Revoke an API key (shared brains only) |
+| `GET` | `/connections` | List federation connections |
+| `POST` | `/compact` | Trigger compaction (admin-only on shared brains) |
+
+### Example: storing and recalling knowledge
+
+```bash title="terminal"
+# Create an entity
+curl -X POST http://localhost:7878/entities \
+  -H "Content-Type: application/json" \
+  -d '{"name": "my-project", "category": "project"}'
+
+# Store a fact
+curl -X POST http://localhost:7878/facts \
+  -H "Content-Type: application/json" \
+  -d '{"entity": "my-project", "fact": "Uses React 19 with Vite 7"}'
+
+# Search for it later
+curl "http://localhost:7878/search?q=React+Vite"
+```
+
+## Integration with dtoolkit
+
+dbrain is designed to work standalone, but it composes with the rest of the dtoolkit suite:
+
+- **[dcontext](/docs/products/dcontext/)** — Hooks into AI coding CLIs (Claude Code, Gemini CLI, Codex CLI, OpenCode) to inject brain context at session start and save transcripts before compaction.
+- **[dwork](/docs/products/dwork/)** — AI-native project manager. dwork and dbrain are independent services; dcontext bridges them by injecting both brain facts and project context into agent sessions.
+- **[dops](/docs/products/dops/)** — Agent observability. Track how agents use brain tools (recall frequency, remember patterns, federation traffic).
+- **[@dtoolkit/sdk](/docs/reference/sdk/)** — Typed `DBrainClient` for programmatic access from Node.js applications.
+
+## Further reading
+
+- [Getting Started](/docs/guides/getting-started/) — Install dtoolkit and run your first brain
+- [MCP Tools Reference](/docs/reference/mcp-tools/) — Full schema reference for all MCP tools
+- [CLI Reference](/docs/reference/cli/) — Complete CLI documentation for all dtoolkit packages

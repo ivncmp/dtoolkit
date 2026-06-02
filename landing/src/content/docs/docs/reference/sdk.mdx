@@ -1,0 +1,444 @@
+---
+title: SDK
+description: Typed HTTP clients for dtoolkit services
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+The `@dtoolkit/sdk` package provides typed HTTP clients for the three dtoolkit services that expose REST APIs: **dbrain** (memory), **dwork** (project management), and **dproxy** (model invocation). Each client wraps a shared `HttpClient` base with Bearer token authentication, configurable timeouts, and structured error handling via `SdkError`.
+
+## Installation
+
+```bash title="install"
+npm install @dtoolkit/sdk
+# or
+pnpm add @dtoolkit/sdk
+```
+
+<Aside type="tip">
+  The SDK requires Node.js 22 or later and uses native `fetch` internally -- no additional HTTP dependencies needed.
+</Aside>
+
+## Quick start
+
+```typescript
+import { DBrainClient, DWorkClient, DProxyClient } from '@dtoolkit/sdk';
+
+const brain = new DBrainClient('http://localhost:7878', 'your-token');
+const work = new DWorkClient('http://localhost:7881', 'your-token');
+const proxy = new DProxyClient('http://localhost:7880', 'your-token');
+```
+
+Each client supports two constructor signatures:
+
+```typescript
+// Positional arguments
+const client = new DBrainClient('http://localhost:7878', 'your-token');
+
+// Options object (supports timeoutMs)
+const client = new DBrainClient({
+  baseUrl: 'http://localhost:7878',
+  token: 'your-token',
+  timeoutMs: 10_000,
+});
+```
+
+## Error handling
+
+All clients throw `SdkError` on non-2xx responses. The error includes the HTTP status code, response body, and request path.
+
+```typescript
+import { SdkError } from '@dtoolkit/sdk';
+
+try {
+  await brain.getEntity('nonexistent');
+} catch (err) {
+  if (err instanceof SdkError) {
+    console.error(`HTTP ${err.status} on ${err.path}: ${err.body}`);
+  }
+}
+```
+
+---
+
+## DBrainClient
+
+Typed client for the [dbrain](/docs/products/dbrain/) REST API (default port `7878`).
+
+### Constructor
+
+```typescript
+new DBrainClient(baseUrl: string, token: string)
+new DBrainClient(options: DBrainClientOptions)
+```
+
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `baseUrl` | `string` | Yes | dbrain server URL (e.g., `http://localhost:7878`) |
+| `token` | `string` | Yes | Bearer token for authentication |
+| `timeoutMs` | `number` | No | Request timeout in milliseconds |
+
+### Methods
+
+#### Health
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `health()` | `() => Promise<HealthResponse>` | Server health, entity/fact/conversation counts, brain type |
+| `connect()` | `() => Promise<ConnectResponse>` | MCP connection config, permissions, and CLAUDE.md content |
+
+#### Entities
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `listEntities(filters?)` | `(filters?: { category?: string; type?: string }) => Promise<EntityRow[]>` | List all entities, optionally filtered by category or type |
+| `getEntity(id)` | `(id: string) => Promise<EntityWithFacts>` | Get a single entity with all its facts |
+| `createEntity(entity)` | `(entity: { id, name, type, category, metadata? }) => Promise<{...}>` | Create a new entity |
+| `archiveEntity(id)` | `(id: string) => Promise<{ id, status }>` | Archive (soft-delete) an entity |
+
+#### Facts
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `listFacts(entityId, filters?)` | `(entityId: string, filters?: { tier?: string }) => Promise<FactRow[]>` | List facts for an entity, optionally filtered by tier |
+| `addFact(entityId, fact)` | `(entityId: string, fact: { id, fact, category?, timestamp?, source?, relatedEntities? }) => Promise<{...}>` | Add a fact to an entity |
+| `bumpFact(id)` | `(id: string) => Promise<{ id, bumped }>` | Touch a fact to keep it in the hot tier |
+
+#### Search
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `search(query, options?)` | `(query: string, options?: { limit?, entityId?, tier? }) => Promise<SearchResult[]>` | Full-text search across facts |
+| `searchFederated(query, options?)` | `(query: string, options?: { limit?, entityId?, tier? }) => Promise<FederatedSearchResponse>` | Search across local and connected brains |
+| `memorySummary()` | `() => Promise<MemorySummaryRow[]>` | Per-entity breakdown of hot/warm/cold fact counts |
+
+#### Conversations
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `listConversations(filters?)` | `(filters?: { source?, limit? }) => Promise<ConversationSummary[]>` | List conversations |
+| `getConversation(id)` | `(id: string) => Promise<ConversationWithMessages>` | Get conversation with all messages |
+| `startConversation(source, id?)` | `(source: string, id?: string) => Promise<{...}>` | Start a new conversation |
+| `sendMessages(conversationId, messages)` | `(id: string, messages: Array<{ role, content }>) => Promise<Array<{...}>>` | Add messages to a conversation |
+| `listMessages(conversationId, filters?)` | `(id: string, filters?: { since?, processed? }) => Promise<Message[]>` | List messages with optional filters |
+| `pendingMessages()` | `() => Promise<PendingMessages>` | Get unprocessed message counts |
+
+#### Workspace (Documents)
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `listDocuments()` | `() => Promise<DocumentListItem[]>` | List all workspace documents |
+| `getDocument(key)` | `(key: string) => Promise<Document>` | Get document by key |
+| `putDocument(key, doc)` | `(key: string, doc: { title, content }) => Promise<{...}>` | Create or update a document |
+| `deleteDocument(key)` | `(key: string) => Promise<{ key, deleted }>` | Delete a document |
+
+#### API Keys and Connections
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `createApiKey(params)` | `(params: { userId, userName, permissions? }) => Promise<ApiKeyCreateResponse>` | Create an API key (shared brains only) |
+| `listApiKeys()` | `() => Promise<ApiKeyListItem[]>` | List all API keys |
+| `revokeApiKey(id)` | `(id: string) => Promise<{ id, revoked }>` | Revoke an API key |
+| `listConnections()` | `() => Promise<ConnectionStatus[]>` | List connected brains with online status |
+| `shareFact(factId, targetBrain?)` | `(factId: string, targetBrain?: string) => Promise<ShareResult>` | Share a fact to a connected brain |
+
+### Example
+
+```typescript
+import { DBrainClient } from '@dtoolkit/sdk';
+
+const brain = new DBrainClient('http://localhost:7878', 'dtk_abc123');
+
+// Create an entity
+await brain.createEntity({
+  id: 'project-acme',
+  name: 'Project ACME',
+  type: 'project',
+  category: 'work',
+});
+
+// Add a fact
+await brain.addFact('project-acme', {
+  id: 'fact-001',
+  fact: 'Uses React 19 with Vite 7 and pnpm workspaces',
+  category: 'tech',
+});
+
+// Search across all facts
+const results = await brain.search('React workspace');
+for (const r of results) {
+  console.log(`[${r.entity.name}] ${r.fact.fact} (score: ${r.score})`);
+}
+
+// Federated search (includes connected brains)
+const federated = await brain.searchFederated('deployment strategy');
+console.log(`Local: ${federated.federation.local}, Remote: ${federated.federation.remote}`);
+```
+
+---
+
+## DWorkClient
+
+Typed client for the [dwork](/docs/products/dwork/) REST API (default port `7881`).
+
+### Constructor
+
+```typescript
+new DWorkClient(baseUrl: string, token: string)
+new DWorkClient(options: DWorkClientOptions)
+```
+
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `baseUrl` | `string` | Yes | dwork server URL (e.g., `http://localhost:7881`) |
+| `token` | `string` | Yes | Bearer token for authentication |
+| `timeoutMs` | `number` | No | Request timeout in milliseconds |
+
+### Methods
+
+#### Health and Overview
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `health()` | `() => Promise<DWorkHealthResponse>` | Server health with project/task/doc counts |
+| `overview()` | `() => Promise<DWorkOverview>` | Global overview: all projects with task breakdowns by status and priority |
+| `whatToDoNext(project?)` | `(project?: string) => Promise<DWorkTask[]>` | AI-ranked next tasks |
+
+#### Projects
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `listProjects(status?)` | `(status?: string) => Promise<DWorkProjectSummary[]>` | List projects with task count summaries |
+| `getProject(slug)` | `(slug: string) => Promise<DWorkProject>` | Get full project details including README and tech stack |
+| `createProject(project)` | `(project: { slug, name, description?, source_path? }) => Promise<DWorkProject>` | Scaffold a new project |
+| `updateProject(slug, changes)` | `(slug: string, changes: { name?, description?, status?, source_path? }) => Promise<DWorkProject>` | Update project metadata |
+| `deleteProject(slug)` | `(slug: string) => Promise<{ deleted, slug }>` | Delete a project |
+
+#### Tasks
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `listTasks(project, filters?)` | `(project: string, filters?: { status?, priority? }) => Promise<DWorkTask[]>` | List tasks for a project |
+| `addTask(project, task)` | `(project: string, task: { title, type?, priority?, status?, estimate?, deadline?, detail?, detail_doc? }) => Promise<DWorkTask>` | Add a task to a project |
+| `updateTask(id, changes)` | `(id: string, changes: { title?, status?, priority?, type?, estimate?, deadline?, detail?, project? }) => Promise<{...}>` | Update a task |
+| `deleteTask(id)` | `(id: string) => Promise<{ deleted, id }>` | Delete a task |
+
+#### Docs
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `listDocs(project, type?)` | `(project: string, type?: string) => Promise<DWorkDoc[]>` | List docs for a project |
+| `getDoc(id)` | `(id: string) => Promise<DWorkDoc>` | Get a doc with content |
+| `addDoc(project, doc)` | `(project: string, doc: { title, body, type }) => Promise<DWorkDoc>` | Add a doc to a project |
+| `updateDoc(id, changes)` | `(id: string, changes: { title?, body?, type? }) => Promise<{...}>` | Update a doc |
+| `deleteDoc(id)` | `(id: string) => Promise<{ deleted, id }>` | Delete a doc |
+
+#### Search and Sync
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `search(query, options?)` | `(query: string, options?: { project?, limit? }) => Promise<DWorkSearchResult[]>` | Full-text search across tasks and docs |
+| `sync(project)` | `(project: string) => Promise<DWorkSyncResult>` | Sync markdown files to the SQLite index |
+
+#### Code Graphs
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `listGraphs()` | `() => Promise<DWorkGraph[]>` | List all uploaded code graphs |
+| `getGraph(name)` | `(name: string) => Promise<DWorkGraph>` | Get graph metadata |
+| `uploadGraph(name, dbBuffer)` | `(name: string, dbBuffer: Uint8Array) => Promise<DWorkGraphUploadResult>` | Upload a codegraph-sdk database |
+| `deleteGraph(name)` | `(name: string) => Promise<void>` | Delete a graph |
+| `linkGraphProjects(name, slugs)` | `(name: string, slugs: string[]) => Promise<{ linked }>` | Link a graph to projects |
+| `graphStats(name)` | `(name: string) => Promise<DWorkGraphStats>` | Node/edge/file counts by kind and language |
+| `searchGraphNodes(name, query, opts?)` | `(name: string, query: string, opts?: { kind?, limit? }) => Promise<DWorkGraphSearchResult[]>` | Search for nodes in a graph |
+| `getGraphNode(name, nodeId)` | `(name: string, nodeId: string) => Promise<DWorkGraphNode>` | Get full node details |
+| `getGraphCallers(name, nodeId, depth?)` | `(name: string, nodeId: string, depth?: number) => Promise<Array<{...}>>` | Trace callers of a node |
+| `getGraphImpact(name, nodeId, depth?)` | `(name: string, nodeId: string, depth?: number) => Promise<DWorkGraphSubgraph>` | Impact analysis: what does this node affect? |
+| `traceGraphPath(name, from, to)` | `(name: string, from: string, to: string) => Promise<{ path }>` | Find the shortest path between two nodes |
+| `graphDeadCode(name, kinds?)` | `(name: string, kinds?: string) => Promise<DWorkGraphNode[]>` | Find unreferenced nodes (dead code) |
+| `graphCircularDependencies(name)` | `(name: string) => Promise<string[][]>` | Detect circular dependency chains |
+
+#### API Keys
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `createApiKey(params)` | `(params: { userId, userName, permissions? }) => Promise<DWorkApiKeyCreateResponse>` | Create an API key |
+| `listApiKeys()` | `() => Promise<DWorkApiKeyListItem[]>` | List API keys |
+| `revokeApiKey(id)` | `(id: string) => Promise<{ id, revoked }>` | Revoke an API key |
+
+### Example
+
+```typescript
+import { DWorkClient } from '@dtoolkit/sdk';
+
+const work = new DWorkClient('http://localhost:7881', 'dtk_abc123');
+
+// List active projects
+const projects = await work.listProjects('active');
+for (const p of projects) {
+  console.log(`${p.name}: ${p.taskCounts.todo ?? 0} todo, ${p.taskCounts.done ?? 0} done`);
+}
+
+// Add a task
+await work.addTask('my-project', {
+  title: 'Implement user auth',
+  type: 'feature',
+  priority: 'high',
+  estimate: '3h',
+});
+
+// Get the global overview
+const overview = await work.overview();
+console.log(`${overview.totalProjects} projects, ${overview.totalTasks} tasks`);
+```
+
+---
+
+## DProxyClient
+
+Typed client for the [dproxy](/docs/products/dproxy/) REST API (default port `7880`). All endpoints are under the `/v1` prefix.
+
+### Constructor
+
+```typescript
+new DProxyClient(baseUrl: string, token?: string)
+new DProxyClient(options: DProxyClientOptions)
+```
+
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `baseUrl` | `string` | Yes | dproxy server URL (e.g., `http://localhost:7880`) |
+| `token` | `string` | No | Bearer token for authentication |
+
+### Methods
+
+#### Health
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `health()` | `() => Promise<DProxyHealthResponse>` | Server health, active provider, version |
+
+#### Ask (Prompt Execution)
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `ask(prompt, options?)` | `(prompt: string, options?: AskOptions) => Promise<AskResponse>` | Execute a prompt and get the full response |
+| `askStream(prompt, options?)` | `(prompt: string, options?: AskOptions) => AsyncGenerator<AdapterStreamEvent>` | Stream a prompt response via SSE |
+
+**`AskOptions`**:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `provider` | `'claude' \| 'codex' \| 'gemini' \| 'opencode'` | Provider to use (default: `claude`) |
+| `model` | `string` | Model override |
+| `maxTurns` | `number` | Maximum agentic turns |
+| `maxBudgetUsd` | `number` | Cost cap in USD |
+| `systemPrompt` | `string` | Custom system prompt |
+| `memory` | `boolean \| string[]` | Include memory context (all or specific keys) |
+| `files` | `InputFile[]` | Files to include in context |
+| `sessionId` | `string` | Session ID for multi-turn conversations |
+| `continueSession` | `boolean` | Continue an existing session |
+| `saveHistory` | `boolean` | Persist to history |
+
+#### History
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `listHistory(limit?)` | `(limit?: number) => Promise<HistoryEntry[]>` | List prompt history |
+| `getHistory(id)` | `(id: string) => Promise<HistoryEntry>` | Get a single history entry |
+| `searchHistory(query)` | `(query: string) => Promise<HistoryEntry[]>` | Search history by query |
+| `clearHistory(before?)` | `(before?: string) => Promise<{ removed }>` | Clear history entries |
+
+#### Memory
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `listMemoryKeys()` | `() => Promise<string[]>` | List all memory keys |
+| `getMemory(key)` | `(key: string) => Promise<string>` | Get memory content by key |
+| `setMemory(key, content)` | `(key: string, content: string) => Promise<void>` | Create or update a memory entry |
+| `deleteMemory(key)` | `(key: string) => Promise<void>` | Delete a memory entry |
+| `searchMemory(query)` | `(query: string) => Promise<MemorySearchResult[]>` | Search across memory entries |
+
+#### Templates
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `listTemplates()` | `() => Promise<TemplateDefinition[]>` | List all prompt templates |
+| `getTemplate(name)` | `(name: string) => Promise<TemplateDefinition>` | Get a template by name |
+| `saveTemplate(name, template)` | `(name: string, template: TemplateDefinition) => Promise<void>` | Create or update a template |
+| `runTemplate(name, options?)` | `(name: string, options?: TemplateRunOptions) => Promise<AskResponse>` | Execute a template with variable substitution |
+| `deleteTemplate(name)` | `(name: string) => Promise<void>` | Delete a template |
+
+#### Config
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `getConfig()` | `() => Promise<unknown>` | Get the full dproxy config |
+| `getConfigValue(key)` | `(key: string) => Promise<unknown>` | Get a single config value |
+| `setConfigValue(key, value)` | `(key: string, value: string) => Promise<void>` | Set a config value |
+
+### Example
+
+```typescript
+import { DProxyClient } from '@dtoolkit/sdk';
+
+const proxy = new DProxyClient('http://localhost:7880', 'dtk_abc123');
+
+// Simple prompt
+const response = await proxy.ask('Explain the builder pattern in 3 sentences', {
+  provider: 'claude',
+});
+console.log(response.text);
+console.log(`Cost: $${response.costUsd}, Duration: ${response.durationMs}ms`);
+
+// Streaming
+for await (const event of proxy.askStream('Write a haiku about TypeScript')) {
+  if (event.type === 'text') {
+    process.stdout.write(event.text);
+  }
+}
+```
+
+---
+
+## Exported types
+
+The SDK re-exports all response types for use in your own code. Import them directly from the package:
+
+```typescript
+import type {
+  // dbrain
+  EntityRow, EntityWithFacts, FactRow, SearchResult,
+  FederatedSearchResponse, HealthResponse, ConversationSummary,
+
+  // dwork
+  DWorkProject, DWorkTask, DWorkDoc, DWorkOverview, DWorkSearchResult,
+  DWorkGraph, DWorkGraphNode, DWorkGraphStats,
+
+  // dproxy
+  AskOptions, AskResponse, DProxyHealthResponse, ProviderName,
+
+  // core (re-exported)
+  AdapterStreamEvent, AdapterUsage,
+} from '@dtoolkit/sdk';
+```
+
+## Default ports
+
+| Service | REST API | Dashboard |
+|---------|----------|-----------|
+| [dbrain](/docs/products/dbrain/) | `7878` | `7879` |
+| [dproxy](/docs/products/dproxy/) | `7880` | -- |
+| [dwork](/docs/products/dwork/) | `7881` | `7882` |
+| [dops](/docs/products/dops/) | `7883` | `7884` |
+
+<Aside type="caution">
+  The SDK does not include a client for dops yet. Use direct HTTP requests or the dops MCP tools for observability data. See the [dops reference](/docs/products/dops/) for endpoint details.
+</Aside>
+
+## Further reading
+
+- [Getting started guide](/docs/guides/getting-started/) -- set up dtoolkit from scratch
+- [MCP tools reference](/docs/reference/mcp-tools/) -- the MCP tool equivalents of these REST endpoints
+- [CLI reference](/docs/reference/cli/) -- command-line interfaces for all dtoolkit services
+- [Examples on GitHub](https://github.com/ivncmp/dtoolkit/tree/main/examples) -- runnable scripts using the SDK

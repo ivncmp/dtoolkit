@@ -1,0 +1,10 @@
+<script is:inline is:raw>
+  (function() {
+    document.documentElement.dataset.theme = 'light';
+    try { localStorage.setItem('starlight-theme', 'light'); } catch(e) {}
+  })();
+</script>
+<style>
+  :root { color-scheme: light !important; }
+  :root:not([data-theme='light']) { display: none; }
+</style>

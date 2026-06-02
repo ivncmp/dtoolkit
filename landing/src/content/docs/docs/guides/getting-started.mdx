@@ -1,0 +1,152 @@
+---
+title: Getting Started
+description: Install dtoolkit and store your first memory in under 5 minutes.
+---
+
+import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+dtoolkit gives your AI coding agents persistent memory, project management, and observability. This guide gets you from zero to your first stored memory in under 5 minutes.
+
+## Prerequisites
+
+- **Node.js >= 22** — [download](https://nodejs.org/)
+- **An AI coding CLI** — [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Codex CLI](https://github.com/openai/codex), or [OpenCode](https://github.com/opencode-ai/opencode)
+
+## Install dbrain
+
+dbrain is the persistent memory server — the foundation of dtoolkit.
+
+<Tabs>
+  <TabItem label="npm">
+    ```bash title="install"
+    npm install -g @dtoolkit/dbrain
+    ```
+  </TabItem>
+  <TabItem label="pnpm">
+    ```bash title="install"
+    pnpm add -g @dtoolkit/dbrain
+    ```
+  </TabItem>
+</Tabs>
+
+## Set up your brain
+
+<Steps>
+1. **Initialize** — the interactive wizard creates your data directory, sets a port, and generates an auth token:
+
+   ```bash title="terminal"
+   dbrain init
+   ```
+
+   Accept the defaults or customize. The wizard creates `~/.dbrain/` with your config and SQLite database.
+
+2. **Start the server** — this launches the REST + MCP API and the web dashboard:
+
+   ```bash title="terminal"
+   dbrain start
+   ```
+
+   You should see:
+
+   ```
+   ✓ dbrain running
+     API:       http://localhost:7878
+     Dashboard: http://localhost:7879
+   ```
+
+3. **Connect your coding CLI** — this configures MCP, injects the CLAUDE.md instructions, and sets permissions:
+
+   <Tabs>
+     <TabItem label="Claude Code">
+       ```bash title="terminal"
+       dbrain connect claude
+       ```
+     </TabItem>
+     <TabItem label="Gemini CLI">
+       ```bash title="terminal"
+       dbrain connect gemini
+       ```
+     </TabItem>
+     <TabItem label="Codex CLI">
+       ```bash title="terminal"
+       dbrain connect codex
+       ```
+     </TabItem>
+     <TabItem label="OpenCode">
+       ```bash title="terminal"
+       dbrain connect opencode
+       ```
+     </TabItem>
+   </Tabs>
+
+   The connect command writes the necessary configuration files for your CLI. No manual setup needed.
+</Steps>
+
+## Store your first memory
+
+Open your coding CLI and ask it to remember something:
+
+```
+You: Remember that my preferred language is TypeScript and I use pnpm.
+```
+
+The AI will use the `remember` MCP tool to save this fact to your brain. You should see it call the tool in the output.
+
+## Verify it worked
+
+**Option A — Dashboard:** Open [http://localhost:7879](http://localhost:7879) in your browser. You'll see your entity with the fact you just stored.
+
+**Option B — Ask your AI:**
+
+```
+You: What do you know about me?
+```
+
+The AI will use the `recall` tool and return your stored facts.
+
+<Aside type="tip">
+  Facts in dbrain have **memory tiers** (hot, warm, cold) that decay naturally based on access patterns — just like a real brain. The more you access a memory, the longer it stays hot.
+</Aside>
+
+## Next steps
+
+You now have a working AI memory system. Here's where to go next:
+
+### Add automatic context injection
+
+[dcontext](/docs/guides/dcontext/) hooks into your CLI's lifecycle to automatically inject your identity and project facts at session start, and save transcripts before context compaction.
+
+```bash title="install"
+npm install -g @dtoolkit/dcontext
+dcontext install
+```
+
+### Add project management
+
+[dwork](/docs/guides/dwork/) is an AI-native project manager that uses Markdown files as the source of truth. Your AI can create tasks, update status, and search docs via MCP.
+
+```bash
+npm install -g @dtoolkit/dwork
+dwork init
+dwork start
+```
+
+### Add observability
+
+[dops](/docs/guides/dops/) tracks tokens, costs, tool usage, success rates, and errors across all your agent sessions.
+
+```bash
+npm install -g @dtoolkit/dops
+dops init
+dops start
+```
+
+### The full stack
+
+Install everything at once for the complete experience:
+
+```bash
+npm install -g @dtoolkit/dbrain @dtoolkit/dcontext @dtoolkit/dwork @dtoolkit/dops @dtoolkit/dproxy
+```
+
+See [Core Concepts](/docs/guides/core-concepts/) for how all the pieces fit together.

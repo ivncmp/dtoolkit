@@ -1,0 +1,269 @@
+---
+title: REST API
+description: REST API endpoints for dbrain, dwork, dops, and dproxy
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+All dtoolkit services expose REST APIs alongside their MCP interfaces on the same port. Every endpoint requires a **Bearer token** in the `Authorization` header unless noted otherwise.
+
+```bash title="terminal"
+curl -H "Authorization: Bearer <token>" http://localhost:7878/health
+```
+
+<Aside type="tip">
+  Each service generates its API key during `init`. Run `<service> keys` to view or rotate keys. For detailed request and response schemas, refer to the source code in the corresponding `src/server/routes/` directory of each package.
+</Aside>
+
+## Authentication
+
+All services use the same auth pattern:
+
+| Header | Value |
+|--------|-------|
+| `Authorization` | `Bearer <api-key>` |
+| `Content-Type` | `application/json` |
+
+Keys are managed per-service. For shared brains (dbrain), additional keys can be issued to connected clients via the `/keys` endpoints.
+
+---
+
+## dbrain — Memory Server
+
+**Default port:** `7878` (REST + MCP) | `7879` (dashboard)
+
+The dbrain API provides CRUD access to entities, facts, conversations, and full-text search with optional federation across connected brains.
+
+### Entities
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/entities` | List all entities. Supports `?category=` and `?type=` query filters. |
+| `GET` | `/entities/:name` | Get a single entity by name, including its facts and metadata. |
+| `POST` | `/entities` | Create a new entity. Body: `{ name, category, type?, metadata? }`. |
+
+### Facts
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/entities/:name/facts` | List all facts for an entity. Supports `?tier=` filter (hot, warm, cold). |
+| `POST` | `/entities/:name/facts` | Add a fact to an entity. Body: `{ content, tier?, source? }`. |
+
+### Search
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/search` | Full-text search across entities and facts. Query params: `q` (required), `federated` (boolean, searches connected brains when `true`). |
+
+<Aside type="tip">
+  Federated search queries all connected brains in parallel and merges results. Set `federated=true` to search across your personal and shared brains simultaneously.
+</Aside>
+
+### Conversations
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/conversations` | List stored conversation logs. |
+| `POST` | `/conversations` | Store a conversation log entry. Body: `{ messages, source?, metadata? }`. |
+
+### Workspace
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/workspace` | Get the current workspace context (identity, project facts, injected context). |
+
+### Keys
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/keys` | List all API keys. Shared brains only. |
+| `POST` | `/keys` | Create a new API key. Shared brains only. Body: `{ label? }`. |
+
+<Aside type="caution">
+  The `/keys` endpoints are only available on shared brains. Personal brains use a single key generated during `dbrain init`.
+</Aside>
+
+### Connections
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/connections` | List all federated brain connections (shared brains this instance connects to). |
+
+### Maintenance
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/compact` | Trigger compaction: deduplicates facts, recalculates memory tiers. Admin-only. |
+| `GET` | `/health` | Health check. Returns server status, brain type, and version. No auth required. |
+
+---
+
+## dwork — Project Manager
+
+**Default port:** `7881` (REST + MCP) | `7882` (dashboard)
+
+The dwork API manages projects, tasks (backed by BACKLOG.md files), docs, and provides full-text search across all project data.
+
+### Projects
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/projects` | List all projects with summary stats. |
+| `GET` | `/projects/:slug` | Get a single project by slug, including task counts and recent activity. |
+| `POST` | `/projects` | Create a new project. Body: `{ name, slug?, description? }`. Scaffolds the project directory and BACKLOG.md. |
+| `PATCH` | `/projects/:slug` | Update project metadata. Body: `{ name?, description?, status? }`. |
+
+### Tasks
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/projects/:slug/tasks` | List all tasks for a project. Supports `?status=` filter (backlog, in-progress, done, blocked). |
+| `GET` | `/projects/:slug/tasks/:id` | Get a single task by ID. |
+| `POST` | `/projects/:slug/tasks` | Create a task. Body: `{ title, description?, status?, priority? }`. Writes to BACKLOG.md. |
+| `PATCH` | `/projects/:slug/tasks/:id` | Update a task. Body: `{ title?, status?, priority?, description? }`. |
+
+### Docs
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/projects/:slug/docs` | List all docs for a project (numbered markdown files). |
+| `GET` | `/projects/:slug/docs/:id` | Get a single doc by ID. |
+| `POST` | `/projects/:slug/docs` | Create a doc. Body: `{ title, content }`. |
+| `PATCH` | `/projects/:slug/docs/:id` | Update a doc. Body: `{ title?, content? }`. |
+
+### Search and Overview
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/search` | Full-text search across all projects, tasks, and docs. Query param: `q` (required). |
+| `GET` | `/overview` | Global overview: project count, task distribution by status, recent activity. |
+
+### Sync and Maintenance
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/sync` | Re-index all markdown files into SQLite FTS5. Use after manual edits to BACKLOG.md or doc files. |
+| `GET` | `/health` | Health check. Returns server status and version. No auth required. |
+| `GET` | `/keys` | List API keys. |
+| `POST` | `/keys` | Create a new API key. |
+
+---
+
+## dops — Observability
+
+**Default port:** `7883` (REST + MCP) | `7884` (dashboard)
+
+The dops API provides agent session tracking, cost analysis, and transcript ingestion from multiple AI coding CLIs.
+
+### Sessions
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/sessions` | List ingested agent sessions. Supports `?provider=` and `?limit=` query params. |
+| `GET` | `/sessions/:id` | Get a single session with full tool-call and token breakdown. |
+
+### Analytics
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/stats` | Aggregated stats: total sessions, tokens, tool calls, success rate, errors. Supports `?from=` and `?to=` date filters. |
+| `GET` | `/costs` | Cost breakdown by provider, model, and time period. Supports `?from=`, `?to=`, `?group_by=` (day, week, month). |
+
+### Ingestion
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/ingest` | Ingest a transcript from a supported CLI. Body: `{ provider, transcript, metadata? }`. Accepts Claude, Codex, Gemini, and OpenCode transcript formats. |
+
+### Health
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Health check. Returns server status and version. No auth required. |
+
+---
+
+## dproxy — Universal Adapter
+
+**Default port:** `7880`
+
+The dproxy API exposes the same capabilities as the CLI (`dproxy ask` and `dproxy chat`) over HTTP, with optional SSE streaming.
+
+### Prompt Execution
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/ask` | Execute a single prompt. Body: `{ prompt, provider?, model?, context? }`. Returns the full response. Set `stream: true` in the body for SSE streaming. |
+| `POST` | `/chat` | Send a message in a conversation. Body: `{ message, conversation_id?, provider?, model? }`. Maintains conversation history. Set `stream: true` for SSE. |
+
+### SSE Streaming
+
+When `stream: true` is included in the request body, the response uses `Content-Type: text/event-stream` and emits `AdapterStreamEvent` objects:
+
+```bash title="terminal"
+curl -N -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "explain dtoolkit", "stream": true}' \
+  http://localhost:7880/ask
+```
+
+Events follow the `AdapterStreamEvent` type defined in `@dtoolkit/core`:
+
+| Event type | Description |
+|------------|-------------|
+| `start` | Stream opened, includes model and provider metadata. |
+| `delta` | Incremental text chunk. |
+| `tool_use` | Tool call made by the model. |
+| `done` | Stream complete, includes token usage summary. |
+| `error` | An error occurred during execution. |
+
+### History and Health
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/history` | List recent prompt/response history. Supports `?limit=` query param. |
+| `GET` | `/health` | Health check. Returns server status, available providers, and version. No auth required. |
+
+---
+
+## Port Summary
+
+| Service | REST + MCP | Dashboard | Default key location |
+|---------|-----------|-----------|---------------------|
+| dbrain | `7878` | `7879` | `~/.dbrain/config.json` |
+| dproxy | `7880` | — | `~/.dproxy/config.json` |
+| dwork | `7881` | `7882` | `~/.dwork/config.json` |
+| dops | `7883` | `7884` | `~/.dops/config.json` |
+
+<Aside type="tip">
+  Ports are configurable during `init` or via the `configure` CLI command for each service. The MCP protocol is served on the same port as the REST API — clients negotiate via the `Accept` header or MCP-specific paths.
+</Aside>
+
+## Error Responses
+
+All services return errors in a consistent JSON format:
+
+```json
+{
+  "error": "not_found",
+  "message": "Entity 'foo' does not exist"
+}
+```
+
+| Status code | Meaning |
+|-------------|---------|
+| `400` | Bad request — invalid or missing parameters. |
+| `401` | Unauthorized — missing or invalid Bearer token. |
+| `403` | Forbidden — insufficient permissions (e.g., write to read-only brain). |
+| `404` | Not found — resource does not exist. |
+| `500` | Internal server error. |
+
+## Related
+
+- [MCP Tools Reference](/docs/reference/mcp-tools/) — full reference for all MCP tools exposed by dbrain, dwork, and dops
+- [CLI Reference](/docs/reference/cli/) — command-line interfaces for all dtoolkit services
+- [Getting Started](/docs/guides/getting-started/) — install and configure dtoolkit
+- [dbrain](/docs/products/dbrain/) — persistent memory server deep dive
+- [dwork](/docs/products/dwork/) — AI-native project manager deep dive
+- [dops](/docs/products/dops/) — agent observability deep dive
+- [dproxy](/docs/products/dproxy/) — universal CLI adapter deep dive

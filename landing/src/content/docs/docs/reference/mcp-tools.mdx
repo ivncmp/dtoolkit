@@ -1,0 +1,172 @@
+---
+title: MCP Tools
+description: Complete reference of all MCP tools across dtoolkit services
+---
+
+import { Aside, Badge } from '@astrojs/starlight/components';
+
+dtoolkit exposes its functionality through the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/), allowing AI coding agents to interact with memory, project management, and observability services using structured tool calls. Each service runs an MCP server alongside its REST API on the same port.
+
+<Aside type="tip">
+  All MCP servers use Bearer token authentication. Generate API keys with the `keys` CLI subcommand for each service (e.g., `dbrain keys create`).
+</Aside>
+
+## dbrain MCP Tools
+
+[dbrain](/docs/products/dbrain/) is the persistent memory server. Its MCP tools let agents store, search, and manage memories organized as entities and facts with automatic tiering (hot/warm/cold).
+
+**Port:** 7878 (shared with REST API)
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `recall` | Search memories across all entities. When federation is enabled, results include both local and connected shared brain memories. | `query` (string, required), `limit` (number), `federated` (boolean) |
+| `remember` | Save a single atomic fact about an entity. Creates the entity if it does not exist. | `entity` (string, required), `fact` (string, required), `source` (string) |
+| `get_entity` | Retrieve full context for a specific entity, including all associated facts and metadata. | `name` (string, required) |
+| `list_entities` | List entities filtered by category or type. Returns name, category, type, and summary for each. | `category` (string), `type` (string) |
+| `create_entity` | Create a new entity with metadata. Use `remember` afterwards to attach facts. | `name` (string, required), `category` (string, required), `type` (string, required), `summary` (string) |
+| `bump` | Touch a fact to reset its decay timer and keep it in the hot tier. | `factId` (string, required) |
+| `log` | Store conversation messages at natural breakpoints for later review. | `messages` (array, required) |
+| `overview` | Return brain statistics: entity count, fact count, tier distribution, connection status. | — |
+| `share` | Push a fact to a connected shared brain. Only available when the brain has active connections. | `factId` (string, required) |
+| `compact` | Deduplicate facts and recalculate memory tiers. Admin-only operation. | — |
+
+<Aside type="caution">
+  The `compact` tool is restricted to admin API keys. Running it on a large brain may take several seconds. Avoid calling it during high-throughput sessions.
+</Aside>
+
+### Memory tiers
+
+Facts in dbrain are automatically organized into three tiers based on recency and access frequency:
+
+| Tier | Behavior |
+|------|----------|
+| **Hot** | Recently accessed or bumped. Prioritized in `recall` results. |
+| **Warm** | Accessed within a moderate window. Included in recall but ranked lower. |
+| **Cold** | Stale facts. Still searchable but deprioritized. Candidates for compaction. |
+
+Use `bump` to promote important facts back to hot tier. The `compact` tool deduplicates redundant facts and recalculates tiers across the entire brain.
+
+### Federation
+
+When a personal brain is connected to a shared brain (via `dbrain connect`), the `recall` tool automatically federates queries across both. Use `share` to explicitly push a fact from your personal brain to the shared brain.
+
+## dwork MCP Tools
+
+[dwork](/docs/products/dwork/) is the AI-native project manager. Its 21 MCP tools plus 5 graph tools cover project CRUD, task management, documentation, search, and code intelligence.
+
+**Port:** 7881 (shared with REST API)
+
+### Project management
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `create_project` | Scaffold a new project with directory structure and initial BACKLOG.md. | `name` (string, required), `description` (string), `template` (string) |
+| `get_project` | Retrieve project metadata, task summary, and doc count. | `projectId` (string, required) |
+| `list_projects` | List all registered projects with status summaries. | — |
+| `update_project` | Update project metadata (name, description, status). | `projectId` (string, required), `name` (string), `description` (string), `status` (string) |
+
+### Task management
+
+Tasks are stored in each project's `BACKLOG.md` file. The SQLite FTS5 index is derived from these Markdown files.
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `add_task` | Add a new task to a project's BACKLOG.md. | `projectId` (string, required), `title` (string, required), `description` (string), `priority` (string), `status` (string) |
+| `get_tasks` | List tasks for a project, optionally filtered by status or priority. | `projectId` (string, required), `status` (string), `priority` (string) |
+| `update_task` | Update task fields (title, description, status, priority). | `projectId` (string, required), `taskId` (string, required), `title` (string), `description` (string), `status` (string), `priority` (string) |
+
+### Documentation
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `add_doc` | Add a numbered Markdown document to a project. | `projectId` (string, required), `title` (string, required), `content` (string, required) |
+| `get_doc` | Retrieve a specific document by ID. | `projectId` (string, required), `docId` (string, required) |
+| `get_docs` | List all documents for a project. | `projectId` (string, required) |
+| `update_doc` | Update document title or content. | `projectId` (string, required), `docId` (string, required), `title` (string), `content` (string) |
+
+### Search and overview
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `search` | Full-text search across all projects, tasks, and docs using FTS5 OR matching. | `query` (string, required), `projectId` (string) |
+| `overview` | Global statistics: project count, task breakdown by status, recent activity. | — |
+| `sync` | Re-index Markdown files into SQLite. Run after external edits to BACKLOG.md. | `projectId` (string) |
+
+### Planning
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `get_roadmap` | Retrieve the project roadmap derived from task priorities and statuses. | `projectId` (string, required) |
+| `what_to_do_next` | AI-prioritized suggestion of the next task to work on, based on status, priority, and dependencies. | `projectId` (string) |
+
+### Code graph tools
+
+These tools are powered by [@dtoolkit/codegraph-sdk](/docs/reference/codegraph-sdk/) and provide semantic code intelligence over the project's codebase.
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `graph_search` | Semantic search over code symbols (functions, classes, types) in the project's knowledge graph. | `query` (string, required), `projectId` (string), `kind` (string) |
+| `graph_stats` | Statistics about the code graph: symbol counts by kind, file counts, edge counts. | `projectId` (string, required) |
+| `graph_trace` | Trace the dependency chain of a symbol — what it depends on and what depends on it. | `projectId` (string, required), `symbol` (string, required), `direction` (string) |
+| `graph_impact` | Analyze the impact radius of changing a symbol — all transitive dependents. | `projectId` (string, required), `symbol` (string, required) |
+| `graph_context` | Retrieve full context for a symbol: definition, references, documentation, and surrounding code. | `projectId` (string, required), `symbol` (string, required) |
+
+<Aside type="tip">
+  The graph tools require an indexed codebase. Run `dwork sync` after cloning a repository or making significant structural changes to rebuild the code graph.
+</Aside>
+
+## dops MCP Tools
+
+[dops](/docs/products/dops/) provides agent observability. Its MCP tools allow agents and dashboards to log sessions and query usage metrics.
+
+**Port:** 7883 (shared with REST API)
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `log_session` | Ingest a completed session with token counts, cost, tool usage, and outcome. | `sessionId` (string, required), `provider` (string, required), `tokens` (object), `cost` (number), `tools` (array), `success` (boolean), `error` (string) |
+| `get_stats` | Retrieve aggregated statistics: total sessions, tokens, cost, success rate, by provider and time range. | `provider` (string), `from` (string), `to` (string) |
+| `get_costs` | Cost breakdown by provider, model, and time period. | `provider` (string), `from` (string), `to` (string), `groupBy` (string) |
+| `get_sessions` | List recorded sessions with filtering and pagination. | `provider` (string), `from` (string), `to` (string), `limit` (number), `offset` (number) |
+| `health` | Service health check. Returns status and uptime. | — |
+
+## Tool discovery
+
+MCP clients discover available tools automatically when connecting to a dtoolkit service. Each service exposes its tool list via the standard MCP `tools/list` method.
+
+To connect an AI coding agent to dtoolkit services, use [dcontext](/docs/products/dcontext/):
+
+```bash title="terminal"
+dcontext init
+dcontext install
+```
+
+This configures the agent's native hook system (e.g., Claude Code's `settings.json`, Gemini CLI's `settings.json`) to connect to running dtoolkit MCP servers.
+
+### Manual MCP connection
+
+If you prefer manual configuration, point your MCP client at the service URL:
+
+```bash title="terminal"
+# dbrain MCP endpoint
+http://localhost:7878/mcp
+
+# dwork MCP endpoint
+http://localhost:7881/mcp
+
+# dops MCP endpoint
+http://localhost:7883/mcp
+```
+
+All endpoints accept standard MCP JSON-RPC messages over HTTP with SSE streaming for server-initiated messages.
+
+## Cross-service patterns
+
+All dtoolkit MCP services share these conventions:
+
+| Pattern | Detail |
+|---------|--------|
+| **Authentication** | Bearer token via `Authorization` header. Generate keys with `<service> keys create`. |
+| **Transport** | MCP over HTTP on the same port as the REST API. |
+| **Error format** | Standard MCP error responses with `code` and `message` fields. |
+| **Idempotency** | Read operations are safe to retry. Write operations use unique IDs to prevent duplicates. |
+| **Permissions** | Some tools (e.g., `compact`) require admin-level API keys. |

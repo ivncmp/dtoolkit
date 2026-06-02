@@ -1,0 +1,277 @@
+---
+title: "dcontext — Context"
+description: "Automatic context injection for AI coding CLIs"
+---
+
+import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+dcontext is the bridge between [dbrain](/docs/products/dbrain/) and your AI coding CLI. It hooks into the native lifecycle of each supported CLI to inject persistent memory at session start and save transcripts before compaction discards them.
+
+Without dcontext, every new session starts from zero. With it, your agent knows who you are, what you are working on, and what it learned yesterday.
+
+## How it works
+
+dcontext operates at two points in the CLI lifecycle:
+
+1. **Session start** — Before the agent sees your first message, dcontext injects a context block into the CLI's instruction file. This block contains your identity, personality traits, project facts, and relevant memories retrieved from dbrain.
+
+2. **Pre-compaction** — When a CLI is about to compact (summarize and discard) its conversation history, dcontext intercepts the transcript and sends it to dbrain for storage. This prevents knowledge loss across long sessions.
+
+The result is a continuous memory loop:
+
+```
+Session N transcript → dbrain (save) → Session N+1 context (inject) → ...
+```
+
+<Aside type="tip">
+dcontext does not require dwork or dproxy. It only needs a running dbrain instance. The two packages compose well together but each works standalone.
+</Aside>
+
+## What gets injected
+
+At session start, dcontext builds a `ContextBlock[]` payload from dbrain and writes it into the CLI's native instruction file. The injected context includes:
+
+| Section | Source | Description |
+|---------|--------|-------------|
+| Identity | dbrain entity | Name, role, communication style, personality traits |
+| User profile | dbrain entity | Who you are, preferences, working hours, language |
+| Project facts | dbrain facts | Active decisions, architecture notes, conventions for the current repo |
+| Relevant memories | dbrain recall | Hot and warm memories ranked by relevance to the current workspace |
+| Session history | dbrain conversations | Summary of recent sessions for continuity |
+
+The exact content depends on what you have stored in dbrain. A fresh brain with no facts produces a minimal injection. A well-populated brain produces rich, targeted context.
+
+<Aside type="caution">
+dcontext writes to your CLI's instruction file (e.g., `CLAUDE.md`). It uses a clearly delimited section (`<!-- dcontext:start -->` / `<!-- dcontext:end -->`) and never touches content outside that block. However, you should be aware that the file is modified on every session start.
+</Aside>
+
+## Supported CLIs
+
+dcontext supports four AI coding CLIs, each through its native hook system:
+
+| CLI | Hook mechanism | Instruction file | Config file |
+|-----|---------------|-------------------|-------------|
+| Claude Code | `settings.json` hooks | `CLAUDE.md` | `.claude/settings.json` |
+| Gemini CLI | `settings.json` hooks | `GEMINI.md` | `.gemini/settings.json` |
+| Codex CLI | `config.toml` hooks | `AGENTS.md` | `.codex/config.toml` |
+| OpenCode | npm plugin system | `AGENTS.md` | OpenCode plugin config |
+
+Each adapter is implemented in its own package (`@dtoolkit/adapter-claude`, `@dtoolkit/adapter-gemini`, etc.) and exposes a `DcontextTarget` interface that dcontext uses to read and write the correct files.
+
+## Setup
+
+There are two ways to set up dcontext. Both achieve the same result.
+
+### Option A: Using dcontext directly
+
+<Steps>
+1. **Install dcontext globally**
+
+   ```bash title="install"
+   pnpm add -g @dtoolkit/dcontext
+   ```
+
+2. **Initialize configuration**
+
+   Run the init wizard. It will ask which CLI you use and where your dbrain instance is running.
+
+   ```bash title="terminal"
+   dcontext init
+   ```
+
+3. **Install hooks into your CLI**
+
+   This registers the session-start and pre-compaction hooks with your chosen CLI.
+
+   ```bash title="terminal"
+   dcontext install
+   ```
+
+4. **Verify the installation**
+
+   ```bash title="terminal"
+   dcontext status
+   ```
+
+   You should see your CLI listed with hooks registered and dbrain connection confirmed.
+</Steps>
+
+### Option B: Using dbrain connect
+
+If you already have dbrain running, the `connect` command handles dcontext setup for you.
+
+```bash title="terminal"
+dbrain connect claude
+```
+
+This installs dcontext hooks for Claude Code and configures the connection to your local brain in one step. Replace `claude` with `gemini`, `codex`, or `opencode` as needed.
+
+<Aside type="tip">
+`dbrain connect` is the recommended path for most users. It handles both the dbrain client configuration and the dcontext hook installation in a single command.
+</Aside>
+
+## CLI commands
+
+| Command | Description |
+|---------|-------------|
+| `dcontext init` | Interactive setup wizard. Configures which CLI to hook into and the dbrain endpoint. |
+| `dcontext install` | Registers hooks with the target CLI. Writes to the CLI's config file. |
+| `dcontext uninstall` | Removes hooks from the target CLI. Cleans up config and instruction file sections. |
+| `dcontext status` | Shows current hook registration, dbrain connectivity, and last injection timestamp. |
+| `dcontext explore` | Opens an interactive browser of what dcontext would inject for the current workspace. Useful for debugging context quality. |
+
+### Examples
+
+Check what context would be injected for the current directory:
+
+```bash title="terminal"
+dcontext explore
+```
+
+Remove hooks from Gemini CLI:
+
+```bash title="terminal"
+dcontext uninstall --target gemini
+```
+
+## How hooks work per CLI
+
+Each CLI has a different mechanism for running code at session boundaries. dcontext adapts to each one.
+
+<Tabs>
+  <TabItem label="Claude Code">
+    **Config file:** `.claude/settings.json`
+    **Instruction file:** `CLAUDE.md`
+
+    Claude Code supports hooks in `settings.json` under the `hooks` key. dcontext registers two hooks:
+
+    - `PreToolUse` (session start) — Runs before the first tool call. dcontext queries dbrain, builds the context payload, and writes it into a `<!-- dcontext:start -->` section in your project's `CLAUDE.md`.
+    - `PostToolUse` (pre-compaction) — Fires when the session is about to compact. dcontext extracts the transcript and sends it to dbrain via the `/conversations` endpoint.
+
+    ```json title=".claude/settings.json"
+    {
+      "hooks": {
+        "PreToolUse": [
+          {
+            "matcher": ".*",
+            "hooks": [
+              {
+                "type": "command",
+                "command": "dcontext inject --target claude"
+              }
+            ]
+          }
+        ]
+      }
+    }
+    ```
+
+    The adapter uses the shared `writeDcontextMdSection()` helper from `@dtoolkit/core` to write the delimited block in `CLAUDE.md` without disturbing your existing content.
+  </TabItem>
+
+  <TabItem label="Gemini CLI">
+    **Config file:** `.gemini/settings.json`
+    **Instruction file:** `GEMINI.md`
+
+    Gemini CLI uses the same `settings.json` hook format as Claude Code. dcontext registers equivalent hooks that inject context into `GEMINI.md`.
+
+    ```json title=".gemini/settings.json"
+    {
+      "hooks": {
+        "PreToolUse": [
+          {
+            "matcher": ".*",
+            "hooks": [
+              {
+                "type": "command",
+                "command": "dcontext inject --target gemini"
+              }
+            ]
+          }
+        ]
+      }
+    }
+    ```
+
+    The Gemini adapter writes to `GEMINI.md` using the same delimited section pattern.
+  </TabItem>
+
+  <TabItem label="Codex CLI">
+    **Config file:** `.codex/config.toml`
+    **Instruction file:** `AGENTS.md`
+
+    Codex CLI uses a TOML-based configuration. dcontext registers hooks under the `[hooks]` section in `config.toml` and injects context into `AGENTS.md`.
+
+    ```toml title=".codex/config.toml"
+    [hooks.pre_tool_use]
+    command = "dcontext inject --target codex"
+
+    [hooks.pre_compact]
+    command = "dcontext save --target codex"
+    ```
+  </TabItem>
+
+  <TabItem label="OpenCode">
+    **Config file:** OpenCode plugin configuration
+    **Instruction file:** `AGENTS.md`
+
+    OpenCode uses an npm plugin system. dcontext registers as a plugin that runs at session boundaries and writes context into `AGENTS.md`.
+
+    ```bash title="terminal"
+    dcontext install --target opencode
+    ```
+
+    The OpenCode adapter handles plugin registration automatically during installation.
+  </TabItem>
+</Tabs>
+
+## Architecture
+
+dcontext is built as a thin orchestration layer. It owns no data and stores no state beyond a small config file. All persistent data lives in dbrain.
+
+```
+┌─────────────┐     ┌──────────────┐     ┌──────────────┐
+│  CLI hooks   │────▶│   dcontext   │────▶│    dbrain     │
+│ (native)     │     │  (inject /   │     │  (REST API)   │
+│              │◀────│   save)      │◀────│  :7878        │
+└─────────────┘     └──────────────┘     └──────────────┘
+       │                                         │
+       ▼                                         ▼
+  CLAUDE.md /                              SQLite + FTS5
+  GEMINI.md /                              (entities, facts,
+  AGENTS.md                                 conversations)
+```
+
+**Key design decisions:**
+
+- **No daemon** — dcontext runs only when triggered by CLI hooks. No background process, no port, no resource consumption at rest.
+- **Adapter pattern** — Each CLI adapter implements the `DcontextTarget` interface from its adapter package. dcontext calls `inject()` and `save()` without knowing CLI-specific details.
+- **Idempotent writes** — The `writeDcontextMdSection()` helper replaces the delimited block in-place. Running inject twice produces the same result as running it once.
+- **ContextBlock contract** — All context flows through the `ContextBlock[]` type defined in `@dtoolkit/core`. This is the same contract used by dproxy and other dtoolkit packages.
+
+## Troubleshooting
+
+**Context not appearing in sessions**
+
+Run `dcontext status` to verify hooks are registered and dbrain is reachable. Then run `dcontext explore` to see what would be injected. If the output is empty, your dbrain likely has no facts for the current workspace.
+
+**Stale context after dbrain changes**
+
+Context is injected at session start. Changes to dbrain during a session will not appear until the next session. Restart your CLI session to pick up new facts.
+
+**Hook conflicts with existing settings**
+
+dcontext merges its hooks into your existing config file. If you have custom hooks, dcontext appends to the hooks array rather than replacing it. Check your config file to verify both your hooks and dcontext hooks are present.
+
+```bash title="terminal"
+dcontext status --verbose
+```
+
+This shows the raw hook configuration and any detected conflicts.
+
+## Related
+
+- [dbrain](/docs/products/dbrain/) — The memory server that dcontext reads from and writes to
+- [dwork](/docs/products/dwork/) — AI-native project manager, works alongside dcontext for project awareness
+- [MCP tools reference](/docs/reference/mcp-tools/) — Full reference for dbrain MCP tools used by dcontext
+- [CLI reference](/docs/reference/cli/) — Complete CLI reference for all dtoolkit packages

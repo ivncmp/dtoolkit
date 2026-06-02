@@ -1,0 +1,309 @@
+---
+title: Installation
+description: Install dtoolkit products individually or as a full stack
+---
+
+import { Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
+
+dtoolkit packages are published to npm under the `@dtoolkit/*` scope. You can install individual products based on your needs or set up the entire stack at once.
+
+## Prerequisites
+
+Before installing any dtoolkit product, make sure your environment meets these requirements:
+
+| Requirement | Details |
+|---|---|
+| **Node.js** | v22.0.0 or later ([download](https://nodejs.org/)) |
+| **Package manager** | npm (bundled with Node.js) or pnpm v9+ |
+| **AI coding CLI** | At least one of: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Codex CLI](https://github.com/openai/codex), or [OpenCode](https://github.com/opencode-ai/opencode) |
+
+<Aside type="tip">
+  You can check your Node.js version by running `node --version`. If you need to manage multiple versions, consider using [fnm](https://github.com/Schniz/fnm) or [nvm](https://github.com/nvm-sh/nvm).
+</Aside>
+
+## Install individual products
+
+Each dtoolkit product is a standalone package. Install only what you need.
+
+### dbrain — Persistent memory server
+
+The AI memory server with SQLite + FTS5, MCP and REST APIs, entity management, memory tiers, and federation support.
+
+<Tabs>
+  <TabItem label="pnpm">
+    ```bash title="install"
+    pnpm add -g @dtoolkit/dbrain
+    ```
+  </TabItem>
+  <TabItem label="npm">
+    ```bash title="install"
+    npm install -g @dtoolkit/dbrain
+    ```
+  </TabItem>
+</Tabs>
+
+After installing, initialize your brain:
+
+```bash title="terminal"
+dbrain init
+```
+
+This starts an interactive wizard that creates your personal brain at `~/.dbrain/`. See the [dbrain product guide](/docs/products/dbrain/) for full configuration options.
+
+### dcontext — AI coding CLI hooks
+
+Injects identity, project facts, and memory into your AI coding sessions automatically. Saves transcripts before compaction.
+
+<Tabs>
+  <TabItem label="pnpm">
+    ```bash title="install"
+    pnpm add -g @dtoolkit/dcontext
+    ```
+  </TabItem>
+  <TabItem label="npm">
+    ```bash title="install"
+    npm install -g @dtoolkit/dcontext
+    ```
+  </TabItem>
+</Tabs>
+
+After installing, initialize and install hooks for your preferred CLI:
+
+```bash title="terminal"
+dcontext init
+dcontext install
+```
+
+<Aside type="caution">
+  dcontext requires a running dbrain instance. Make sure you have initialized and started dbrain before installing dcontext hooks.
+</Aside>
+
+### dwork — AI-native project manager
+
+Markdown-driven project management with BACKLOG.md as the source of truth, full-text search, and 21 MCP tools including code graph integration.
+
+<Tabs>
+  <TabItem label="pnpm">
+    ```bash title="install"
+    pnpm add -g @dtoolkit/dwork
+    ```
+  </TabItem>
+  <TabItem label="npm">
+    ```bash title="install"
+    npm install -g @dtoolkit/dwork
+    ```
+  </TabItem>
+</Tabs>
+
+Initialize a project workspace:
+
+```bash title="terminal"
+dwork init
+```
+
+### dops — Agent observability
+
+Track tokens, cost, tool usage, success rates, and errors across all your AI coding sessions. Ingests transcripts from Claude Code, Codex CLI, Gemini CLI, and OpenCode.
+
+<Tabs>
+  <TabItem label="pnpm">
+    ```bash title="install"
+    pnpm add -g @dtoolkit/dops
+    ```
+  </TabItem>
+  <TabItem label="npm">
+    ```bash title="install"
+    npm install -g @dtoolkit/dops
+    ```
+  </TabItem>
+</Tabs>
+
+Initialize and start the observability server:
+
+```bash title="terminal"
+dops init
+dops start
+```
+
+### dproxy — Universal CLI adapter
+
+Invoke AI models through a unified interface across four providers. Includes a CLI for interactive use and a REST API with SSE streaming.
+
+<Tabs>
+  <TabItem label="pnpm">
+    ```bash title="install"
+    pnpm add -g @dtoolkit/dproxy
+    ```
+  </TabItem>
+  <TabItem label="npm">
+    ```bash title="install"
+    npm install -g @dtoolkit/dproxy
+    ```
+  </TabItem>
+</Tabs>
+
+Initialize dproxy configuration:
+
+```bash title="terminal"
+dproxy init
+```
+
+## Install the full stack
+
+To install all five products at once:
+
+<Tabs>
+  <TabItem label="pnpm">
+    ```bash title="install"
+    pnpm add -g @dtoolkit/dbrain @dtoolkit/dcontext @dtoolkit/dwork @dtoolkit/dops @dtoolkit/dproxy
+    ```
+  </TabItem>
+  <TabItem label="npm">
+    ```bash title="install"
+    npm install -g @dtoolkit/dbrain @dtoolkit/dcontext @dtoolkit/dwork @dtoolkit/dops @dtoolkit/dproxy
+    ```
+  </TabItem>
+</Tabs>
+
+Then initialize each product in order:
+
+<Steps>
+1. **Initialize dbrain** — this must come first since other products depend on it.
+
+   ```bash title="terminal"
+   dbrain init
+   dbrain start
+   ```
+
+2. **Initialize dwork** — set up your project workspace.
+
+   ```bash title="terminal"
+   dwork init
+   dwork start
+   ```
+
+3. **Initialize dops** — start observability tracking.
+
+   ```bash title="terminal"
+   dops init
+   dops start
+   ```
+
+4. **Initialize dproxy** — configure your model adapter.
+
+   ```bash title="terminal"
+   dproxy init
+   ```
+
+5. **Install dcontext hooks** — connect everything to your AI coding CLI.
+
+   ```bash title="terminal"
+   dcontext init
+   dcontext install
+   ```
+</Steps>
+
+## Verify installation
+
+After installing, verify each product is available and running correctly:
+
+```bash title="terminal"
+dbrain --version
+dcontext --version
+dwork --version
+dops --version
+dproxy --version
+```
+
+For the server products, check their status after starting:
+
+```bash title="terminal"
+dbrain status
+dwork status
+dops status
+```
+
+| Product | Default ports | Status command |
+|---|---|---|
+| dbrain | REST + MCP on `:7878`, dashboard on `:7879` | `dbrain status` |
+| dwork | REST + MCP on `:7881`, dashboard on `:7882` | `dwork status` |
+| dops | REST + MCP on `:7883`, dashboard on `:7884` | `dops status` |
+| dproxy | REST API on `:7880` (when using `dproxy serve`) | — |
+| dcontext | No server (hooks only) | `dcontext status` |
+
+<Aside type="tip">
+  Each server product exposes both MCP and REST APIs on the same port. Dashboards are served on port + 1. You can access dashboards in your browser at `http://localhost:<port>` (e.g., `http://localhost:7879` for dbrain).
+</Aside>
+
+## Docker
+
+dbrain and dwork provide Docker images for containerized deployments. This is useful for running shared team brains or project management servers on remote infrastructure.
+
+```bash title="terminal"
+docker run -d -p 7878:7878 -p 7879:7879 -v dbrain-data:/root/.dbrain dtoolkit/dbrain
+docker run -d -p 7881:7881 -p 7882:7882 -v dwork-data:/root/.dwork dtoolkit/dwork
+```
+
+<Aside type="caution">
+  Docker support is currently available for dbrain and dwork only. Refer to each package's README for the latest image tags and configuration options: [`@dtoolkit/dbrain`](https://github.com/ivncmp/dtoolkit/tree/main/packages/dbrain), [`@dtoolkit/dwork`](https://github.com/ivncmp/dtoolkit/tree/main/packages/dwork).
+</Aside>
+
+## From source
+
+If you want to contribute to dtoolkit or run the latest development version, build from source:
+
+<Steps>
+1. **Clone the repository**
+
+   ```bash title="terminal"
+   git clone https://github.com/ivncmp/dtoolkit.git
+   cd dtoolkit
+   ```
+
+2. **Install dependencies**
+
+   ```bash title="install"
+   pnpm install
+   ```
+
+3. **Build all packages**
+
+   Turbo handles the dependency-ordered build across the entire monorepo:
+
+   ```bash title="terminal"
+   pnpm build
+   ```
+
+4. **Run tests**
+
+   ```bash title="terminal"
+   pnpm test
+   ```
+
+5. **Link packages globally** (optional)
+
+   To use the CLIs from your development checkout:
+
+   ```bash title="terminal"
+   cd packages/dbrain && pnpm link --global
+   cd packages/dcontext && pnpm link --global
+   cd packages/dwork && pnpm link --global
+   cd packages/dops && pnpm link --global
+   cd packages/dproxy && pnpm link --global
+   ```
+</Steps>
+
+For development workflows, each package supports a `dev` command that watches for changes:
+
+```bash title="terminal"
+pnpm --filter @dtoolkit/dbrain dev
+pnpm --filter @dtoolkit/dwork dev
+pnpm --filter @dtoolkit/dproxy dev
+```
+
+## Next steps
+
+- [Getting started guide](/docs/guides/getting-started/) — set up your first brain and connect it to your AI coding CLI
+- [Product guides](/docs/products/dbrain/) — deep dives into each dtoolkit product
+- [MCP tools reference](/docs/reference/mcp-tools/) — complete list of all available MCP tools
+- [CLI reference](/docs/reference/cli/) — full command documentation for every CLI

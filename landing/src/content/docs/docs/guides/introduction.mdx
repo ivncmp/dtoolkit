@@ -1,0 +1,52 @@
+---
+title: Introduction
+description: What is dtoolkit and why it matters
+---
+
+import { Card, CardGrid, Aside } from '@astrojs/starlight/components';
+
+dtoolkit is an open-source harness engineering toolkit for AI coding agents. It gives your agents persistent memory, project awareness, multi-provider routing, observability, and structured project management — all running locally, backed by SQLite, and exposed over both MCP and REST. Ship it as a pnpm monorepo of `@dtoolkit/*` packages; use one product or compose them all.
+
+## Why it matters
+
+AI coding agents are only as good as their harness. A model with no memory forgets your architecture between sessions. A model with no project context hallucinates file paths. A model with no observability burns tokens in silence.
+
+<Aside type="tip">
+The frontier is not the model — it is the harness.
+</Aside>
+
+dtoolkit closes these gaps with a composable set of tools that work across providers and respect your local-first workflow.
+
+## What's included
+
+<CardGrid>
+  <Card title="dbrain" icon="star">
+    Persistent memory server. Entities, facts, memory tiers, and federation across personal and shared brains. [Learn more](/docs/products/dbrain/)
+  </Card>
+  <Card title="dcontext" icon="setting">
+    Session hooks for AI coding CLIs. Injects identity and project facts at session start, saves transcripts before compaction. [Learn more](/docs/products/dcontext/)
+  </Card>
+  <Card title="dwork" icon="list-format">
+    AI-native project manager. Markdown files as source of truth, SQLite FTS5 index, 21 MCP tools including code graph queries. [Learn more](/docs/products/dwork/)
+  </Card>
+  <Card title="dproxy" icon="rocket">
+    Universal CLI adapter for invoking models. Route prompts to Claude, Codex, Gemini, or OpenCode from a single interface. [Learn more](/docs/products/dproxy/)
+  </Card>
+  <Card title="dops" icon="open-book">
+    Agent observability. Track tokens, cost, tool usage, success rate, and errors across all providers. [Learn more](/docs/products/dops/)
+  </Card>
+</CardGrid>
+
+## Key differentiators
+
+| Principle | What it means |
+|---|---|
+| **Local-first** | SQLite everywhere. Your data stays on your machine. No cloud dependency. |
+| **Multi-provider** | First-class support for Claude Code, Gemini CLI, Codex CLI, and OpenCode. No vendor lock-in. |
+| **MCP native** | Every server exposes MCP tools on the same port as its REST API. Agents call tools directly. |
+| **Markdown-driven** | Project state lives in BACKLOG.md and other plain-text files. Git-friendly, human-readable. |
+| **Composable** | Each product works standalone. Compose them through the shared `ContextBlock[]` contract and typed SDK clients. |
+
+## Next steps
+
+Ready to set up your first agent harness? Head to the [Quickstart guide](/docs/guides/quickstart/) to install dtoolkit and run dbrain in under five minutes.

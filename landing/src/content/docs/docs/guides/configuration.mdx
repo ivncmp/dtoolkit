@@ -1,0 +1,348 @@
+---
+title: Configuration
+description: Config files, ports, environment variables, and authentication for all dtoolkit services.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Each dtoolkit service stores its configuration in a JSON file under the user's home directory. Every config value can be overridden with an environment variable, and all services share the same conventions for ports, authentication, and data storage.
+
+## Config file locations
+
+| Service | Config file | Data directory |
+|---------|------------|----------------|
+| dbrain | `~/.dbrain/config.json` | `~/.dbrain/` |
+| dwork | `~/.dwork/config.json` | `~/.dwork/` |
+| dops | `~/.dops/config.json` | `~/.dops/` |
+| dcontext | _(per-CLI config)_ | _(none)_ |
+| dproxy | `~/.dproxy/config.json` | `~/.dproxy/` |
+
+All config files are created automatically when you run the `init` command for each service. You can also edit them directly.
+
+```bash title="terminal"
+dbrain init    # creates ~/.dbrain/config.json
+dwork init     # creates ~/.dwork/config.json
+dops init      # creates ~/.dops/config.json
+dproxy init    # creates ~/.dproxy/config.json
+```
+
+## Service configuration
+
+<Tabs>
+<TabItem label="dbrain">
+
+The dbrain config controls the memory server, its storage, networking, and federation connections.
+
+```json
+// ~/.dbrain/config.json
+{
+  "dataPath": "~/.dbrain",
+  "port": 7878,
+  "host": "127.0.0.1",
+  "token": "your-secret-token",
+  "brainType": "personal",
+  "connections": [
+    {
+      "name": "team-brain",
+      "url": "http://192.168.1.50:7878",
+      "token": "shared-brain-token"
+    }
+  ]
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `dataPath` | `string` | `~/.dbrain` | Directory for SQLite database and data files |
+| `port` | `number` | `7878` | REST API and MCP server port |
+| `host` | `string` | `127.0.0.1` | Bind address |
+| `token` | `string` | _(generated)_ | Bearer token for API authentication |
+| `brainType` | `"personal" \| "shared"` | `personal` | Personal brains are single-user; shared brains accept connections from multiple clients |
+| `connections` | `array` | `[]` | List of remote brains to federate with |
+
+<Aside type="tip">
+  The `brainType` field determines how the brain behaves. A **personal** brain is your local memory store. A **shared** brain runs as a team server that multiple personal brains connect to. When you call `recall` on a personal brain with connections, it automatically federates the search across all connected shared brains.
+</Aside>
+
+**Adding connections:**
+
+You can add connections via the CLI or by editing the config file directly.
+
+```bash title="terminal"
+dbrain connect --name team-brain --url http://192.168.1.50:7878 --token shared-token
+```
+
+</TabItem>
+<TabItem label="dwork">
+
+The dwork config controls the project manager server and its storage.
+
+```json
+// ~/.dwork/config.json
+{
+  "dataPath": "~/.dwork",
+  "port": 7881,
+  "host": "127.0.0.1",
+  "token": "your-secret-token"
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `dataPath` | `string` | `~/.dwork` | Directory for SQLite index and project data |
+| `port` | `number` | `7881` | REST API and MCP server port |
+| `host` | `string` | `127.0.0.1` | Bind address |
+| `token` | `string` | _(generated)_ | Bearer token for API authentication |
+
+<Aside type="tip">
+  dwork uses Markdown files (especially `BACKLOG.md`) as the source of truth. The SQLite database is only an index for full-text search. You can always regenerate it with `dwork sync`.
+</Aside>
+
+</TabItem>
+<TabItem label="dops">
+
+The dops config controls the observability server.
+
+```json
+// ~/.dops/config.json
+{
+  "dataPath": "~/.dops",
+  "port": 7883,
+  "host": "127.0.0.1",
+  "token": "your-secret-token"
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `dataPath` | `string` | `~/.dops` | Directory for SQLite database with session data |
+| `port` | `number` | `7883` | REST API and MCP server port |
+| `host` | `string` | `127.0.0.1` | Bind address |
+| `token` | `string` | _(generated)_ | Bearer token for API authentication |
+
+</TabItem>
+<TabItem label="dcontext">
+
+dcontext does not have its own config file. Instead, it writes hooks into each CLI's native configuration:
+
+| CLI | Config modified | Context file |
+|-----|----------------|--------------|
+| Claude Code | `.claude/settings.json` | `CLAUDE.md` |
+| Gemini CLI | `settings.json` | `GEMINI.md` |
+| Codex CLI | `config.toml` | `AGENTS.md` |
+| OpenCode | npm plugin | `AGENTS.md` |
+
+Install hooks with:
+
+```bash title="terminal"
+dcontext install
+```
+
+Or use dbrain's shorthand:
+
+```bash title="terminal"
+dbrain connect claude
+dbrain connect gemini
+```
+
+Uninstall hooks to revert all changes:
+
+```bash title="terminal"
+dcontext uninstall
+```
+
+<Aside type="tip">
+  Run `dcontext status` to see which CLIs have hooks installed and whether dbrain is reachable.
+</Aside>
+
+</TabItem>
+<TabItem label="dproxy">
+
+The dproxy config controls the universal CLI adapter, including which AI provider to use by default.
+
+```json
+// ~/.dproxy/config.json
+{
+  "provider": "claude",
+  "model": "sonnet",
+  "port": 7880,
+  "host": "127.0.0.1",
+  "token": "your-secret-token"
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `provider` | `string` | `claude` | Default provider: `claude`, `codex`, `gemini`, or `opencode` |
+| `model` | `string` | _(provider default)_ | Model to use (e.g., `sonnet`, `opus`, `haiku`) |
+| `port` | `number` | `7880` | REST API port (used by `dproxy serve`) |
+| `host` | `string` | `127.0.0.1` | Bind address |
+| `token` | `string` | _(generated)_ | Bearer token for API authentication |
+
+<Aside type="tip">
+  You can override the provider per-request with the `--provider` flag: `dproxy ask --provider gemini "your prompt"`.
+</Aside>
+
+</TabItem>
+</Tabs>
+
+## Environment variables
+
+Every config field can be overridden with an environment variable. Environment variables take precedence over values in the config file. The naming convention is `{SERVICE}_{FIELD}` in uppercase.
+
+### dbrain
+
+| Variable | Overrides | Example |
+|----------|-----------|---------|
+| `DBRAIN_DATA_PATH` | `dataPath` | `~/.dbrain` |
+| `DBRAIN_PORT` | `port` | `7878` |
+| `DBRAIN_HOST` | `host` | `0.0.0.0` |
+| `DBRAIN_TOKEN` | `token` | `my-secret-token` |
+| `DBRAIN_BRAIN_TYPE` | `brainType` | `shared` |
+
+### dwork
+
+| Variable | Overrides | Example |
+|----------|-----------|---------|
+| `DWORK_DATA_PATH` | `dataPath` | `~/.dwork` |
+| `DWORK_PORT` | `port` | `7881` |
+| `DWORK_HOST` | `host` | `0.0.0.0` |
+| `DWORK_TOKEN` | `token` | `my-secret-token` |
+
+### dops
+
+| Variable | Overrides | Example |
+|----------|-----------|---------|
+| `DOPS_DATA_PATH` | `dataPath` | `~/.dops` |
+| `DOPS_PORT` | `port` | `7883` |
+| `DOPS_HOST` | `host` | `0.0.0.0` |
+| `DOPS_TOKEN` | `token` | `my-secret-token` |
+
+### dproxy
+
+| Variable | Overrides | Example |
+|----------|-----------|---------|
+| `DPROXY_PROVIDER` | `provider` | `gemini` |
+| `DPROXY_MODEL` | `model` | `opus` |
+| `DPROXY_PORT` | `port` | `7880` |
+| `DPROXY_HOST` | `host` | `0.0.0.0` |
+| `DPROXY_TOKEN` | `token` | `my-secret-token` |
+
+```bash title="terminal"
+# Start dbrain on a custom port, bound to all interfaces
+DBRAIN_PORT=9000 DBRAIN_HOST=0.0.0.0 dbrain start
+```
+
+<Aside type="caution">
+  When you set `host` to `0.0.0.0`, the service will be accessible from other machines on your network. Always ensure a strong `token` is configured before exposing services beyond localhost.
+</Aside>
+
+## Ports summary
+
+All dtoolkit services use a pair of consecutive ports: one for the API (REST + MCP) and one for the web dashboard.
+
+| Service | API port | Dashboard port | Protocol |
+|---------|----------|---------------|----------|
+| dbrain | 7878 | 7879 | REST + MCP (same port) |
+| dproxy | 7880 | -- | REST + SSE streaming |
+| dwork | 7881 | 7882 | REST + MCP (same port) |
+| dops | 7883 | 7884 | REST + MCP (same port) |
+
+<Aside type="tip">
+  dbrain, dwork, and dops serve both REST and MCP on the same API port. MCP clients connect to the same URL as REST clients -- the server detects the protocol automatically. The dashboard is always served on the next port (API port + 1).
+</Aside>
+
+dproxy is the exception: it provides a REST API with SSE streaming but does not have an MCP server or dashboard.
+
+## Authentication
+
+All dtoolkit services use **Bearer token** authentication. A token is generated automatically during `init` and stored in the config file.
+
+### How authentication works
+
+Every HTTP request to a dtoolkit service must include the token in the `Authorization` header:
+
+```bash title="terminal"
+curl -H "Authorization: Bearer your-secret-token" http://localhost:7878/health
+```
+
+MCP clients also authenticate with the same token. When configuring an MCP client (such as Claude Code's `settings.json`), pass the token as part of the connection URL or headers.
+
+### Setting a token
+
+Tokens are generated automatically when you run `init`. To set a specific token:
+
+```bash title="terminal"
+# Set via the configure command
+dbrain configure --token my-new-token
+
+# Or edit the config file directly
+# ~/.dbrain/config.json -> "token": "my-new-token"
+
+# Or use an environment variable
+DBRAIN_TOKEN=my-new-token dbrain start
+```
+
+### Rotating tokens
+
+To rotate a token, update it in the config file or via environment variable, then restart the service. Any connected clients (dcontext hooks, MCP integrations, SDK clients) must be updated with the new token.
+
+```bash title="terminal"
+# 1. Generate a new token
+NEW_TOKEN=$(openssl rand -hex 32)
+
+# 2. Update the config
+dbrain configure --token "$NEW_TOKEN"
+
+# 3. Restart the service
+dbrain start
+
+# 4. Update any clients that connect to this service
+```
+
+<Aside type="caution">
+  For shared brains, token rotation affects all connected clients. Coordinate with your team before rotating a shared brain token. Shared brains also support per-client API keys via `dbrain keys` for finer-grained access control.
+</Aside>
+
+### SDK authentication
+
+When using the `@dtoolkit/sdk` package to connect to services programmatically, pass the token when creating a client:
+
+```typescript
+import { DBrainClient, DWorkClient } from '@dtoolkit/sdk';
+
+const brain = new DBrainClient({
+  baseUrl: 'http://localhost:7878',
+  token: 'your-secret-token',
+});
+
+const work = new DWorkClient({
+  baseUrl: 'http://localhost:7881',
+  token: 'your-secret-token',
+});
+```
+
+## Shared brain API keys
+
+Shared brains support multiple API keys for team access control. This lets each team member or service authenticate independently, without sharing a single master token.
+
+```bash title="terminal"
+# List existing keys
+dbrain keys list
+
+# Create a new key for a team member
+dbrain keys create --name "alice"
+
+# Revoke a key
+dbrain keys revoke --name "alice"
+```
+
+API keys provide the same access as the master token. The master token (in `config.json`) always works and cannot be revoked via the `keys` command.
+
+## Next steps
+
+- [Getting started](/docs/guides/getting-started/) -- install and initialize your first service
+- [dbrain](/docs/products/dbrain/) -- deep dive into the memory server
+- [dwork](/docs/products/dwork/) -- set up your AI-native project manager
+- [MCP tools reference](/docs/reference/mcp-tools/) -- full list of MCP tools across all services
+- [CLI reference](/docs/reference/cli/) -- all CLI commands and flags

@@ -22,11 +22,12 @@ pnpm add @dtoolkit/sdk
 ## Quick start
 
 ```typescript
-import { DBrainClient, DWorkClient, DProxyClient } from '@dtoolkit/sdk';
+import { DBrainClient, DWorkClient, DProxyClient, DOpsClient } from '@dtoolkit/sdk';
 
 const brain = new DBrainClient('http://localhost:7878', 'your-token');
 const work = new DWorkClient('http://localhost:7881', 'your-token');
 const proxy = new DProxyClient('http://localhost:7880', 'your-token');
+const ops = new DOpsClient('http://localhost:7883', 'your-token');
 ```
 
 Each client supports two constructor signatures:
@@ -432,9 +433,136 @@ import type {
 | [dwork](/docs/products/dwork/) | `7881` | `7882` |
 | [dops](/docs/products/dops/) | `7883` | `7884` |
 
-<Aside type="caution">
-  The SDK does not include a client for dops yet. Use direct HTTP requests or the dops MCP tools for observability data. See the [dops reference](/docs/products/dops/) for endpoint details.
-</Aside>
+---
+
+## DOpsClient
+
+Typed client for the [dops](/docs/products/dops/) REST API (default port `7883`).
+
+### Constructor
+
+```typescript
+new DOpsClient(baseUrl: string, token: string)
+new DOpsClient(options: DOpsClientOptions)
+```
+
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `baseUrl` | `string` | Yes | dops server URL (e.g., `http://localhost:7883`) |
+| `token` | `string` | Yes | Bearer token for authentication |
+| `timeoutMs` | `number` | No | Request timeout in milliseconds |
+
+### Methods
+
+#### Health
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `health()` | `() => Promise<DOpsHealthResponse>` | Server health, session/event/tool counts |
+
+#### Sessions
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `createSession(session)` | `(session: CreateSessionInput) => Promise<DOpsSession>` | Start a new telemetry session |
+| `listSessions(filters?)` | `(filters?: { source?, limit?, offset? }) => Promise<DOpsSession[]>` | List sessions with optional filters |
+| `getSession(id)` | `(id: string) => Promise<DOpsSessionDetail>` | Get session with token usage and tool calls |
+| `endSession(id, data?)` | `(id: string, data?: { error? }) => Promise<void>` | End a session |
+
+#### Token Usage
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `addTokenUsage(sessionId, usage)` | `(sessionId: string, usage: TokenUsageInput) => Promise<void>` | Record token usage for a model turn |
+
+#### Tool Calls
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `addToolCall(sessionId, tool)` | `(sessionId: string, tool: ToolCallInput) => Promise<void>` | Record a tool invocation |
+
+#### Events
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `addEvent(sessionId, event)` | `(sessionId: string, event: EventInput) => Promise<void>` | Add a telemetry event |
+| `addEvents(sessionId, events)` | `(sessionId: string, events: EventInput[]) => Promise<void>` | Batch add events |
+
+#### Errors
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `addError(sessionId, error)` | `(sessionId: string, error: ErrorInput) => Promise<void>` | Record an error linked to a session |
+
+#### Analytics
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `getStats(filters?)` | `(filters?: StatsFilters) => Promise<DOpsStats>` | Aggregated stats: sessions, tokens, costs, tool usage |
+| `getCosts(filters?)` | `(filters?: CostFilters) => Promise<DOpsCosts>` | Cost breakdown by model, source, time range |
+| `getToolStats(filters?)` | `(filters?: StatsFilters) => Promise<DOpsToolStats[]>` | Per-tool success rates and call counts |
+| `getTimeseries(filters?)` | `(filters?: TimeseriesFilters) => Promise<DOpsTimeseries>` | Token usage and costs over time |
+
+### Example
+
+```typescript
+import { DOpsClient } from '@dtoolkit/sdk';
+
+const ops = new DOpsClient('http://localhost:7883', 'dtk_abc123');
+
+// Create a session
+const session = await ops.createSession({
+  source: 'claude',
+  model: 'claude-sonnet-4-6',
+  hostname: 'macbook',
+});
+
+// Record token usage
+await ops.addTokenUsage(session.id, {
+  model: 'claude-sonnet-4-6',
+  inputTokens: 1500,
+  outputTokens: 320,
+  cacheReadTokens: 800,
+});
+
+// Record a tool call
+await ops.addToolCall(session.id, {
+  name: 'Read',
+  success: true,
+  durationMs: 45,
+});
+
+// End the session
+await ops.endSession(session.id);
+
+// Get cost stats
+const costs = await ops.getCosts({ days: 30 });
+console.log(`Last 30 days: $${costs.totalCost}`);
+```
+
+---
+
+## Examples
+
+The [`examples/`](https://github.com/ivncmp/dtoolkit/tree/main/examples) directory in the dtoolkit repo contains ready-to-run TypeScript scripts for every SDK client:
+
+| Example | Client | What it covers |
+|---------|--------|----------------|
+| `dbrain.ts` | `DBrainClient` | Health, entity CRUD, facts, search, memory summary, conversations, federation |
+| `dproxy.ts` | `DProxyClient` | Batch ask, streaming, system prompts, file attachments, history, memory |
+| `dwork.ts` | `DWorkClient` | Projects, tasks, docs, search, overview |
+| `dops.ts` | `DOpsClient` | Sessions, token usage, tool calls, errors, analytics queries |
+| `demo.ts` | All clients | Combined smoke test |
+
+Run all examples with zero config:
+
+```bash title="terminal"
+cd examples
+npm install
+npm start
+```
+
+The setup script creates temporary servers, runs the demo, and cleans up automatically.
 
 ## Further reading
 

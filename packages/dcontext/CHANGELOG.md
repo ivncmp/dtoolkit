@@ -1,5 +1,23 @@
 # @dtoolkit/dcontext
 
+## 1.0.0
+
+### Major Changes
+
+- 01aa6ac: v1.0.0 — production-ready launch. All core packages graduate to stable.
+
+### Patch Changes
+
+- Updated dependencies [01aa6ac]
+- Updated dependencies [01aa6ac]
+  - @dtoolkit/core@1.0.0
+  - @dtoolkit/sdk@1.0.0
+  - @dtoolkit/codegraph-sdk@1.0.0
+  - @dtoolkit/adapter-claude@1.5.0
+  - @dtoolkit/adapter-codex@1.5.0
+  - @dtoolkit/adapter-gemini@1.5.0
+  - @dtoolkit/adapter-opencode@1.5.0
+
 ## 0.4.0
 
 ### Minor Changes

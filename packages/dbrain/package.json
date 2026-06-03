@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/dbrain",
-  "version": "0.6.3",
+  "version": "1.0.0",
   "description": "Your distributed mind. Persistent knowledge across all your AIs.",
   "type": "module",
   "license": "MIT",

@@ -1,5 +1,21 @@
 # @dtoolkit/dproxy
 
+## 1.5.0
+
+### Minor Changes
+
+- 01aa6ac: Launch milestone bump — marks the v1.0.0 ecosystem release.
+
+### Patch Changes
+
+- Updated dependencies [01aa6ac]
+- Updated dependencies [01aa6ac]
+  - @dtoolkit/core@1.0.0
+  - @dtoolkit/adapter-claude@1.5.0
+  - @dtoolkit/adapter-codex@1.5.0
+  - @dtoolkit/adapter-gemini@1.5.0
+  - @dtoolkit/adapter-opencode@1.5.0
+
 ## 1.4.3
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @dtoolkit/adapter-gemini
 
+## 1.5.0
+
+### Minor Changes
+
+- 01aa6ac: Launch milestone bump — marks the v1.0.0 ecosystem release.
+
+### Patch Changes
+
+- Updated dependencies [01aa6ac]
+  - @dtoolkit/core@1.0.0
+
 ## 1.4.0
 
 ### Minor Changes

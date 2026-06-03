@@ -1,6 +1,6 @@
 {
   "name": "@dtoolkit/codegraph-sdk",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Code intelligence SDK — semantic knowledge graph from any codebase. Fork of @colbymchenry/codegraph (library-only, no CLI/MCP/installer).",
   "homepage": "https://github.com/colbymchenry/codegraph",
   "repository": {

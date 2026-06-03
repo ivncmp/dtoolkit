@@ -1,5 +1,11 @@
 # @dtoolkit/codegraph-sdk
 
+## 1.0.0
+
+### Major Changes
+
+- 01aa6ac: v1.0.0 — production-ready launch. All core packages graduate to stable.
+
 ## 0.2.0
 
 ### Minor Changes

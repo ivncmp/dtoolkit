@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dtoolkit — Slide Deck</title>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #b8b8c4;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      margin: 48px auto;
+      width: 1280px;
+    }
+
+    .slide {
+      width: 1280px;
+      height: 820px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      display: flex;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .snum {
+      position: absolute;
+      bottom: 24px;
+      right: 36px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      color: rgba(0, 0, 0, 0.18);
+      z-index: 10;
+    }
+
+    .snum--light {
+      color: rgba(255, 255, 255, 0.25);
+    }
+
+    .mi {
+      font-family: 'Material Symbols Rounded';
+      font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+      font-size: inherit;
+      line-height: 1;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    :root {
+      --purple: #7C3AED;
+      --purple-dark: #5B21B6;
+      --purple-light: #A78BFA;
+      --gold: #D4A057;
+      --gold-light: #F5D590;
+      --dark: #0a0a1a;
+      --dark-2: #12122a;
+      --light: #f5f5f8;
+      --white: #ffffff;
+      --text: #1a1a2e;
+      --text-2: #6a6a80;
+      --text-3: #9a9ab0;
+      --border: #e2e2ea;
+    }
+
+    /* ── Decorative rings (MODE-style) ── */
+    .ring {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .ring--purple {
+      border: 10px solid var(--purple);
+    }
+
+    .ring--purple-fill {
+      background: var(--purple);
+      opacity: 0.06;
+    }
+
+    .ring--gold {
+      border: 10px solid var(--gold);
+    }
+
+    .ring--white {
+      border: 10px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .ring--light {
+      border: 10px solid rgba(0, 0, 0, 0.04);
+    }
+
+    .grad {
+      background: linear-gradient(135deg, var(--purple-light), var(--gold-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .t1 {
+      font-size: 64px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+    }
+
+    .t2 {
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .t3 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 6px 18px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+    }
+
+    .pill--purple {
+      background: #ede9fe;
+      color: var(--purple);
+    }
+
+    .pill--green {
+      background: #059669;
+      color: #ffffff;
+    }
+
+    .pill--orange {
+      background: #fff7ed;
+      color: #c2410c;
+    }
+
+    .pill--gold {
+      background: #fef3e2;
+      color: #92400e;
+    }
+
+    .pill--white {
+      background: rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .pill--dark {
+      background: rgba(0, 0, 0, 0.06);
+      color: var(--text-2);
+    }
+
+    .aline {
+      width: 56px;
+      height: 3px;
+      background: var(--purple);
+      border-radius: 3px;
+      margin: 16px 0 24px;
+    }
+
+    .ic {
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .ic--sm {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      border-radius: 8px;
+      font-size: 17px;
+    }
+
+    .ic--lg {
+      width: 52px;
+      height: 52px;
+      min-width: 52px;
+      border-radius: 14px;
+      font-size: 26px;
+    }
+
+    .ic.purple {
+      background: #ede9fe;
+      color: var(--purple);
+    }
+
+    .ic.green {
+      background: #ecfdf5;
+      color: #059669;
+    }
+
+    .ic.blue {
+      background: #eff6ff;
+      color: #2563eb;
+    }
+
+    .ic.orange {
+      background: #fff7ed;
+      color: #c2410c;
+    }
+
+    .ic.gold {
+      background: #fef3e2;
+      color: var(--gold);
+    }
+
+    .code {
+      background: var(--dark);
+      color: #d4d4e0;
+      font-family: 'JetBrains Mono', 'SF Mono', monospace;
+      font-size: 13px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+
+    .code .kw {
+      color: var(--purple-light);
+    }
+
+    .code .cm {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ═══ SLIDE 1: COVER (purple block) ═══ */
+    .s1 {
+      background: linear-gradient(160deg, #ffffff 0%, var(--purple-dark) 100%);
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 72px 88px;
+      color: white;
+    }
+
+    .s1-logo {
+      width: 320px;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 0px 20px rgba(255, 255, 255, 0.6));
+      z-index: 1;
+    }
+
+    .s1-brand {
+      font-size: 18px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.5);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      z-index: 1;
+    }
+
+    .s1 .t1 {
+      color: white;
+      z-index: 1;
+      margin-bottom: 12px;
+      font-size: 72px;
+    }
+
+    .s1-tag {
+      font-size: 20px;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 500;
+      max-width: 540px;
+      line-height: 1.6;
+      z-index: 1;
+      margin-bottom: 40px;
+    }
+
+    .s1-date {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.35);
+      z-index: 1;
+    }
+
+    /* ═══ SLIDE 2: PROBLEM / SOLUTION ═══ */
+    .s2 {
+      background: var(--light);
+    }
+
+    .s2-left {
+      width: 50%;
+      background: var(--white);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 56px 52px;
+      position: relative;
+    }
+
+    .s2-left .t3 {
+      color: var(--text);
+      margin-bottom: 28px;
+    }
+
+    .s2-prob {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .s2-x {
+      color: #ef4444;
+      font-weight: 800;
+      font-size: 18px;
+      flex-shrink: 0;
+      line-height: 1.3;
+    }
+
+    .s2-prob p {
+      font-size: 14.5px;
+      color: var(--text-2);
+      line-height: 1.55;
+    }
+
+    .s2-right {
+      width: 50%;
+      background: var(--purple);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 56px 52px;
+      position: relative;
+    }
+
+    .s2-right .t3 {
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    .s2-sol {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .s2-sol-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--gold);
+      margin-top: 6px;
+    }
+
+    .s2-sol h4 {
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 2px;
+    }
+
+    .s2-sol p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.5;
+    }
+
+    /* ═══ SLIDE 3: ARCHITECTURE ═══ */
+    .s3 {
+      background: var(--white);
+      flex-direction: column;
+      padding: 56px 80px;
+      position: relative;
+    }
+
+    .s3-diagram {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      flex: 1;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    .s3-layer {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .s3-box {
+      background: var(--light);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 24px;
+      text-align: center;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .s3-box h4 {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .s3-box p {
+      font-size: 12px;
+      color: var(--text-2);
+    }
+
+    .s3-box--agent {
+      border: 2px dashed var(--purple-light);
+      background: #faf8ff;
+      flex-direction: row;
+      gap: 28px;
+      justify-content: center;
+    }
+
+    .s3-box--agent span {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+
+    .s3-box--purple {
+      border-left: 4px solid var(--purple);
+    }
+
+    .s3-box--green {
+      border-left: 4px solid #10b981;
+    }
+
+    .s3-arrow {
+      text-align: center;
+      padding: 8px 0;
+      font-size: 20px;
+      color: var(--purple-light);
+    }
+
+    .s3-arrow-label {
+      font-size: 10px;
+      color: var(--text-3);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .s3-quote {
+      background: var(--light);
+      border-left: 4px solid var(--purple);
+      border-radius: 10px;
+      padding: 16px 24px;
+      margin-top: auto;
+      width: 100%;
+      max-width: 900px;
+      z-index: 1;
+    }
+
+    .s3-quote p {
+      font-size: 14px;
+      color: var(--purple-dark);
+      font-style: italic;
+      font-weight: 500;
+    }
+
+    /* ═══ SLIDES 4-6: PRODUCTS ═══ */
+    .sprod {
+      background: var(--light);
+    }
+
+    .sprod-left {
+      width: 58%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 52px 48px 52px 72px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .sprod-logo {
+      display: none;
+      height: 44px;
+      margin-bottom: 16px;
+      object-fit: contain;
+      align-self: flex-start;
+    }
+
+    .sprod-feats {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sprod-feat {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .sprod-feat h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .sprod-feat p {
+      font-size: 12.5px;
+      color: var(--text-2);
+      line-height: 1.5;
+    }
+
+    .sprod-right {
+      width: 42%;
+      background: var(--purple);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 36px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sprod-right-logo {
+      height: 172px;
+      object-fit: contain;
+      z-index: 1;
+      filter: drop-shadow(0 0px 4px rgba(255, 255, 255, 0.25));
+      margin-bottom: 16px;
+    }
+
+    .sprod-right-desc {
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.55;
+      max-width: 280px;
+      z-index: 1;
+    }
+
+    .sprod-port {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      margin-top: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.8);
+      z-index: 1;
+    }
+
+    .sprod.reverse {
+      flex-direction: row-reverse;
+    }
+
+    .sprod--green .sprod-right {
+      background: #059669;
+    }
+
+    .sprod--orange .sprod-right {
+      background: #c2410c;
+    }
+
+    /* ═══ SLIDE 7: DCONTEXT + DPROXY ═══ */
+    .s7 {
+      background: var(--white);
+      flex-direction: column;
+      padding: 56px 80px;
+      position: relative;
+    }
+
+    .s7-cols {
+      display: flex;
+      gap: 0;
+      flex: 1;
+      margin-top: 8px;
+      z-index: 1;
+    }
+
+    .s7-col {
+      flex: 1;
+      padding: 0 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .s7-col:first-child {
+      padding-left: 0;
+      border-right: 2px solid var(--border);
+      padding-right: 48px;
+    }
+
+    .s7-col:last-child {
+      padding-left: 48px;
+      padding-right: 0;
+    }
+
+    .s7-col-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .s7-col-sub {
+      font-size: 14px;
+      color: var(--purple);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .s7-item {
+      background: var(--light);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .s7-item h4 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .s7-item p {
+      font-size: 12px;
+      color: var(--text-2);
+      line-height: 1.45;
+    }
+
+    /* ═══ SLIDE 8: SDK ═══ */
+    .s8 {
+      background: var(--white);
+      flex-direction: column;
+      padding: 56px 80px;
+      position: relative;
+    }
+
+    .s8-clients {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px;
+      z-index: 1;
+    }
+
+    .s8-card {
+      flex: 1;
+      border-radius: 14px;
+      padding: 28px 22px;
+      text-align: center;
+      border-top: 4px solid;
+      background: var(--light);
+      border-color: var(--border);
+    }
+
+    .s8-card h4 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 12px 0 6px;
+    }
+
+    .s8-card p {
+      font-size: 12.5px;
+      color: var(--text-2);
+      line-height: 1.5;
+    }
+
+    .s8-footer {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--light);
+      border-radius: 12px;
+      padding: 16px 24px;
+      margin-top: 24px;
+      z-index: 1;
+    }
+
+    .s8-footer p {
+      font-size: 14px;
+      color: var(--text-2);
+      font-weight: 500;
+    }
+
+    /* ═══ SLIDE 9: QUICKSTART ═══ */
+    .s9 {
+      background: var(--light);
+      flex-direction: column;
+      padding: 56px 80px;
+      position: relative;
+    }
+
+    .s9-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      flex: 1;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    .s9-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .s9-step-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .s9-num {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--purple);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .s9-line {
+      width: 2px;
+      height: 28px;
+      background: var(--purple-light);
+      opacity: 0.3;
+    }
+
+    .s9-step-body {
+      padding: 8px 0 20px;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .s9-step h4 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .s9-step p {
+      font-size: 13px;
+      color: var(--text-2);
+    }
+
+    /* ═══ SLIDE 10: ECOSYSTEM ═══ */
+    .s10 {
+      background: var(--white);
+      flex-direction: column;
+      padding: 56px 80px;
+      position: relative;
+    }
+
+    .s10-cols {
+      display: flex;
+      gap: 48px;
+      margin-top: 16px;
+      flex: 1;
+      align-items: flex-start;
+      z-index: 1;
+    }
+
+    .s10-col {
+      flex: 1;
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .s10-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .s10-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .s10-count {
+      font-size: 11px;
+      font-weight: 800;
+      color: white;
+      border-radius: 100px;
+      padding: 2px 10px;
+      margin-left: 4px;
+    }
+
+    .s10-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-content: flex-start;
+    }
+
+    .s10-pill {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 10px;
+    }
+
+    .s10-pill--on {
+      background: var(--light);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .s10-pill--soon {
+      background: var(--white);
+      border: 1px dashed #d0d0dc;
+      color: var(--text-3);
+    }
+
+    .s10-footer {
+      background: var(--light);
+      border-radius: 12px;
+      padding: 16px 24px;
+      margin-top: auto;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text-2);
+      font-weight: 500;
+    }
+
+    /* ═══ SLIDE 11: PRINCIPLES (purple) ═══ */
+    .s11 {
+      background: var(--purple);
+      flex-direction: column;
+      padding: 56px 80px;
+      position: relative;
+      color: white;
+    }
+
+    .s11-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      flex: 1;
+      align-content: center;
+      z-index: 1;
+    }
+
+    .s11-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 28px 24px;
+    }
+
+    .s11-num {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--gold-light);
+      margin-bottom: 10px;
+    }
+
+    .s11-card h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    .s11-card p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.65);
+      line-height: 1.55;
+    }
+
+    /* ═══ SLIDE 12: CLOSING (dark) ═══ */
+    .s12 {
+      background: linear-gradient(160deg, var(--dark) 0%, var(--dark-2) 50%, #0d0d22 100%);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 100px;
+      position: relative;
+    }
+
+    .s12-logo {
+      width: 288px;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 4px 20px rgba(124, 58, 237, 0.4));
+      z-index: 1;
+    }
+
+    .s12-brand {
+      font-size: 20px;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.4);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      z-index: 1;
+    }
+
+    .s12-title {
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      margin-bottom: 36px;
+      z-index: 1;
+    }
+
+    .s12-ctas {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 44px;
+      z-index: 1;
+    }
+
+    .s12-cta {
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .s12-cta:first-child {
+      background: var(--purple);
+      border-color: var(--purple);
+      color: white;
+    }
+
+    .s12-contact {
+      font-size: 15px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 8px;
+      z-index: 1;
+    }
+
+    .s12-url {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.2);
+      z-index: 1;
+    }
+
+    .s12-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+
+    /* ═══ PRINT ═══ */
+    @page {
+      size: A4 landscape;
+      margin: 0;
+    }
+
+    @media print {
+      body {
+        background: white;
+        margin: 0;
+        padding: 0;
+      }
+
+      .page {
+        width: 297mm;
+        height: 210mm;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        page-break-after: always;
+        page-break-inside: avoid;
+        margin: 0;
+        padding: 8mm;
+      }
+
+      .page:last-child {
+        page-break-after: auto;
+      }
+
+      .slide {
+        zoom: 0.82;
+        box-shadow: none;
+        border-radius: 8px;
+      }
+
+      .ring,
+      .s12-orb {
+        display: none;
+      }
+
+      .grad {
+        -webkit-text-fill-color: var(--purple);
+        background: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ════ SLIDE 1: COVER ════ -->
+  <div class="page">
+    <div class="slide s1">
+      <div class="ring ring--white" style="width:280px;height:280px;top:-60px;right:-40px;"></div>
+      <div class="ring ring--gold" style="width:140px;height:140px;top:60px;right:140px;z-index:1;"></div>
+      <div class="ring ring--white" style="width:200px;height:200px;bottom:-50px;right:200px;"></div>
+      <div class="ring ring--purple-fill" style="width:400px;height:400px;bottom:-200px;right:-100px;"></div>
+
+      <img src="logos/logo-dtoolkit-complete.png" alt="dtoolkit" class="s1-logo">
+      <div class="t1">Engineering toolkit<br>for AI coding agents</div>
+      <p class="s1-tag">Give your agents persistent memory, automatic context, project management, and observability.
+      </p>
+      <div class="pill pill--white" style="margin-bottom:0;">Open Source · MIT Licensed</div>
+      <div class="s1-date" style="position:absolute;bottom:28px;left:88px;">June 2026</div>
+      <span class="snum snum--light">01 / 12</span>
+    </div>
+  </div>
+
+  <!-- ════ SLIDE 2: THE PROBLEM ════ -->
+  <div class="page">
+    <div class="slide s2">
+      <div class="ring ring--light" style="width:220px;height:220px;top:-60px;left:-50px;"></div>
+      <div class="ring ring--gold" style="width:100px;height:100px;bottom:80px;left:calc(50% - 50px);z-index:5;"></div>
+
+      <div class="s2-left">
+        <div class="pill pill--dark" style="align-self:flex-start;">The Problem</div>
+        <div class="t3">Agents forget<br>everything</div>
+        <div class="s2-prob"><span class="s2-x">✕</span>
+          <p>No memory between sessions — agents start from zero every time</p>
+        </div>
+        <div class="s2-prob"><span class="s2-x">✕</span>
+          <p>No project awareness — agents hallucinate file paths and structure</p>
+        </div>
+        <div class="s2-prob"><span class="s2-x">✕</span>
+          <p>No observability — you don't know what they cost or where they fail</p>
+        </div>
+        <div class="s2-prob"><span class="s2-x">✕</span>
+          <p>Vendor lock-in — switching providers means rewriting everything</p>
+        </div>
+        <div class="s2-prob"><span class="s2-x">✕</span>
+          <p>No team knowledge — each developer's agent is an island</p>
+        </div>
+      </div>
+      <div class="s2-right">
+        <div class="ring ring--white" style="width:200px;height:200px;top:-60px;right:-60px;"></div>
+        <div class="ring ring--gold" style="width:80px;height:80px;bottom:40px;left:40px;"></div>
+        <div class="pill pill--white" style="align-self:flex-start;z-index:1;">The Solution</div>
+        <div class="t3" style="z-index:1;">A composable<br>harness</div>
+        <div class="s2-sol" style="z-index:1;">
+          <div class="s2-sol-dot"></div>
+          <div>
+            <h4>Persistent memory</h4>
+            <p>Agents remember across sessions</p>
+          </div>
+        </div>
+        <div class="s2-sol" style="z-index:1;">
+          <div class="s2-sol-dot"></div>
+          <div>
+            <h4>Automatic context</h4>
+            <p>Identity + project facts injected at start</p>
+          </div>
+        </div>
+        <div class="s2-sol" style="z-index:1;">
+          <div class="s2-sol-dot"></div>
+          <div>
+            <h4>Multi-provider</h4>
+            <p>Claude, Gemini, Codex, OpenCode</p>
+          </div>
+        </div>
+        <div class="s2-sol" style="z-index:1;">
+          <div class="s2-sol-dot"></div>
+          <div>
+            <h4>Observable</h4>
+            <p>Tokens, costs, tools, errors tracked</p>
+          </div>
+        </div>
+        <div class="s2-sol" style="z-index:1;">
+          <div class="s2-sol-dot"></div>
+          <div>
+            <h4>Team-ready</h4>
+            <p>Federated brains share knowledge</p>
+          </div>
+        </div>
+      </div>
+      <span class="snum">02 / 12</span>
+    </div>
+  </div>
+
+  <!-- ════ SLIDE 3: ARCHITECTURE ════ -->
+  <div class="page">
+    <div class="slide s3">
+      <div class="ring ring--purple" style="width:180px;height:180px;top:-50px;right:-40px;"></div>
+      <div class="ring ring--gold" style="width:100px;height:100px;bottom:40px;right:60px;"></div>
+      <div class="ring ring--light" style="width:260px;height:260px;bottom:-100px;left:-80px;"></div>
+
+      <div class="pill pill--purple" style="z-index:1;">How it works</div>
+      <div class="t2" style="z-index:1;">One layer, one job</div>
+      <div class="aline" style="z-index:1;"></div>
+      <div class="s3-diagram">
+        <div class="s3-arrow-label">Your coding agent</div>
+        <div class="s3-layer">
+          <div class="s3-box s3-box--agent">
+            <span>Claude Code</span><span>Gemini CLI</span><span>Codex CLI</span><span>OpenCode</span>
+          </div>
+        </div>
+        <div class="s3-arrow"><span class="mi" style="font-size:24px;">arrow_downward</span></div>
+        <div class="s3-arrow-label">Hooks &amp; transport</div>
+        <div class="s3-layer">
+          <div class="s3-box s3-box--purple">
+            <span class="mi" style="font-size:24px;color:var(--purple);">link</span>
+            <h4>dcontext</h4>
+            <p>Session hooks — inject &amp; save</p>
+          </div>
+          <div class="s3-box s3-box--purple">
+            <span class="mi" style="font-size:24px;color:var(--purple);">route</span>
+            <h4>dproxy</h4>
+            <p>Universal CLI adapter &amp; REST API</p>
+          </div>
+        </div>
+        <div class="s3-arrow"><span class="mi" style="font-size:24px;">arrow_downward</span></div>
+        <div class="s3-arrow-label">Data &amp; services</div>
+        <div class="s3-layer">
+          <div class="s3-box s3-box--green">
+            <span class="mi" style="font-size:24px;color:#059669;">psychology</span>
+            <h4>dbrain</h4>
+            <p>Memory</p>
+          </div>
+          <div class="s3-box s3-box--green">
+            <span class="mi" style="font-size:24px;color:#059669;">assignment</span>
+            <h4>dwork</h4>
+            <p>Projects</p>
+          </div>
+          <div class="s3-box s3-box--green">
+            <span class="mi" style="font-size:24px;color:#059669;">monitoring</span>
+            <h4>dops</h4>
+            <p>Observability</p>
+          </div>
+        </div>
+      </div>
+      <div class="s3-quote">
+        <p>"If two products need to sync to function, the design is wrong."</p>
+      </div>
+      <span class="snum">03 / 12</span>
+    </div>
+  </div>
+
+  <!-- ════ SLIDE 4: DBRAIN ════ -->
+  <div class="page">
+    <div class="slide sprod">
+      <div class="ring ring--light" style="width:200px;height:200px;top:-60px;left:-50px;"></div>
+      <div class="sprod-left">
+        <div class="pill pill--purple">Product</div>
+        <img src="logos/logo-dbrain-complete.png" alt="dbrain" class="sprod-logo">
+        <div class="t3">Your distributed mind</div>
+        <div class="aline"></div>
+        <div class="sprod-feats">
+          <div class="sprod-feat">
+            <div class="ic ic--sm purple"><span class="mi">category</span></div>
+            <div>
+              <h4>Entities, facts, and memory tiers</h4>
+              <p>Hot, warm, and cold tiers keep context relevant and compact.</p>
+            </div>
+          </div>
+          <div class="sprod-feat">
+            <div class="ic ic--sm blue"><span class="mi">search</span></div>
+            <div>
+              <h4>Full-text search with FTS5</h4>
+              <p>Semantic search across all stored knowledge in milliseconds.</p>
+            </div>
+          </div>
+          <div class="sprod-feat">
+            <div class="ic ic--sm green"><span class="mi">hub</span></div>
+            <div>
+              <h4>MCP server</h4>
+              <p>Works with Claude Code, Cursor, Windsurf, and any MCP client.</p>
+            </div>
+          </div>
+          <div class="sprod-feat">
+            <div class="ic ic--sm orange"><span class="mi">share</span></div>
+            <div>
+              <h4>Federation</h4>
+              <p>Personal and shared team brains. Recall auto-federates.</p>
+            </div>
+          </div>
+          <div class="sprod-feat">
+            <div class="ic ic--sm gold"><span class="mi">dashboard</span></div>
+            <div>
+              <h4>React dashboard</h4>
+              <p>Browse entities, search memories, and manage your brain visually.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sprod-right">
+        <div class="ring ring--white" style="width:200px;height:200px;top:-60px;right:-60px;"></div>
+        <div class="ring ring--gold" style="width:100px;height:100px;bottom:60px;left:-30px;"></div>
+        <img src="logos/logo-dbrain-complete.png" alt="dbrain" class="sprod-right-logo">
+        <p class="sprod-right-desc">Persistent memory server with SQLite, FTS5, and a built-in React dashboard.</p>
+        <div class="sprod-port"><span class="mi" style="font-size:16px;">dns</span> API :7878 · Dashboard :7879</div>
+      </div>
+      <span class="snum">04 / 12</span>
+    </div>
+  </div>
+
+  <!-- ════ SLIDE 5: DWORK ════ -->
+  <div class="page">
+    <div class="slide sprod sprod--green reverse">
+      <div class="ring ring--light" style="width:220px;height:220px;bottom:-60px;right:-50px;"></div>
+      <div class="sprod-left">
+        <div class="pill pill--green">Product</div>
+        <img src="logos/logo-dwork-complete.png" alt="dwork" class="sprod-logo">
+        <div class="t3">Markdown is the source of truth</div>
+        <div class="aline" style="background:#059669;"></div>
+        <div class="sprod-feats">
+          <div class="sprod-feat">
+            <div class="ic ic--sm green"><span class="mi">description</span></div>
+            <div>
+              <h4>BACKLOG.md with inline task metadata</h4>
+              <p>Tasks live in Markdown files. Human-readable, git-friendly.</p>
+            </div>
+          </div>
+          <div class="sprod-feat">
+            <div class="ic ic--sm purple"><span class="mi">build</span></div>
+            <div>
+              <h4>21 MCP tools including code graph</h4>
+              <p>Search, trace, and analyze your codebase through natural language.</p>
+            </div>
+          </div>
+          <div class="sprod-feat">
+            <div class="ic ic--sm blue"><span class="mi">search</span></div>
+            <div>
+              <h4>Full-text search across tasks and docs</h4>
+              <p>FTS5-powered search over every project, task, and document.</p>
+            </div>
+          </div>
+          <div class="sprod-feat">
+            <div class="ic ic--sm orange"><span class="mi">view_kanban</span></div>
+            <div>
+              <h4>Kanban dashboard with task detail</h4>
+              <p>Visual board with drag-and-drop, task metadata, and Markdown editing.</p>
+            </div>
+          </div>
+          <div class="sprod-feat">
+            <div class="ic ic--sm gold"><span class="mi">code</span></div>
+            <div>
+              <h4>Git-friendly, human-readable</h4>
+              <p>Every change is a clean diff. Review project state in any editor.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sprod-right">
+        <div class="ring ring--white" style="width:180px;height:180px;bottom:-50px;left:-50px;"></div>
+        <div class="ring ring--gold" style="width:90px;height:90px;top:60px;right:-20px;"></div>
+        <img src="logos/logo-dwork-complete.png" alt="dwork" class="sprod-right-logo">
+        <p class="sprod-right-desc">AI-native project manager. Markdown files are the source of truth; SQLite is just an
+          index.</p>
+        <div class="sprod-port"><span class="mi" style="font-size:16px;">dns</span> API :7881 · Dashboard :7882</div>
+      </div>
+      <span class="snum">05 / 12</span>
+    </div>
+  </div>
+
+  <!-- ════ SLIDE 6: DOPS ════ -->
+  <div class="page">
+    <div class="slide sprod sprod--orange">
+      <div class="ring ring--light" style="width:180px;height:180px;top:-50px;left:-40px;"></div>
+      <div class="sprod-left">
+        <div class="pill pill--orange">Product</div>
+        <img src="logos/logo-dops-complete.png" alt="dops" class="sprod-logo">
+        <div class="t3">Know what your agents cost</div>
+        <div class="aline" style="background:#c2410c;"></div>
+        <div class="sprod-feats">
+          <div class="sprod-feat">
+            <div class="ic ic--sm orange"><span class="mi">token</span></div>
+            <div>
+              <h4>Token tracking per session</h4>
+              <p>Input, output, and cache tokens broken down for every session.</p>
+            </div>
+          </div>
+          <div class="sprod-feat">
+            <div class="ic ic--sm green"><span class="mi">attach_money</span></div>
+            <div>
+              <h4>Model-aware cost estimation</h4>
+              <p>Accurate pricing for every model across all supported providers.</p>
+            </div>
+          </div>
+          <div class="sprod-feat">
+            <div class="ic ic--sm blue"><span class="mi">analytics</span></div>
+            <div>
+              <h4>Tool call analytics and success rates</h4>
+              <p>Which tools get called, how often they fail, and where agents get stuck.</p>
+            </div>
+          </div>
+          <div class="sprod-feat">
+            <div class="ic ic--sm purple"><span class="mi">input</span></div>
+            <div>
+              <h4>Multi-provider transcript ingestion</h4>
+              <p>Ingest transcripts from Claude, Gemini, Codex, and OpenCode.</p>
+            </div>
+          </div>
+          <div class="sprod-feat">
+            <div class="ic ic--sm gold"><span class="mi">bar_chart</span></div>
+            <div>
+              <h4>Dashboard with charts and timeseries</h4>
+              <p>Visual cost trends, usage heatmaps, and per-project breakdowns.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sprod-right">
+        <div class="ring ring--white" style="width:220px;height:220px;top:-70px;right:-70px;"></div>
+        <div class="ring ring--gold" style="width:80px;height:80px;bottom:80px;left:-20px;"></div>
+        <img src="logos/logo-dops-complete.png" alt="dops" class="sprod-right-logo">
+        <p class="sprod-right-desc">Agent observability server with token tracking, cost estimation, and analytics
+          dashboard.</p>
+        <div class="sprod-port"><span class="mi" style="font-size:16px;">dns</span> API :7883 · Dashboard :7884</div>
+      </div>
+      <span class="snum">06 / 12</span>
+    </div>
+  </div>
+
+  <!-- ════ SLIDE 7: DCONTEXT + DPROXY ════ -->
+  <div class="page">
+    <div class="slide s7">
+      <div class="ring ring--purple" style="width:160px;height:160px;top:-40px;right:-30px;"></div>
+      <div class="ring ring--gold" style="width:80px;height:80px;bottom:40px;left:50%;"></div>
+      <div class="ring ring--light" style="width:240px;height:240px;bottom:-80px;left:-60px;"></div>
+
+      <div class="pill pill--gold" style="z-index:1;">The Glue</div>
+      <div class="t2" style="z-index:1;">The invisible layers</div>
+      <div class="aline" style="background:linear-gradient(90deg, var(--purple), var(--gold));z-index:1;"></div>
+      <div class="s7-cols">
+        <div class="s7-col">
+          <div class="s7-col-title">dcontext</div>
+          <div class="s7-col-sub">Automatic context</div>
+          <div class="s7-item">
+            <div class="ic ic--sm purple"><span class="mi">login</span></div>
+            <div>
+              <h4>Identity + project facts injected at session start</h4>
+              <p>Your brain's knowledge is available from the first prompt.</p>
+            </div>
+          </div>
+          <div class="s7-item">
+            <div class="ic ic--sm blue"><span class="mi">save</span></div>
+            <div>
+              <h4>Transcripts saved before compaction</h4>
+              <p>Conversations preserved before the context window shrinks.</p>
+            </div>
+          </div>
+          <div class="s7-item">
+            <div class="ic ic--sm green"><span class="mi">bolt</span></div>
+            <div>
+              <h4>Zero config</h4>
+              <p>One command: <span class="code" style="padding:2px 10px;font-size:11px;">dbrain connect claude</span>
+              </p>
+            </div>
+          </div>
+          <div class="s7-item">
+            <div class="ic ic--sm orange"><span class="mi">devices</span></div>
+            <div>
+              <h4>Multi-CLI support</h4>
+              <p>Claude Code, Gemini CLI, Codex CLI, OpenCode.</p>
+            </div>
+          </div>
+        </div>
+        <div class="s7-col">
+          <div class="s7-col-title">dproxy</div>
+          <div class="s7-col-sub">Multi-provider transport</div>
+          <div class="s7-item">
+            <div class="ic ic--sm gold"><span class="mi">swap_horiz</span></div>
+            <div>
+              <h4>One CLI, one API — 4 providers</h4>
+              <p>Switch between Claude, Gemini, Codex, and OpenCode with a flag.</p>
+            </div>
+          </div>
+          <div class="s7-item">
+            <div class="ic ic--sm purple"><span class="mi">layers</span></div>
+            <div>
+              <h4>Context pipeline</h4>
+              <p>Memory + workspace + templates assembled automatically.</p>
+            </div>
+          </div>
+          <div class="s7-item">
+            <div class="ic ic--sm blue"><span class="mi">api</span></div>
+            <div>
+              <h4>REST API with SSE streaming</h4>
+              <p>Full CLI parity via HTTP. Bearer token auth, configurable port.</p>
+            </div>
+          </div>
+          <div class="s7-item">
+            <div class="ic ic--sm green"><span class="mi">chat</span></div>
+            <div>
+              <h4>Interactive REPL</h4>
+              <p>Ask single-shot or chat in a persistent REPL with history.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span class="snum">07 / 12</span>
+    </div>
+  </div>
+
+  <!-- ════ SLIDE 8: SDK ════ -->
+  <div class="page">
+    <div class="slide s8">
+      <div class="ring ring--purple" style="width:200px;height:200px;bottom:-60px;right:-50px;"></div>
+      <div class="ring ring--gold" style="width:100px;height:100px;top:40px;right:60px;"></div>
+
+      <div class="pill pill--purple" style="z-index:1;">For Developers</div>
+      <div class="t2" style="z-index:1;">Typed clients for everything</div>
+      <div class="aline" style="z-index:1;"></div>
+      <div class="code" style="margin-bottom:8px;z-index:1;"><span class="kw">npm install</span> @dtoolkit/sdk</div>
+      <div class="s8-clients">
+        <div class="s8-card" style="border-top-color:var(--purple);">
+          <div class="ic ic--lg purple"><span class="mi">psychology</span></div>
+          <h4>DBrainClient</h4>
+          <p>Memory operations — recall, remember, entities, facts, search, and federation.</p>
+        </div>
+        <div class="s8-card" style="border-top-color:#059669;">
+          <div class="ic ic--lg green"><span class="mi">assignment</span></div>
+          <h4>DWorkClient</h4>
+          <p>Project management — projects, tasks, docs, search, sync, and overview.</p>
+        </div>
+        <div class="s8-card" style="border-top-color:#2563eb;">
+          <div class="ic ic--lg blue"><span class="mi">route</span></div>
+          <h4>DProxyClient</h4>
+          <p>Model invocation — prompt execution, streaming, and multi-provider routing.</p>
+        </div>
+        <div class="s8-card" style="border-top-color:#c2410c;">
+          <div class="ic ic--lg orange"><span class="mi">monitoring</span></div>
+          <h4>DOpsClient</h4>
+          <p>Observability — sessions, costs, tool analytics, and transcript ingestion.</p>
+        </div>
+      </div>
+      <div class="s8-footer">
+        <span class="mi" style="font-size:20px;color:var(--purple);">science</span>
+        <p>Zero-config examples: <span class="code" style="padding:4px 14px;font-size:11px;margin-left:8px;">cd examples
+            && npm start</span></p>
+      </div>
+      <span class="snum">08 / 12</span>
+    </div>
+  </div>
+
+  <!-- ════ SLIDE 9: QUICKSTART ════ -->
+  <div class="page">
+    <div class="slide s9">
+      <div class="ring ring--purple" style="width:160px;height:160px;top:-40px;right:-30px;"></div>
+      <div class="ring ring--gold" style="width:80px;height:80px;bottom:60px;right:80px;"></div>
+
+      <div class="pill pill--green" style="z-index:1;">5 Minutes</div>
+      <div class="t2" style="z-index:1;">From zero to full harness</div>
+      <div class="aline" style="background:#059669;z-index:1;"></div>
+      <div class="s9-steps">
+        <div class="s9-step">
+          <div class="s9-step-left">
+            <div class="s9-num">1</div>
+            <div class="s9-line"></div>
+          </div>
+          <div class="s9-step-body">
+            <div>
+              <h4>Install</h4>
+              <p>Install the core packages globally from npm.</p>
+            </div>
+            <div class="code" style="font-size:11px;">npm i -g @dtoolkit/dbrain @dtoolkit/dcontext @dtoolkit/dwork
+              @dtoolkit/dops</div>
+          </div>
+        </div>
+        <div class="s9-step">
+          <div class="s9-step-left">
+            <div class="s9-num">2</div>
+            <div class="s9-line"></div>
+          </div>
+          <div class="s9-step-body">
+            <div>
+              <h4>Memory</h4>
+              <p>Initialize and start your personal brain.</p>
+            </div>
+            <div class="code">dbrain init && dbrain start</div>
+          </div>
+        </div>
+        <div class="s9-step">
+          <div class="s9-step-left">
+            <div class="s9-num">3</div>
+            <div class="s9-line"></div>
+          </div>
+          <div class="s9-step-body">
+            <div>
+              <h4>Context</h4>
+              <p>Connect your brain to your AI coding CLI.</p>
+            </div>
+            <div class="code">dbrain connect claude</div>
+          </div>
+        </div>
+        <div class="s9-step">
+          <div class="s9-step-left">
+            <div class="s9-num">4</div>
+            <div class="s9-line"></div>
+          </div>
+          <div class="s9-step-body">
+            <div>
+              <h4>Projects</h4>
+              <p>Initialize and start the project manager.</p>
+            </div>
+            <div class="code">dwork init && dwork start</div>
+          </div>
+        </div>
+        <div class="s9-step">
+          <div class="s9-step-left">
+            <div class="s9-num">5</div>
+          </div>
+          <div class="s9-step-body">
+            <div>
+              <h4>Build</h4>
+              <p>Open your CLI. The full harness is active.</p>
+            </div>
+            <div class="code" style="background:var(--purple);color:white;"><span
+                style="color:var(--gold-light);">claude</span> <span class="cm"># or gemini, codex, opencode</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span class="snum">09 / 12</span>
+    </div>
+  </div>
+
+  <!-- ════ SLIDE 10: ECOSYSTEM ════ -->
+  <div class="page">
+    <div class="slide s10">
+      <div class="ring ring--purple" style="width:180px;height:180px;bottom:-50px;right:-40px;"></div>
+      <div class="ring ring--gold" style="width:90px;height:90px;top:40px;right:100px;"></div>
+      <div class="ring ring--light" style="width:260px;height:260px;top:-80px;left:-70px;"></div>
+
+      <div class="pill pill--purple" style="z-index:1;">20 Packages</div>
+      <div class="t2" style="z-index:1;">Available now + Coming soon</div>
+      <div class="aline" style="z-index:1;"></div>
+      <div class="s10-cols">
+        <div class="s10-col">
+          <div class="s10-label">
+            <div class="s10-dot" style="background:#059669;"></div> Available <span class="s10-count"
+              style="background:var(--purple);">12</span>
+          </div>
+          <div class="s10-pills">
+            <div class="s10-pill s10-pill--on">core</div>
+            <div class="s10-pill s10-pill--on">sdk</div>
+            <div class="s10-pill s10-pill--on">dbrain</div>
+            <div class="s10-pill s10-pill--on">dcontext</div>
+            <div class="s10-pill s10-pill--on">dwork</div>
+            <div class="s10-pill s10-pill--on">dops</div>
+            <div class="s10-pill s10-pill--on">dproxy</div>
+            <div class="s10-pill s10-pill--on">adapter-claude</div>
+            <div class="s10-pill s10-pill--on">adapter-gemini</div>
+            <div class="s10-pill s10-pill--on">adapter-codex</div>
+            <div class="s10-pill s10-pill--on">adapter-opencode</div>
+            <div class="s10-pill s10-pill--on">codegraph-sdk</div>
+          </div>
+        </div>
+        <div class="s10-col">
+          <div class="s10-label">
+            <div class="s10-dot" style="background:var(--text-3);"></div> Coming soon <span class="s10-count"
+              style="background:var(--text-3);">8</span>
+          </div>
+          <div class="s10-pills">
+            <div class="s10-pill s10-pill--soon">dcouncil</div>
+            <div class="s10-pill s10-pill--soon">dguard</div>
+            <div class="s10-pill s10-pill--soon">dpolicy</div>
+            <div class="s10-pill s10-pill--soon">droute</div>
+            <div class="s10-pill s10-pill--soon">dpair</div>
+            <div class="s10-pill s10-pill--soon">dreplay</div>
+            <div class="s10-pill s10-pill--soon">dstream</div>
+            <div class="s10-pill s10-pill--soon">dforge</div>
+          </div>
+        </div>
+      </div>
+      <div class="s10-footer">
+        <span class="mi" style="font-size:20px;color:#059669;">verified</span>
+        All MIT licensed, published on npm as @dtoolkit/* scoped packages.
+      </div>
+      <span class="snum">10 / 12</span>
+    </div>
+  </div>
+
+  <!-- ════ SLIDE 11: PRINCIPLES ════ -->
+  <div class="page">
+    <div class="slide s11">
+      <div class="ring ring--white" style="width:300px;height:300px;top:-100px;right:-80px;"></div>
+      <div class="ring ring--gold" style="width:120px;height:120px;top:60px;right:120px;"></div>
+      <div class="ring ring--white" style="width:200px;height:200px;bottom:-60px;left:-50px;"></div>
+
+      <div class="pill pill--white" style="z-index:1;">Philosophy</div>
+      <div class="t2" style="color:white;z-index:1;">What we believe</div>
+      <div class="aline" style="background:var(--gold);z-index:1;"></div>
+      <div class="s11-grid">
+        <div class="s11-card">
+          <div class="s11-num">01</div>
+          <h4>One layer, one responsibility</h4>
+          <p>Each package does one thing well. Memory is memory. Projects are projects. No god objects.</p>
+        </div>
+        <div class="s11-card">
+          <div class="s11-num">02</div>
+          <h4>CLI-first, dashboard as bonus</h4>
+          <p>Everything works from the terminal. Dashboards are a visual convenience, not a dependency.</p>
+        </div>
+        <div class="s11-card">
+          <div class="s11-num">03</div>
+          <h4>SQLite everywhere</h4>
+          <p>Zero external dependencies. No Postgres, no Redis, no Docker. Just a single file on disk.</p>
+        </div>
+        <div class="s11-card">
+          <div class="s11-num">04</div>
+          <h4>MCP + REST on the same port</h4>
+          <p>One server, two protocols. MCP for agents, REST for everything else. No port sprawl.</p>
+        </div>
+        <div class="s11-card">
+          <div class="s11-num">05</div>
+          <h4>Markdown as source of truth</h4>
+          <p>Data lives in files you can read, edit, and version. The database is just an index.</p>
+        </div>
+        <div class="s11-card">
+          <div class="s11-num">06</div>
+          <h4>No vendor lock-in</h4>
+          <p>Four adapters, one interface. Switch providers with a flag. Your data stays with you.</p>
+        </div>
+      </div>
+      <span class="snum snum--light">11 / 12</span>
+    </div>
+  </div>
+
+  <!-- ════ SLIDE 12: CLOSING ════ -->
+  <div class="page">
+    <div class="slide s12">
+      <div class="s12-orb"
+        style="width:500px;height:500px;background:var(--purple);opacity:0.08;top:-200px;right:-100px;"></div>
+      <div class="s12-orb"
+        style="width:350px;height:350px;background:var(--gold);opacity:0.05;bottom:-120px;left:-80px;"></div>
+      <div class="ring ring--white" style="width:200px;height:200px;top:40px;left:80px;border-width:6px;"></div>
+      <div class="ring ring--gold" style="width:100px;height:100px;bottom:80px;right:120px;border-width:6px;"></div>
+
+      <img src="logos/logo-dtoolkit.png" alt="dtoolkit" class="s12-logo">
+      <div class="s12-title grad">Ready to try it?</div>
+      <div class="s12-ctas">
+        <a class="s12-cta" href="https://github.com/ivncmp/dtoolkit"><span class="mi"
+            style="font-size:18px;">code</span> GitHub</a>
+        <a class="s12-cta" href="https://www.npmjs.com/org/dtoolkit"><span class="mi"
+            style="font-size:18px;">package_2</span> npm</a>
+        <a class="s12-cta" href="https://dtoolkit.dev/docs"><span class="mi" style="font-size:18px;">menu_book</span>
+          Docs</a>
+      </div>
+      <div class="s12-contact">Iván Campillo · <a href="mailto:ivncmp@gmail.com"
+          style="color:var(--purple-light);text-decoration:none;">ivncmp@gmail.com</a></div>
+      <div class="s12-url"><a href="https://github.com/ivncmp/dtoolkit"
+          style="color:inherit;text-decoration:none;">github.com/ivncmp/dtoolkit</a></div>
+      <span class="snum snum--light">12 / 12</span>
+    </div>
+  </div>
+
+</body>
+
+</html>

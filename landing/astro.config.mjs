@@ -92,9 +92,6 @@ export default defineConfig({
           ],
         },
       ],
-      editLink: {
-        baseUrl: 'https://github.com/ivncmp/dtoolkit/edit/main/landing/',
-      },
     }),
     react(),
     tailwind({ applyBaseStyles: false }),

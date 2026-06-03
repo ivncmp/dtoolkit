@@ -1,5 +1,6 @@
 // --- Clients ---
 export { DBrainClient, type DBrainClientOptions } from './dbrain/index.js';
+export { DOpsClient, type DOpsClientOptions } from './dops/index.js';
 export { DProxyClient, type DProxyClientOptions } from './dproxy/index.js';
 export { DWorkClient, type DWorkClientOptions } from './dwork/index.js';
 
@@ -39,6 +40,29 @@ export type {
   ProviderName,
   TemplateRunOptions,
 } from './dproxy/index.js';
+
+// --- DOps types ---
+export type {
+  DOpsCreateSession,
+  DOpsDateFilters,
+  DOpsEndSession,
+  DOpsError,
+  DOpsEvent,
+  DOpsEventType,
+  DOpsHealthResponse,
+  DOpsModelStat,
+  DOpsSessionDetail,
+  DOpsSessionFilters,
+  DOpsSessionRow,
+  DOpsSessionStatus,
+  DOpsSourceStat,
+  DOpsStatsFilters,
+  DOpsTimeSeriesBucket,
+  DOpsTimeSeriesFilters,
+  DOpsTokenUsage,
+  DOpsToolCall,
+  DOpsToolStat,
+} from './dops/index.js';
 
 // --- DWork types ---
 export type {

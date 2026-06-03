@@ -15,7 +15,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { InputFile } from "@dtoolkit/sdk";
-import { DBrainClient, DProxyClient, DWorkClient, SdkError } from "@dtoolkit/sdk";
+import { DBrainClient, DOpsClient, DProxyClient, DWorkClient, SdkError } from "@dtoolkit/sdk";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SAMPLES_DIR = resolve(__dirname, "../samples");
@@ -31,6 +31,10 @@ const dproxy = new DProxyClient(
 const dwork = new DWorkClient(
   process.env.DWORK_URL ?? "http://localhost:7881",
   process.env.DWORK_TOKEN ?? "changeme",
+);
+const dops = new DOpsClient(
+  process.env.DOPS_URL ?? "http://localhost:7883",
+  process.env.DOPS_TOKEN ?? "changeme",
 );
 
 const passed: string[] = [];
@@ -239,39 +243,22 @@ try {
 
   section("dops");
 
-  const DOPS_URL = process.env.DOPS_URL ?? "http://localhost:7883";
-  const DOPS_TOKEN = process.env.DOPS_TOKEN ?? "changeme";
-  const dopsHeaders: Record<string, string> = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${DOPS_TOKEN}`,
-  };
-
-  async function dopsApi<T>(method: string, path: string, body?: unknown): Promise<T> {
-    const res = await fetch(`${DOPS_URL}${path}`, {
-      method,
-      headers: dopsHeaders,
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status} on ${method} ${path}`);
-    return res.json() as Promise<T>;
-  }
-
   await test("Health check", async () => {
-    const h = await dopsApi<{ version: string; stats: { sessions: number } }>("GET", "/health");
+    const h = await dops.health();
     console.log(`        v${h.version} — ${h.stats.sessions} sessions`);
   });
 
   let dopsSessionId = "";
 
   await test("Create session + ingest data", async () => {
-    const { id } = await dopsApi<{ id: string }>("POST", "/sessions", {
+    const { id } = await dops.createSession({
       source: "demo",
       model: "claude-sonnet-4-6",
     });
     dopsSessionId = id;
     console.log(`        Session: ${id}`);
 
-    await dopsApi("POST", "/token-usage", {
+    await dops.recordTokenUsage({
       session_id: id,
       model: "claude-sonnet-4-6",
       input_tokens: 1000,
@@ -279,32 +266,26 @@ try {
       cache_read: 500,
     });
 
-    await dopsApi("POST", "/tool-calls", {
+    await dops.recordToolCall({
       session_id: id,
       tool_name: "Read",
       success: true,
       duration_ms: 15,
     });
 
-    await dopsApi("PATCH", `/sessions/${id}`, { status: "completed" });
+    await dops.endSession(id, { status: "completed" });
     console.log(`        Ingested tokens + tool call, session completed`);
   });
 
   await test("Query stats", async () => {
-    const tools = await dopsApi<Array<{ tool_name: string; total: number }>>("GET", "/stats/tools");
+    const tools = await dops.toolStats();
     console.log(`        ${tools.length} tool(s) tracked`);
-    const models = await dopsApi<Array<{ model: string; input_tokens: number }>>(
-      "GET",
-      "/stats/models",
-    );
+    const models = await dops.modelStats();
     console.log(`        ${models.length} model(s) tracked`);
   });
 
   await test("Session detail", async () => {
-    const d = await dopsApi<{
-      token_usage: unknown[];
-      tool_calls: unknown[];
-    }>("GET", `/sessions/${dopsSessionId}`);
+    const d = await dops.getSession(dopsSessionId);
     console.log(
       `        ${d.token_usage.length} token record(s), ${d.tool_calls.length} tool call(s)`,
     );

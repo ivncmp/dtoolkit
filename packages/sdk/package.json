@@ -1,7 +1,7 @@
 {
   "name": "@dtoolkit/sdk",
   "version": "0.6.1",
-  "description": "Typed HTTP clients for dtoolkit services (dbrain + dproxy)",
+  "description": "Typed HTTP clients for dtoolkit services (dbrain + dops + dproxy + dwork)",
   "type": "module",
   "license": "MIT",
   "author": "Iván Campillo <ivncmp@gmail.com>",
@@ -30,7 +30,9 @@
     "ai",
     "memory",
     "dbrain",
+    "dops",
     "dproxy",
+    "dwork",
     "client",
     "sdk",
     "dtoolkit"

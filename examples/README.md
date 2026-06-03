@@ -12,7 +12,7 @@ These examples demonstrate the SDK clients and REST APIs:
 - **`DBrainClient`** — persistent memory server: entities, facts, search, conversations, federation
 - **`DProxyClient`** — universal model proxy: ask (batch & streaming), file attachments, history, memory
 - **`DWorkClient`** — AI-native project manager: projects, tasks, docs, search, overview
-- **dops REST API** — agent observability: sessions, token usage, tool calls, errors, analytics
+- **`DOpsClient`** — agent observability: sessions, token usage, tool calls, errors, analytics
 
 > Other dtoolkit packages (`dcontext`, `dproxy` CLI, adapters) are CLI tools without a programmatic SDK — they're not covered here.
 
@@ -84,7 +84,7 @@ Covers `DWorkClient` from `@dtoolkit/sdk`:
 
 ### dops ([src/dops.ts](src/dops.ts))
 
-Uses `fetch` against the dops REST API directly (no SDK client yet):
+Covers `DOpsClient` from `@dtoolkit/sdk`:
 
 - Health check — server status, session/event/tool counts
 - Session lifecycle — create session, ingest data, mark completed

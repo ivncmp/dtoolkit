@@ -5,7 +5,7 @@ description: Typed HTTP clients for dtoolkit services
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-The `@dtoolkit/sdk` package provides typed HTTP clients for the three dtoolkit services that expose REST APIs: **dbrain** (memory), **dwork** (project management), and **dproxy** (model invocation). Each client wraps a shared `HttpClient` base with Bearer token authentication, configurable timeouts, and structured error handling via `SdkError`.
+The `@dtoolkit/sdk` package provides typed HTTP clients for the four dtoolkit services that expose REST APIs: **dbrain** (memory), **dops** (observability), **dwork** (project management), and **dproxy** (model invocation). Each client wraps a shared `HttpClient` base with Bearer token authentication, configurable timeouts, and structured error handling via `SdkError`.
 
 ## Installation
 
@@ -402,39 +402,6 @@ for await (const event of proxy.askStream('Write a haiku about TypeScript')) {
 
 ---
 
-## Exported types
-
-The SDK re-exports all response types for use in your own code. Import them directly from the package:
-
-```typescript
-import type {
-  // dbrain
-  EntityRow, EntityWithFacts, FactRow, SearchResult,
-  FederatedSearchResponse, HealthResponse, ConversationSummary,
-
-  // dwork
-  DWorkProject, DWorkTask, DWorkDoc, DWorkOverview, DWorkSearchResult,
-  DWorkGraph, DWorkGraphNode, DWorkGraphStats,
-
-  // dproxy
-  AskOptions, AskResponse, DProxyHealthResponse, ProviderName,
-
-  // core (re-exported)
-  AdapterStreamEvent, AdapterUsage,
-} from '@dtoolkit/sdk';
-```
-
-## Default ports
-
-| Service | REST API | Dashboard |
-|---------|----------|-----------|
-| [dbrain](/docs/products/dbrain/) | `7878` | `7879` |
-| [dproxy](/docs/products/dproxy/) | `7880` | -- |
-| [dwork](/docs/products/dwork/) | `7881` | `7882` |
-| [dops](/docs/products/dops/) | `7883` | `7884` |
-
----
-
 ## DOpsClient
 
 Typed client for the [dops](/docs/products/dops/) REST API (default port `7883`).
@@ -458,50 +425,35 @@ new DOpsClient(options: DOpsClientOptions)
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `health()` | `() => Promise<DOpsHealthResponse>` | Server health, session/event/tool counts |
+| `health()` | `() => Promise<DOpsHealthResponse>` | Server health, session/event/tool counts, pricing |
 
 #### Sessions
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `createSession(session)` | `(session: CreateSessionInput) => Promise<DOpsSession>` | Start a new telemetry session |
-| `listSessions(filters?)` | `(filters?: { source?, limit?, offset? }) => Promise<DOpsSession[]>` | List sessions with optional filters |
-| `getSession(id)` | `(id: string) => Promise<DOpsSessionDetail>` | Get session with token usage and tool calls |
-| `endSession(id, data?)` | `(id: string, data?: { error? }) => Promise<void>` | End a session |
+| `createSession(session)` | `(session: DOpsCreateSession) => Promise<{ id }>` | Create a new observability session |
+| `endSession(id, data?)` | `(id: string, data?: DOpsEndSession) => Promise<{ updated, id }>` | Mark a session as completed/failed/abandoned |
+| `listSessions(filters?)` | `(filters?: DOpsSessionFilters) => Promise<DOpsSessionRow[]>` | List sessions (filter by source, model, status, date range, limit/offset) |
+| `getSession(id)` | `(id: string) => Promise<DOpsSessionDetail>` | Full session detail with token usage, tool calls, and errors |
 
-#### Token Usage
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `addTokenUsage(sessionId, usage)` | `(sessionId: string, usage: TokenUsageInput) => Promise<void>` | Record token usage for a model turn |
-
-#### Tool Calls
+#### Ingestion
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `addToolCall(sessionId, tool)` | `(sessionId: string, tool: ToolCallInput) => Promise<void>` | Record a tool invocation |
-
-#### Events
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `addEvent(sessionId, event)` | `(sessionId: string, event: EventInput) => Promise<void>` | Add a telemetry event |
-| `addEvents(sessionId, events)` | `(sessionId: string, events: EventInput[]) => Promise<void>` | Batch add events |
-
-#### Errors
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `addError(sessionId, error)` | `(sessionId: string, error: ErrorInput) => Promise<void>` | Record an error linked to a session |
+| `ingestEvent(event)` | `(event: DOpsEvent) => Promise<{ id }>` | Ingest a single event |
+| `ingestBatch(events)` | `(events: DOpsEvent[]) => Promise<{ ingested }>` | Batch-ingest events (up to 1000) |
+| `recordToolCall(toolCall)` | `(toolCall: DOpsToolCall) => Promise<{ id }>` | Record a tool invocation with success/failure and duration |
+| `recordTokenUsage(usage)` | `(usage: DOpsTokenUsage) => Promise<{ id }>` | Record token usage per model (input, output, cache read/write) |
+| `recordError(error)` | `(error: DOpsError) => Promise<{ id }>` | Record an error linked to a session |
 
 #### Analytics
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `getStats(filters?)` | `(filters?: StatsFilters) => Promise<DOpsStats>` | Aggregated stats: sessions, tokens, costs, tool usage |
-| `getCosts(filters?)` | `(filters?: CostFilters) => Promise<DOpsCosts>` | Cost breakdown by model, source, time range |
-| `getToolStats(filters?)` | `(filters?: StatsFilters) => Promise<DOpsToolStats[]>` | Per-tool success rates and call counts |
-| `getTimeseries(filters?)` | `(filters?: TimeseriesFilters) => Promise<DOpsTimeseries>` | Token usage and costs over time |
+| `timeseries(filters?)` | `(filters?: DOpsTimeSeriesFilters) => Promise<DOpsTimeSeriesBucket[]>` | Token usage over time (1h or 15m intervals) |
+| `toolStats(filters?)` | `(filters?: DOpsStatsFilters) => Promise<DOpsToolStat[]>` | Per-tool stats: call count, success rate, avg duration |
+| `modelStats(filters?)` | `(filters?: DOpsDateFilters) => Promise<DOpsModelStat[]>` | Stats by model: sessions, input/output tokens, cache |
+| `sourceStats(filters?)` | `(filters?: DOpsDateFilters) => Promise<DOpsSourceStat[]>` | Stats by source: sessions and token counts |
 
 ### Example
 
@@ -511,33 +463,37 @@ import { DOpsClient } from '@dtoolkit/sdk';
 const ops = new DOpsClient('http://localhost:7883', 'dtk_abc123');
 
 // Create a session
-const session = await ops.createSession({
-  source: 'claude',
+const { id } = await ops.createSession({
+  source: 'claude-code',
   model: 'claude-sonnet-4-6',
-  hostname: 'macbook',
+  metadata: { project: 'my-app' },
 });
 
 // Record token usage
-await ops.addTokenUsage(session.id, {
+await ops.recordTokenUsage({
+  session_id: id,
   model: 'claude-sonnet-4-6',
-  inputTokens: 1500,
-  outputTokens: 320,
-  cacheReadTokens: 800,
+  input_tokens: 1500,
+  output_tokens: 320,
+  cache_read: 800,
 });
 
 // Record a tool call
-await ops.addToolCall(session.id, {
-  name: 'Read',
+await ops.recordToolCall({
+  session_id: id,
+  tool_name: 'Read',
   success: true,
-  durationMs: 45,
+  duration_ms: 45,
 });
 
 // End the session
-await ops.endSession(session.id);
+await ops.endSession(id, { status: 'completed' });
 
-// Get cost stats
-const costs = await ops.getCosts({ days: 30 });
-console.log(`Last 30 days: $${costs.totalCost}`);
+// Query analytics
+const tools = await ops.toolStats({ from: '2025-01-01' });
+for (const t of tools) {
+  console.log(`${t.tool_name}: ${t.total} calls, ${t.success} ok`);
+}
 ```
 
 ---
@@ -563,6 +519,41 @@ npm start
 ```
 
 The setup script creates temporary servers, runs the demo, and cleans up automatically.
+
+## Exported types
+
+The SDK re-exports all response types for use in your own code:
+
+```typescript
+import type {
+  // dbrain
+  EntityRow, EntityWithFacts, FactRow, SearchResult,
+  FederatedSearchResponse, HealthResponse, ConversationSummary,
+
+  // dops
+  DOpsHealthResponse, DOpsSessionRow, DOpsSessionDetail,
+  DOpsToolStat, DOpsModelStat, DOpsSourceStat, DOpsTimeSeriesBucket,
+
+  // dwork
+  DWorkProject, DWorkTask, DWorkDoc, DWorkOverview, DWorkSearchResult,
+  DWorkGraph, DWorkGraphNode, DWorkGraphStats,
+
+  // dproxy
+  AskOptions, AskResponse, DProxyHealthResponse, ProviderName,
+
+  // core (re-exported)
+  AdapterStreamEvent, AdapterUsage,
+} from '@dtoolkit/sdk';
+```
+
+## Default ports
+
+| Service | REST API | Dashboard |
+|---------|----------|-----------|
+| [dbrain](/docs/products/dbrain/) | `7878` | `7879` |
+| [dproxy](/docs/products/dproxy/) | `7880` | -- |
+| [dwork](/docs/products/dwork/) | `7881` | `7882` |
+| [dops](/docs/products/dops/) | `7883` | `7884` |
 
 ## Further reading
 

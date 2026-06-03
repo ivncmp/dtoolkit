@@ -1,10 +1,8 @@
 /**
- * @dtoolkit/dops — REST API examples
+ * @dtoolkit/dops — SDK client examples
  *
  * Demonstrates: health check, session lifecycle, event ingestion,
  * token usage, tool calls, error reporting, and analytics queries.
- *
- * dops doesn't have an SDK client yet — these examples use fetch directly.
  *
  * Usage:
  *   cp .env.example .env   # edit with your values
@@ -12,46 +10,17 @@
  *   npm run dops
  */
 
-const DOPS_URL = process.env.DOPS_URL ?? "http://localhost:7883";
-const DOPS_TOKEN = process.env.DOPS_TOKEN ?? "changeme";
+import { DOpsClient } from "@dtoolkit/sdk";
 
-const headers: Record<string, string> = {
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${DOPS_TOKEN}`,
-};
-
-async function api<T>(
-  method: string,
-  path: string,
-  body?: unknown,
-): Promise<T> {
-  const res = await fetch(`${DOPS_URL}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`HTTP ${res.status} on ${method} ${path}: ${text}`);
-  }
-  return res.json() as Promise<T>;
-}
+const ops = new DOpsClient(
+  process.env.DOPS_URL ?? "http://localhost:7883",
+  process.env.DOPS_TOKEN ?? "changeme",
+);
 
 // ── Health ──────────────────────────────────────────────────────────
 
 async function healthCheck(): Promise<void> {
-  const health = await api<{
-    status: string;
-    service: string;
-    version: string;
-    stats: {
-      sessions: number;
-      events: number;
-      tool_calls: number;
-      errors: number;
-      token_records: number;
-    };
-  }>("GET", "/health");
+  const health = await ops.health();
   console.log(`dops v${health.version} is ${health.status}`);
   console.log(
     `  ${health.stats.sessions} sessions, ${health.stats.events} events, ${health.stats.tool_calls} tool calls`,
@@ -61,17 +30,14 @@ async function healthCheck(): Promise<void> {
 // ── Session lifecycle ──────────────────────────────────────────────
 
 async function sessionLifecycle(): Promise<string> {
-  const { id } = await api<{ id: string }>("POST", "/sessions", {
+  const { id } = await ops.createSession({
     source: "sdk-example",
     model: "claude-sonnet-4-6",
     metadata: { project: "dtoolkit", purpose: "demo" },
   });
   console.log(`\nCreated session: ${id}`);
 
-  const session = await api<{ id: string; status: string; source: string }>(
-    "GET",
-    `/sessions/${id}`,
-  );
+  const session = await ops.getSession(id);
   console.log(`  Status: ${session.status}, source: ${session.source}`);
 
   return id;
@@ -80,7 +46,7 @@ async function sessionLifecycle(): Promise<string> {
 // ── Token usage ────────────────────────────────────────────────────
 
 async function ingestTokenUsage(sessionId: string): Promise<void> {
-  await api("POST", "/token-usage", {
+  await ops.recordTokenUsage({
     session_id: sessionId,
     model: "claude-sonnet-4-6",
     input_tokens: 1250,
@@ -90,7 +56,7 @@ async function ingestTokenUsage(sessionId: string): Promise<void> {
   });
   console.log(`\nIngested token usage (1250 in / 430 out / 800 cache read)`);
 
-  await api("POST", "/token-usage", {
+  await ops.recordTokenUsage({
     session_id: sessionId,
     model: "claude-sonnet-4-6",
     input_tokens: 2100,
@@ -104,7 +70,7 @@ async function ingestTokenUsage(sessionId: string): Promise<void> {
 // ── Tool calls ─────────────────────────────────────────────────────
 
 async function ingestToolCalls(sessionId: string): Promise<void> {
-  await api("POST", "/tool-calls", {
+  await ops.recordToolCall({
     session_id: sessionId,
     tool_name: "Read",
     success: true,
@@ -112,7 +78,7 @@ async function ingestToolCalls(sessionId: string): Promise<void> {
     args: { file_path: "/src/index.ts" },
   });
 
-  await api("POST", "/tool-calls", {
+  await ops.recordToolCall({
     session_id: sessionId,
     tool_name: "Edit",
     success: true,
@@ -120,7 +86,7 @@ async function ingestToolCalls(sessionId: string): Promise<void> {
     args: { file_path: "/src/index.ts" },
   });
 
-  await api("POST", "/tool-calls", {
+  await ops.recordToolCall({
     session_id: sessionId,
     tool_name: "Bash",
     success: false,
@@ -134,39 +100,37 @@ async function ingestToolCalls(sessionId: string): Promise<void> {
 // ── Events ─────────────────────────────────────────────────────────
 
 async function ingestEvents(sessionId: string): Promise<void> {
-  await api("POST", "/events", {
+  await ops.ingestEvent({
     session_id: sessionId,
     type: "session_start",
     data: { cwd: "/home/user/project", provider: "claude" },
   });
   console.log(`\nIngested session_start event`);
 
-  await api("POST", "/events/batch", {
-    events: [
-      {
-        session_id: sessionId,
-        type: "tool_call",
-        data: { tool: "Read", file: "/src/index.ts" },
-      },
-      {
-        session_id: sessionId,
-        type: "tool_call",
-        data: { tool: "Edit", file: "/src/index.ts" },
-      },
-      {
-        session_id: sessionId,
-        type: "custom",
-        data: { action: "user_approved_edit" },
-      },
-    ],
-  });
+  await ops.ingestBatch([
+    {
+      session_id: sessionId,
+      type: "tool_call",
+      data: { tool: "Read", file: "/src/index.ts" },
+    },
+    {
+      session_id: sessionId,
+      type: "tool_call",
+      data: { tool: "Edit", file: "/src/index.ts" },
+    },
+    {
+      session_id: sessionId,
+      type: "custom",
+      data: { action: "user_approved_edit" },
+    },
+  ]);
   console.log(`  Batch-ingested 3 events`);
 }
 
 // ── Errors ─────────────────────────────────────────────────────────
 
 async function ingestErrors(sessionId: string): Promise<void> {
-  await api("POST", "/errors", {
+  await ops.recordError({
     session_id: sessionId,
     type: "tool_error",
     message: "ENOENT: no such file or directory '/src/missing.ts'",
@@ -177,26 +141,14 @@ async function ingestErrors(sessionId: string): Promise<void> {
 // ── End session ────────────────────────────────────────────────────
 
 async function endSession(sessionId: string): Promise<void> {
-  await api("PATCH", `/sessions/${sessionId}`, {
-    status: "completed",
-  });
+  await ops.endSession(sessionId, { status: "completed" });
   console.log(`\nSession ${sessionId} marked as completed`);
 }
 
 // ── Query: sessions list ───────────────────────────────────────────
 
 async function querySessions(): Promise<void> {
-  const sessions = await api<
-    Array<{
-      id: string;
-      source: string;
-      status: string;
-      total_input: number;
-      total_output: number;
-      tool_count: number;
-      error_count: number;
-    }>
-  >("GET", "/sessions?limit=5");
+  const sessions = await ops.listSessions({ limit: 5 });
   console.log(`\nSessions (${sessions.length}):`);
   for (const s of sessions) {
     console.log(
@@ -208,23 +160,7 @@ async function querySessions(): Promise<void> {
 // ── Query: session detail ──────────────────────────────────────────
 
 async function querySessionDetail(sessionId: string): Promise<void> {
-  const detail = await api<{
-    id: string;
-    source: string;
-    status: string;
-    token_usage: Array<{
-      model: string;
-      input_tokens: number;
-      output_tokens: number;
-      cache_read: number;
-    }>;
-    tool_calls: Array<{
-      tool_name: string;
-      success: number;
-      duration_ms: number | null;
-    }>;
-    errors: Array<{ type: string; message: string }>;
-  }>("GET", `/sessions/${sessionId}`);
+  const detail = await ops.getSession(sessionId);
 
   console.log(`\nSession detail: ${detail.id}`);
   console.log(`  Token records: ${detail.token_usage.length}`);
@@ -248,15 +184,7 @@ async function querySessionDetail(sessionId: string): Promise<void> {
 // ── Query: tool stats ──────────────────────────────────────────────
 
 async function queryToolStats(): Promise<void> {
-  const tools = await api<
-    Array<{
-      tool_name: string;
-      total: number;
-      success: number;
-      failed: number;
-      avg_duration_ms: number | null;
-    }>
-  >("GET", "/stats/tools");
+  const tools = await ops.toolStats();
   console.log(`\nTool stats (${tools.length} tools):`);
   for (const t of tools) {
     const avg = t.avg_duration_ms ? ` avg ${t.avg_duration_ms}ms` : "";
@@ -269,15 +197,7 @@ async function queryToolStats(): Promise<void> {
 // ── Query: model stats ─────────────────────────────────────────────
 
 async function queryModelStats(): Promise<void> {
-  const models = await api<
-    Array<{
-      model: string;
-      sessions: number;
-      input_tokens: number;
-      output_tokens: number;
-      cache_read: number;
-    }>
-  >("GET", "/stats/models");
+  const models = await ops.modelStats();
   console.log(`\nModel stats (${models.length} models):`);
   for (const m of models) {
     const total = m.input_tokens + m.output_tokens;
@@ -290,14 +210,7 @@ async function queryModelStats(): Promise<void> {
 // ── Query: source stats ────────────────────────────────────────────
 
 async function querySourceStats(): Promise<void> {
-  const sources = await api<
-    Array<{
-      source: string;
-      sessions: number;
-      input_tokens: number;
-      output_tokens: number;
-    }>
-  >("GET", "/stats/sources");
+  const sources = await ops.sourceStats();
   console.log(`\nSource stats (${sources.length} sources):`);
   for (const s of sources) {
     console.log(
@@ -309,16 +222,7 @@ async function querySourceStats(): Promise<void> {
 // ── Query: timeseries ──────────────────────────────────────────────
 
 async function queryTimeseries(): Promise<void> {
-  const buckets = await api<
-    Array<{
-      bucket: string;
-      sessions: number;
-      input_tokens: number;
-      output_tokens: number;
-      tool_calls: number;
-      errors: number;
-    }>
-  >("GET", "/stats/timeseries?interval=1h");
+  const buckets = await ops.timeseries({ interval: "1h" });
   console.log(`\nTimeseries (${buckets.length} buckets):`);
   for (const b of buckets.slice(0, 5)) {
     console.log(

@@ -109,6 +109,25 @@ When running, dops exposes MCP tools on the `/mcp` endpoint:
 | `session_detail` | Full session detail |
 | `errors` | List recent errors |
 
+## SDK client
+
+Use `DOpsClient` from `@dtoolkit/sdk` for typed access to the REST API:
+
+```ts
+import { DOpsClient } from "@dtoolkit/sdk";
+
+const ops = new DOpsClient("http://localhost:7883", "your-token");
+
+const { id } = await ops.createSession({ source: "claude-code", model: "claude-sonnet-4-6" });
+await ops.recordTokenUsage({ session_id: id, model: "claude-sonnet-4-6", input_tokens: 1000, output_tokens: 400 });
+await ops.endSession(id, { status: "completed" });
+
+const tools = await ops.toolStats();
+const models = await ops.modelStats();
+```
+
+See the [SDK reference](../sdk/) for the full API.
+
 ## Configuration
 
 Config stored at `<dataPath>/config.json`. Environment variable overrides: `DOPS_PORT`, `DOPS_HOST`, `DOPS_TOKEN`.

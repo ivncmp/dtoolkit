@@ -83,8 +83,8 @@ packages/
 │                      SQLite + FTS5 via better-sqlite3. Markdown files as source of truth.
 │                      CLI: dwork init/start/status/sync/configure/keys
 │                      Build: tsc + copy dashboard assets + chmod bin
-└── sdk/               Typed HTTP clients for dtoolkit services (dbrain + dproxy + dwork)
-                       DBrainClient + DProxyClient + DWorkClient, shared HttpClient base
+└── sdk/               Typed HTTP clients for dtoolkit services (dbrain + dops + dproxy + dwork)
+                       DBrainClient + DOpsClient + DProxyClient + DWorkClient, shared HttpClient base
                        Build: tsc. Auth: unified Bearer token.
 landing/               Public website — Astro 6 + React 19 + Tailwind CSS 3
                        Static site deployed to Vercel. Not a published package.

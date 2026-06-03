@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">@dtoolkit/sdk</h1>
-<p align="center">Typed HTTP clients for dtoolkit services (dbrain + dproxy + dwork)</p>
+<p align="center">Typed HTTP clients for dtoolkit services (dbrain + dops + dproxy + dwork)</p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@dtoolkit/sdk"><img src="https://img.shields.io/npm/v/@dtoolkit/sdk.svg" alt="npm"></a>
@@ -103,6 +103,52 @@ const history = await proxy.listHistory(10);
 const matches = await proxy.searchHistory("monads");
 ```
 
+### DOpsClient
+
+Connect to a [dops](../dops/) observability server:
+
+```ts
+import { DOpsClient } from "@dtoolkit/sdk";
+
+const ops = new DOpsClient("http://localhost:7883", "sk-dops_...");
+
+// Health check
+const health = await ops.health();
+console.log(`dops v${health.version}: ${health.stats.sessions} sessions`);
+
+// Session lifecycle
+const { id } = await ops.createSession({
+  source: "claude-code",
+  model: "claude-sonnet-4-6",
+  metadata: { project: "my-app" },
+});
+
+// Ingest telemetry
+await ops.recordTokenUsage({
+  session_id: id,
+  model: "claude-sonnet-4-6",
+  input_tokens: 1250,
+  output_tokens: 430,
+  cache_read: 800,
+});
+
+await ops.recordToolCall({
+  session_id: id,
+  tool_name: "Read",
+  success: true,
+  duration_ms: 12,
+});
+
+await ops.endSession(id, { status: "completed" });
+
+// Query analytics
+const sessions = await ops.listSessions({ source: "claude", limit: 10 });
+const detail = await ops.getSession(id);
+const tools = await ops.toolStats({ from: "2025-01-01" });
+const models = await ops.modelStats();
+const timeseries = await ops.timeseries({ interval: "1h" });
+```
+
 ### DWorkClient
 
 Connect to a [dwork](../dwork/) project manager:
@@ -160,6 +206,7 @@ All dtoolkit services use unified `Authorization: Bearer <token>` authentication
 ```ts
 // All clients use the same auth mechanism
 const brain = new DBrainClient("http://localhost:7878", "my-token");
+const ops = new DOpsClient("http://localhost:7883", "my-token");
 const proxy = new DProxyClient("http://localhost:7880", "my-token");
 const work = new DWorkClient("http://localhost:7881", "my-token");
 
@@ -221,6 +268,25 @@ try {
 | `createApiKey(params)` | Create a per-user API key (shared brains) |
 | `listApiKeys()` | List API keys (shared brains) |
 | `revokeApiKey(id)` | Revoke an API key (shared brains) |
+
+### DOpsClient
+
+| Method | Description |
+| --- | --- |
+| `health()` | Server health, stats, and pricing info |
+| `createSession(session)` | Create a new observability session |
+| `endSession(id, data?)` | Mark a session as completed/failed/abandoned |
+| `listSessions(filters?)` | List sessions (filter by source, model, status, date range) |
+| `getSession(id)` | Full session detail with token usage, tool calls, and errors |
+| `ingestEvent(event)` | Ingest a single event |
+| `ingestBatch(events)` | Batch-ingest events (up to 1000) |
+| `recordToolCall(toolCall)` | Record a tool invocation with success/failure and duration |
+| `recordTokenUsage(usage)` | Record token usage per model |
+| `recordError(error)` | Record an error linked to a session |
+| `timeseries(filters?)` | Time-series buckets (1h or 15m intervals) |
+| `toolStats(filters?)` | Tool usage stats: call count, success rate, avg duration |
+| `modelStats(filters?)` | Stats by model: sessions, input/output tokens, cache |
+| `sourceStats(filters?)` | Stats by source: sessions and token counts |
 
 ### DProxyClient
 

@@ -23,7 +23,7 @@ Each product has **one job**, works standalone, and composes with the rest via a
 | Package | Version | Description |
 | --- | --- | --- |
 | [`@dtoolkit/core`](packages/core/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/core.svg)](https://www.npmjs.com/package/@dtoolkit/core) | Shared types and Zod schemas (`Adapter`, `ContextBlock`, `Fact`, `Entity`, `Tier`) |
-| [`@dtoolkit/sdk`](packages/sdk/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/sdk.svg)](https://www.npmjs.com/package/@dtoolkit/sdk) | Typed HTTP clients for dtoolkit services (dbrain + dproxy + dwork) |
+| [`@dtoolkit/sdk`](packages/sdk/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/sdk.svg)](https://www.npmjs.com/package/@dtoolkit/sdk) | Typed HTTP clients for dtoolkit services (dbrain + dops + dproxy + dwork) |
 | [`@dtoolkit/adapter-claude`](packages/adapter-claude/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-claude.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-claude) | Adapter for Claude Code CLI |
 | [`@dtoolkit/adapter-codex`](packages/adapter-codex/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-codex.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-codex) | Adapter for Codex CLI |
 | [`@dtoolkit/adapter-gemini`](packages/adapter-gemini/) | [![npm](https://img.shields.io/npm/v/@dtoolkit/adapter-gemini.svg)](https://www.npmjs.com/package/@dtoolkit/adapter-gemini) | Adapter for Gemini CLI |
@@ -126,11 +126,10 @@ The [`examples/`](examples/) directory contains ready-to-run TypeScript examples
 | Example | Client | What it covers |
 | --- | --- | --- |
 | [`dbrain.ts`](examples/src/dbrain.ts) | `DBrainClient` | Health, entity CRUD, facts, search, memory summary, conversations, federation |
+| [`dops.ts`](examples/src/dops.ts) | `DOpsClient` | Sessions, token usage, tool calls, events, errors, analytics |
 | [`dproxy.ts`](examples/src/dproxy.ts) | `DProxyClient` | Batch ask, streaming, system prompts, file attachments, history, memory |
 | [`dwork.ts`](examples/src/dwork.ts) | `DWorkClient` | Projects, tasks, docs, search, overview |
 | [`demo.ts`](examples/src/demo.ts) | All SDK clients | Combined smoke test |
-
-> `dops` is used via CLI and REST API — see [examples README](examples/README.md) for usage.
 
 ```bash
 cd examples

@@ -1,5 +1,15 @@
 # @dtoolkit/dbrain
 
+## 1.0.1
+
+### Patch Changes
+
+- 8e19dfb: fix: republish with resolved workspace:\* dependencies
+
+  dbrain@1.0.0 was published to npm with unresolved `workspace:*` in its dependencies
+  (`@dtoolkit/core` and `@dtoolkit/sdk`), causing `npm i -g @dtoolkit/dbrain` to fail
+  with EUNSUPPORTEDPROTOCOL. This patch triggers a republish with properly resolved versions.
+
 ## 1.0.0
 
 ### Major Changes

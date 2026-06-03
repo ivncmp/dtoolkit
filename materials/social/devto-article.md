@@ -200,6 +200,6 @@ Five commands. Your agent now has a brain.
 
 - **GitHub**: [github.com/ivncmp/dtoolkit](https://github.com/ivncmp/dtoolkit)
 - **npm**: [@dtoolkit/*](https://www.npmjs.com/org/dtoolkit)
-- **Docs**: [dtoolkit.dev/docs](https://dtoolkit.dev/docs)
+- **Docs**: [dtoolkit.vercel.app/docs](https://dtoolkit.vercel.app/docs)
 
 All MIT licensed. v1.0.0 just shipped. Feedback and contributions welcome.

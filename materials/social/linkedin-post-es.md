@@ -42,8 +42,8 @@ Si trabajas con agentes de código y quieres que dejen de ser amnésicos:
 
 → GitHub: github.com/ivncmp/dtoolkit
 → npm: @dtoolkit/*
-→ Docs: dtoolkit.dev/docs
+→ Docs: dtoolkit.vercel.app/docs
 
-v1.0.0 acaba de salir. Feedback bienvenido.
+v1.0.0 acaba de salir. Es un proyecto abierto y cualquier forma de colaborar es bienvenida: abrir issues, proponer mejoras, enviar PRs, o simplemente probarlo y dar feedback. Todo se gestiona en GitHub.
 
 #OpenSource #AIEngineering #DeveloperTools #CodingAgents #MCP

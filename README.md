@@ -165,14 +165,31 @@ pnpm --filter @dtoolkit/dproxy build    # single build
 
 ## Contributing
 
+Contributions are welcome! Here's how you can help:
+
+- **Report bugs** — open an [issue](https://github.com/ivncmp/dtoolkit/issues) with steps to reproduce
+- **Suggest features** — open an issue describing the use case and expected behavior
+- **Send a PR** — fork the repo, create a branch, make your changes, and open a pull request
+
+### Development setup
+
 This is a [pnpm workspace](https://pnpm.io/workspaces) monorepo using [Turborepo](https://turbo.build/) for task orchestration and [Changesets](https://github.com/changesets/changesets) for versioning.
 
 ```bash
-pnpm changeset       # describe your change
-git push             # CI runs lint + test + build
-                     # release workflow creates a version PR
-                     # merging publishes to npm
+git clone https://github.com/ivncmp/dtoolkit.git
+cd dtoolkit
+pnpm install
+pnpm build
 ```
+
+### Submitting changes
+
+1. Create a feature branch from `main`
+2. Make your changes and ensure they pass checks: `pnpm lint && pnpm format:check && pnpm test`
+3. Add a changeset describing your change: `pnpm changeset`
+4. Push and open a PR against `main`
+
+CI runs lint, tests, and build automatically. When a PR with changesets is merged, the release workflow creates a version PR — merging that publishes to npm.
 
 ## Acknowledgements
 

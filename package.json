@@ -23,7 +23,7 @@
     "format:check": "prettier --check \"packages/*/src/**/*.ts\"",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo run build && pnpm changeset publish"
+    "release": "turbo run build && node scripts/verify-no-workspace.js && node scripts/publish.js"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

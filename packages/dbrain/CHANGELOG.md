@@ -1,5 +1,11 @@
 # @dtoolkit/dbrain
 
+## 1.0.2
+
+### Patch Changes
+
+- 3d0f03d: Pin @babel/standalone to v7 in dashboards to fix Babel 8 breaking change (automatic JSX runtime generates import statements incompatible with inline script tags)
+
 ## 1.0.1
 
 ### Patch Changes
